@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks/reduxHooks';
 import { 
@@ -8,6 +8,11 @@ import {
   fetchFormsFailure,
   setCurrentForm
 } from '../../store/patientSlice';
+import { Calendar } from '../../components/ui/calendar';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { CalendarIcon } from 'lucide-react';
 
 // Mock forms data - this would come from an API in a real app
 const mockForms = [
@@ -57,8 +62,11 @@ const PatientForms: React.FC = () => {
   const { patientId } = useParams<{ patientId: string }>();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
   
   const { currentPatient, forms, loading, error } = useAppSelector(state => state.patients);
+  const [filteredForms, setFilteredForms] = useState<any[]>([]);
   
   useEffect(() => {
     if (!patientId) return;
@@ -75,6 +83,39 @@ const PatientForms: React.FC = () => {
       }
     }, 500);
   }, [dispatch, patientId]);
+
+  useEffect(() => {
+    if (forms.length === 0 || !date) return;
+    
+    let filtered = [];
+    switch (viewMode) {
+      case 'day':
+        filtered = forms.filter(form => {
+          const formDate = new Date(form.updatedAt);
+          return formDate.toDateString() === date.toDateString();
+        });
+        break;
+      case 'week':
+        filtered = forms.filter(form => {
+          const formDate = new Date(form.updatedAt);
+          const weekStart = startOfWeek(date);
+          const weekEnd = endOfWeek(date);
+          return isWithinInterval(formDate, { start: weekStart, end: weekEnd });
+        });
+        break;
+      case 'month':
+        filtered = forms.filter(form => {
+          const formDate = new Date(form.updatedAt);
+          const monthStart = startOfMonth(date);
+          const monthEnd = endOfMonth(date);
+          return isWithinInterval(formDate, { start: monthStart, end: monthEnd });
+        });
+        break;
+      default:
+        filtered = forms;
+    }
+    setFilteredForms(filtered);
+  }, [forms, date, viewMode]);
   
   const formatTime = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
@@ -87,8 +128,8 @@ const PatientForms: React.FC = () => {
     navigate(`/staff/patients/${patientId}/forms/${form.id}`);
   };
   
-  const handleAddForm = () => {
-    navigate(`/staff/patients/${patientId}/forms/new`);
+  const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
+    setViewMode(mode);
   };
   
   if (loading) {
@@ -104,13 +145,42 @@ const PatientForms: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Forms of {currentPatient?.name || patientId}</h1>
         <div className="flex space-x-2">
-          <button className="bg-gray-200 px-4 py-2 rounded">Calendar</button>
-          <button 
-            onClick={handleAddForm}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            + Add Form
-          </button>
+          <div className="flex rounded-md overflow-hidden">
+            <button 
+              onClick={() => setViewAndUpdate('day')}
+              className={`px-3 py-1 ${viewMode === 'day' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            >
+              Day
+            </button>
+            <button 
+              onClick={() => setViewAndUpdate('week')}
+              className={`px-3 py-1 ${viewMode === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            >
+              Week
+            </button>
+            <button 
+              onClick={() => setViewAndUpdate('month')}
+              className={`px-3 py-1 ${viewMode === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            >
+              Month
+            </button>
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-10 w-10 p-0">
+                <CalendarIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
       
@@ -120,10 +190,10 @@ const PatientForms: React.FC = () => {
           <div className="p-4 font-semibold">Billing Time</div>
         </div>
         
-        {forms.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">No forms found for this patient</div>
+        {filteredForms.length === 0 ? (
+          <div className="p-6 text-center text-gray-500">No forms found for this time period</div>
         ) : (
-          forms.map(form => (
+          filteredForms.map(form => (
             <div 
               key={form.id}
               onClick={() => handleFormClick(form)}

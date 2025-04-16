@@ -1,8 +1,13 @@
 
-import React, { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks/reduxHooks';
 import { fetchPatientsStart, fetchPatientsSuccess, setCurrentPatient } from '../../store/patientSlice';
+import { Calendar } from '../../components/ui/calendar';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { CalendarIcon } from 'lucide-react';
 
 // Mock patients data - this would come from an API in a real app
 const mockPatients = [
@@ -17,6 +22,9 @@ const PatientsList: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAppSelector(state => state.auth);
   const { patients, loading, error } = useAppSelector(state => state.patients);
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
+  const [filteredPatients, setFilteredPatients] = useState<any[]>([]);
   
   useEffect(() => {
     if (!user) return;
@@ -34,6 +42,17 @@ const PatientsList: React.FC = () => {
     }, 500);
   }, [dispatch, user]);
   
+  useEffect(() => {
+    if (patients.length === 0) {
+      setFilteredPatients([]);
+      return;
+    }
+    
+    // For demonstration purposes, we'll just show all patients
+    // In a real application, this would filter based on activity date
+    setFilteredPatients(patients);
+  }, [patients, date, viewMode]);
+  
   const formatTime = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -42,7 +61,13 @@ const PatientsList: React.FC = () => {
   
   const handlePatientClick = (patient: any) => {
     dispatch(setCurrentPatient(patient));
-    navigate(`/staff/patients/${patient.id}/forms`);
+    // Determine correct route based on user role
+    const baseRoute = user?.role === 'client' ? '/client' : '/staff';
+    navigate(`${baseRoute}/patients/${patient.id}/forms`);
+  };
+  
+  const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
+    setViewMode(mode);
   };
 
   if (loading) {
@@ -57,7 +82,44 @@ const PatientsList: React.FC = () => {
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Patients of {user?.name}</h1>
-        <button className="bg-gray-200 px-4 py-2 rounded">Calendar</button>
+        <div className="flex space-x-2">
+          <div className="flex rounded-md overflow-hidden">
+            <button 
+              onClick={() => setViewAndUpdate('day')}
+              className={`px-3 py-1 ${viewMode === 'day' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            >
+              Day
+            </button>
+            <button 
+              onClick={() => setViewAndUpdate('week')}
+              className={`px-3 py-1 ${viewMode === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            >
+              Week
+            </button>
+            <button 
+              onClick={() => setViewAndUpdate('month')}
+              className={`px-3 py-1 ${viewMode === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            >
+              Month
+            </button>
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-10 w-10 p-0">
+                <CalendarIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
       
       <div className="bg-white shadow-md rounded-md overflow-hidden">
@@ -66,10 +128,10 @@ const PatientsList: React.FC = () => {
           <div className="p-4 font-semibold">Billing Time</div>
         </div>
         
-        {patients.length === 0 ? (
+        {filteredPatients.length === 0 ? (
           <div className="p-6 text-center text-gray-500">No patients found</div>
         ) : (
-          patients.map(patient => (
+          filteredPatients.map(patient => (
             <div 
               key={patient.id}
               onClick={() => handlePatientClick(patient)}
