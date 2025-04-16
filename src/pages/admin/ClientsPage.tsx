@@ -3,19 +3,19 @@ import React from 'react';
 import Layout from '../../components/layout/Layout';
 import ProtectedRoute from '../../components/shared/ProtectedRoute';
 import AdminTabs from '../../components/admin/AdminTabs';
-import AdminFormsList from '../../components/admin/AdminFormsList';
+import AdminClientsList from '../../components/admin/AdminClientsList';
 
-const AdminDashboard: React.FC = () => {
+const ClientsPage: React.FC = () => {
   return (
     <ProtectedRoute allowedRoles={['admin']}>
       <Layout>
         <div className="max-w-6xl mx-auto p-6">
           <AdminTabs />
-          <AdminFormsList />
+          <AdminClientsList />
         </div>
       </Layout>
     </ProtectedRoute>
   );
 };
 
-export default AdminDashboard;
+export default ClientsPage;

@@ -13,6 +13,9 @@ import Unauthorized from './pages/Unauthorized';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import CreateFormPage from './pages/admin/CreateFormPage';
 import EditFormPage from './pages/admin/EditFormPage';
+import ClientsPage from './pages/admin/ClientsPage';
+import StaffPage from './pages/admin/StaffPage';
+import PatientsPage from './pages/admin/PatientsPage';
 import AddClientPage from './pages/admin/AddClientPage';
 import EditClientPage from './pages/admin/EditClientPage';
 import AddStaffPage from './pages/admin/AddStaffPage';
@@ -39,6 +42,9 @@ const App = () => (
           
           {/* Admin routes */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/clients" element={<ClientsPage />} />
+          <Route path="/admin/staff" element={<StaffPage />} />
+          <Route path="/admin/patients" element={<PatientsPage />} />
           <Route path="/admin/forms/create" element={<CreateFormPage />} />
           <Route path="/admin/forms/:formId/edit" element={<EditFormPage />} />
           <Route path="/admin/clients/add" element={<AddClientPage />} />
