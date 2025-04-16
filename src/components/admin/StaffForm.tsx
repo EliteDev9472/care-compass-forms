@@ -3,6 +3,13 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 
 // Mock clients data
 const mockClients = [
@@ -72,7 +79,7 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
   };
 
   const handlePatientSelection = () => {
-    setShowPatientSelection(true);
+    setShowPatientSelection(!showPatientSelection);
   };
 
   const handleAddPatient = (patientId: string) => {
@@ -118,16 +125,26 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Assign to Client</label>
-          <select
-            value={selectedClientId}
-            onChange={(e) => setSelectedClientId(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Client" />
+            </SelectTrigger>
+            <SelectContent>
+              {mockClients.map(client => (
+                <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="mb-4">
+          <Button
+            type="button"
+            onClick={handlePatientSelection}
+            variant={showPatientSelection ? "outline" : "default"}
           >
-            <option value="">Select Client</option>
-            {mockClients.map(client => (
-              <option key={client.id} value={client.id}>{client.name}</option>
-            ))}
-          </select>
+            {showPatientSelection ? 'Hide Patient Selection' : (mode === 'add' ? 'Add Patients' : 'Edit Patients')}
+          </Button>
         </div>
 
         {mode === 'edit' && (
@@ -150,14 +167,6 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
           </div>
         )}
       </div>
-
-      {selectedClientId && !showPatientSelection ? (
-        <div className="mb-6">
-          <Button onClick={handlePatientSelection}>
-            {mode === 'add' ? 'Add Patients' : 'Edit Patients'}
-          </Button>
-        </div>
-      ) : null}
 
       {showPatientSelection && (
         <div className="mb-6">

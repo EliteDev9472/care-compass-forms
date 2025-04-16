@@ -3,6 +3,13 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 
 // Mock clients data
 const mockClients = [
@@ -104,34 +111,37 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Assign to Client</label>
-          <select
-            value={selectedClientId}
-            onChange={(e) => {
-              setSelectedClientId(e.target.value);
+          <Select 
+            value={selectedClientId} 
+            onValueChange={(value) => {
+              setSelectedClientId(value);
               setSelectedStaffId(''); // Reset staff selection when client changes
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="">Select Client</option>
-            {mockClients.map(client => (
-              <option key={client.id} value={client.id}>{client.name}</option>
-            ))}
-          </select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Client" />
+            </SelectTrigger>
+            <SelectContent>
+              {mockClients.map(client => (
+                <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {selectedClientId && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Assign to Staff</label>
-            <select
-              value={selectedStaffId}
-              onChange={(e) => setSelectedStaffId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select Staff</option>
-              {filteredStaff.map(staff => (
-                <option key={staff.id} value={staff.id}>{staff.name}</option>
-              ))}
-            </select>
+            <Select value={selectedStaffId} onValueChange={setSelectedStaffId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Staff" />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredStaff.map(staff => (
+                  <SelectItem key={staff.id} value={staff.id}>{staff.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
 
