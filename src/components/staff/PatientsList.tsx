@@ -48,9 +48,33 @@ const PatientsList: React.FC = () => {
       return;
     }
     
-    // For demonstration purposes, we'll just show all patients
-    // In a real application, this would filter based on activity date
-    setFilteredPatients(patients);
+    // Filter patients based on selected date and view mode
+    // In a real app, this would filter based on activity date from the database
+    let filteredByDate = [...patients];
+    
+    if (date) {
+      // Example date filtering logic - in a real app, you would filter based on patient activity dates
+      if (viewMode === 'day') {
+        // Only show patients active on the selected day
+        const dateStr = format(date, 'yyyy-MM-dd');
+        // This is a mock implementation. In a real app, you would check if a patient had activity on this date
+        filteredByDate = patients;
+      } else if (viewMode === 'week') {
+        // Show patients active during the selected week
+        const weekStart = startOfWeek(date);
+        const weekEnd = endOfWeek(date);
+        // This is a mock implementation. In a real app, you would check if a patient had activity in this date range
+        filteredByDate = patients;
+      } else if (viewMode === 'month') {
+        // Show patients active during the selected month
+        const monthStart = startOfMonth(date);
+        const monthEnd = endOfMonth(date);
+        // This is a mock implementation. In a real app, you would check if a patient had activity in this date range
+        filteredByDate = patients;
+      }
+    }
+    
+    setFilteredPatients(filteredByDate);
   }, [patients, date, viewMode]);
   
   const formatTime = (minutes: number): string => {

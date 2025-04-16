@@ -11,6 +11,14 @@ import Unauthorized from './pages/Unauthorized';
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
+import CreateFormPage from './pages/admin/CreateFormPage';
+import EditFormPage from './pages/admin/EditFormPage';
+import AddClientPage from './pages/admin/AddClientPage';
+import EditClientPage from './pages/admin/EditClientPage';
+import AddStaffPage from './pages/admin/AddStaffPage';
+import EditStaffPage from './pages/admin/EditStaffPage';
+import AddPatientPage from './pages/admin/AddPatientPage';
+import EditPatientPage from './pages/admin/EditPatientPage';
 
 // Staff pages
 import PatientsListPage from './pages/staff/PatientsListPage';
@@ -31,6 +39,14 @@ const App = () => (
           
           {/* Admin routes */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/forms/create" element={<CreateFormPage />} />
+          <Route path="/admin/forms/:formId/edit" element={<EditFormPage />} />
+          <Route path="/admin/clients/add" element={<AddClientPage />} />
+          <Route path="/admin/clients/:clientId/edit" element={<EditClientPage />} />
+          <Route path="/admin/staff/add" element={<AddStaffPage />} />
+          <Route path="/admin/staff/:staffId/edit" element={<EditStaffPage />} />
+          <Route path="/admin/patients/add" element={<AddPatientPage />} />
+          <Route path="/admin/patients/:patientId/edit" element={<EditPatientPage />} />
           
           {/* Staff routes */}
           <Route path="/staff/patients" element={<PatientsListPage />} />
