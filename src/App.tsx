@@ -62,9 +62,8 @@ const App = () => (
           <Route path="/staff/patients/:patientId/forms/:formId" element={<FormPage />} />
           
           {/* Client routes */}
-          <Route path="/client/patients" element={<PatientsListPage />} />
-          <Route path="/client/patients/:patientId/forms" element={<PatientFormsPage />} />
-          <Route path="/client/patients/:patientId/forms/:formId" element={<ReviewFormPage />} />
+          <Route path="/client/forms" element={<PatientFormsPage />} />
+          <Route path="/client/forms/:formId" element={<ReviewFormPage />} />
           
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
