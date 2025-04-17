@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -27,6 +26,9 @@ import EditPatientPage from './pages/admin/EditPatientPage';
 import PatientsListPage from './pages/staff/PatientsListPage';
 import PatientFormsPage from './pages/staff/PatientFormsPage';
 import FormPage from './pages/staff/FormPage';
+
+// Client pages
+import ReviewFormPage from './pages/client/ReviewFormPage';
 
 const App = () => (
   <Provider store={store}>
@@ -59,10 +61,10 @@ const App = () => (
           <Route path="/staff/patients/:patientId/forms" element={<PatientFormsPage />} />
           <Route path="/staff/patients/:patientId/forms/:formId" element={<FormPage />} />
           
-          {/* Client routes (reusing staff components) */}
+          {/* Client routes */}
           <Route path="/client/patients" element={<PatientsListPage />} />
           <Route path="/client/patients/:patientId/forms" element={<PatientFormsPage />} />
-          <Route path="/client/patients/:patientId/forms/:formId" element={<FormPage />} />
+          <Route path="/client/patients/:patientId/forms/:formId" element={<ReviewFormPage />} />
           
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
