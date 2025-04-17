@@ -29,6 +29,7 @@ import FormPage from './pages/staff/FormPage';
 
 // Client pages
 import ReviewFormPage from './pages/client/ReviewFormPage';
+import ClientListPage from './pages/client/ClientListPage';
 
 const App = () => (
   <Provider store={store}>
@@ -62,6 +63,7 @@ const App = () => (
           <Route path="/staff/patients/:patientId/forms/:formId" element={<FormPage />} />
           
           {/* Client routes */}
+          <Route path="/client" element={<ClientListPage />} />
           <Route path="/client/forms" element={<PatientFormsPage />} />
           <Route path="/client/forms/:formId" element={<ReviewFormPage />} />
           

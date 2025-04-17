@@ -1,0 +1,107 @@
+
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppSelector, useAppDispatch } from '../../hooks/reduxHooks';
+import { Calendar } from '../../components/ui/calendar';
+import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { CalendarIcon } from 'lucide-react';
+
+// Mock client data - this would come from an API in a real app
+const mockClients = [
+  { id: '1', name: 'John Doe Client', totalBillingTime: 65 },
+  { id: '2', name: 'Jane Smith Client', totalBillingTime: 165 },
+  { id: '3', name: 'Michael Johnson Client', totalBillingTime: 213 },
+];
+
+const ClientList: React.FC = () => {
+  const navigate = useNavigate();
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
+  const [clients, setClients] = useState(mockClients);
+
+  const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
+    setViewMode(mode);
+  };
+
+  const formatTime = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  };
+
+  const handleClientClick = (clientId: string) => {
+    navigate(`/client/forms`);
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">My Clients</h1>
+        <div className="flex space-x-2">
+          <div className="flex rounded-md overflow-hidden">
+            <button 
+              onClick={() => setViewAndUpdate('day')}
+              className={`px-3 py-1 ${viewMode === 'day' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            >
+              Day
+            </button>
+            <button 
+              onClick={() => setViewAndUpdate('week')}
+              className={`px-3 py-1 ${viewMode === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            >
+              Week
+            </button>
+            <button 
+              onClick={() => setViewAndUpdate('month')}
+              className={`px-3 py-1 ${viewMode === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            >
+              Month
+            </button>
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-10 w-10 p-0">
+                <CalendarIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
+      <div className="bg-white shadow-md rounded-md overflow-hidden">
+        <div className="grid grid-cols-2 bg-gray-50 border-b">
+          <div className="p-4 font-semibold">Client Name</div>
+          <div className="p-4 font-semibold">Billing Time</div>
+        </div>
+        
+        {clients.length === 0 ? (
+          <div className="p-6 text-center text-gray-500">No clients found</div>
+        ) : (
+          clients.map(client => (
+            <div 
+              key={client.id}
+              onClick={() => handleClientClick(client.id)}
+              className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
+            >
+              <div className="p-4">{client.name}</div>
+              <div className="p-4">{formatTime(client.totalBillingTime)}</div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ClientList;
