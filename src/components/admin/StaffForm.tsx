@@ -3,12 +3,12 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 
 // Mock clients data
@@ -46,34 +46,38 @@ interface StaffFormProps {
 const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
   const navigate = useNavigate();
   const { staffId } = useParams();
-  
+
   // Initialize state with mock data if in edit mode
   const [staffName, setStaffName] = useState(mode === 'edit' && staffId === '1' ? mockStaff.name : '');
   const [username, setUsername] = useState(mode === 'edit' && staffId === '1' ? mockStaff.username : '');
   const [password, setPassword] = useState(mode === 'edit' && staffId === '1' ? mockStaff.password : '');
   const [enabled, setEnabled] = useState(mode === 'edit' && staffId === '1' ? mockStaff.enabled : true);
-  const [selectedClientId, setSelectedClientId] = useState<string>(
-    mode === 'edit' && staffId === '1' ? mockStaff.clientId : ''
-  );
-  
+
   const [showPatientSelection, setShowPatientSelection] = useState(false);
+  const [showClientSelection, setShowClientSelection] = useState(false);
   const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>(
     mode === 'edit' && staffId === '1' ? mockStaff.assignedPatientIds : []
   );
+
+  const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
+
 
   // Get selected and unselected patients
   const selectedPatients = mockAllPatients.filter(patient => selectedPatientIds.includes(patient.id));
   const unselectedPatients = mockAllPatients.filter(patient => !selectedPatientIds.includes(patient.id));
 
+  // Get selected and unselected patients
+  const selectedClients = mockAllPatients.filter(client => selectedClientIds.includes(client.id));
+  const unselectedClients = mockAllPatients.filter(client => !selectedClientIds.includes(client.id));
+
   const handleSave = () => {
     // In a real app, this would save to a database
-    console.log('Saving staff:', { 
-      staffName, 
-      username, 
-      password, 
-      enabled, 
-      selectedClientId, 
-      selectedPatientIds 
+    console.log('Saving staff:', {
+      staffName,
+      username,
+      password,
+      enabled,
+      selectedPatientIds
     });
     navigate('/admin/dashboard');
   };
@@ -82,12 +86,25 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
     setShowPatientSelection(!showPatientSelection);
   };
 
+  const handleClientSelection = () => {
+    setShowClientSelection(!showClientSelection);
+  };
+
   const handleAddPatient = (patientId: string) => {
     setSelectedPatientIds([...selectedPatientIds, patientId]);
   };
 
   const handleRemovePatient = (patientId: string) => {
     setSelectedPatientIds(selectedPatientIds.filter(id => id !== patientId));
+  };
+
+  const handleAddClient = (clientId: string) => {
+    console.log(clientId)
+    setSelectedClientIds([...selectedClientIds, clientId]);
+  };
+
+  const handleRemoveClient = (clientId: string) => {
+    setSelectedClientIds(selectedClientIds.filter(id => id !== clientId));
   };
 
   return (
@@ -123,19 +140,70 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Assign to Client</label>
-          <Select value={selectedClientId} onValueChange={setSelectedClientId}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Client" />
-            </SelectTrigger>
-            <SelectContent>
-              {mockClients.map(client => (
-                <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="mb-4">
+          <Button
+            type="button"
+            onClick={handleClientSelection}
+            variant={showClientSelection ? "outline" : "default"}
+          >
+            {showClientSelection ? 'Hide Client Selection' : (mode === 'add' ? 'Add Clients' : 'Edit Clients')}
+          </Button>
         </div>
+        {showClientSelection && (
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-4">Assign Clients to Staff</h3>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-medium mb-2">Selected Clients</h4>
+                <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
+                  {selectedClients.length === 0 ? (
+                    <p className="text-gray-500 text-sm">No clients selected</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {selectedClients.map(client => (
+                        <li key={client.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
+                          <span>{client.name}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveClient(client.id)}
+                          >
+                            Remove
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-2">Unselected Clients</h4>
+                <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
+                  {unselectedClients.length === 0 ? (
+                    <p className="text-gray-500 text-sm">No clients available</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {unselectedClients.map(client => (
+                        <li key={client.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
+                          <span>{client.name}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleAddClient(client.id)}
+                          >
+                            Add
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="mb-4">
           <Button
@@ -146,14 +214,69 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
             {showPatientSelection ? 'Hide Patient Selection' : (mode === 'add' ? 'Add Patients' : 'Edit Patients')}
           </Button>
         </div>
+        {showPatientSelection && (
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-4">Assign Patients to Staff</h3>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-medium mb-2">Selected Patients</h4>
+                <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
+                  {selectedPatients.length === 0 ? (
+                    <p className="text-gray-500 text-sm">No patients selected</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {selectedPatients.map(patient => (
+                        <li key={patient.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
+                          <span>{patient.name}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemovePatient(patient.id)}
+                          >
+                            Remove
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-2">Unselected Patients</h4>
+                <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
+                  {unselectedPatients.length === 0 ? (
+                    <p className="text-gray-500 text-sm">No patients available</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {unselectedPatients.map(patient => (
+                        <li key={patient.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
+                          <span>{patient.name}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleAddPatient(patient.id)}
+                          >
+                            Add
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {mode === 'edit' && (
           <div className="flex items-center">
             <label className="flex items-center cursor-pointer">
               <div className="relative">
-                <input 
-                  type="checkbox" 
-                  className="sr-only" 
+                <input
+                  type="checkbox"
+                  className="sr-only"
                   checked={enabled}
                   onChange={() => setEnabled(!enabled)}
                 />
@@ -168,61 +291,8 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
         )}
       </div>
 
-      {showPatientSelection && (
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-4">Assign Patients to Staff</h3>
-          
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium mb-2">Selected Patients</h4>
-              <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                {selectedPatients.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No patients selected</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {selectedPatients.map(patient => (
-                      <li key={patient.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-                        <span>{patient.name}</span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleRemovePatient(patient.id)}
-                        >
-                          Remove
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-medium mb-2">Unselected Patients</h4>
-              <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                {unselectedPatients.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No patients available</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {unselectedPatients.map(patient => (
-                      <li key={patient.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-                        <span>{patient.name}</span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleAddPatient(patient.id)}
-                        >
-                          Add
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
+
 
       <div className="flex justify-end space-x-4">
         <Button variant="outline" onClick={() => navigate('/admin/dashboard')}>

@@ -16,37 +16,37 @@ const SignInForm: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  
+
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!username || !password) {
       setError('Please enter both username and password');
       return;
     }
-    
+
     dispatch(loginStart());
-    
+
     // Simulate API call
     setTimeout(() => {
       const user = mockUsers.find(
         (user) => user.username === username && user.password === password
       );
-      
+
       if (user) {
         const { password, ...userWithoutPassword } = user;
         dispatch(loginSuccess(userWithoutPassword));
-        
+
         // Redirect based on role
         switch (user.role) {
           case 'admin':
             navigate('/admin/dashboard');
             break;
           case 'client':
-            navigate('/client/patients');
+            navigate('/client');
             break;
           case 'staff':
             navigate('/staff/patients');
@@ -73,14 +73,14 @@ const SignInForm: React.FC = () => {
             Please sign in with your account
           </p>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="p-3 text-sm text-red-500 bg-red-100 rounded-md">
               {error}
             </div>
           )}
-          
+
           <div className="space-y-4">
             <div>
               <label htmlFor="username" className="sr-only">
@@ -97,7 +97,7 @@ const SignInForm: React.FC = () => {
                 onChange={(e) => setUsername(e.target.value)}
               />
             </div>
-            
+
             <div>
               <label htmlFor="password" className="sr-only">
                 Password
@@ -114,7 +114,7 @@ const SignInForm: React.FC = () => {
               />
             </div>
           </div>
-          
+
           <div>
             <button
               type="submit"

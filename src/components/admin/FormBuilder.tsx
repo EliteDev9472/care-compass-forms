@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { X, Type, AlignLeft, CheckSquare, List, Radio, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-type FormElementType = 'heading' | 'text' | 'textbox' | 'dropdown' | 'checkbox' | 'radio' | 'richtext';
+type FormElementType = 'heading' | 'text' | 'icdtextbox' | 'textbox' | 'dropdown' | 'checkbox' | 'radio' | 'richtext';
 
 interface FormElement {
   id: string;
@@ -40,8 +40,8 @@ const FormBuilder: React.FC = () => {
   };
 
   const updateElement = (id: string, updatedContent: any) => {
-    setFormElements(prevElements => 
-      prevElements.map(el => 
+    setFormElements(prevElements =>
+      prevElements.map(el =>
         el.id === id ? { ...el, content: { ...el.content, ...updatedContent } } : el
       )
     );
@@ -54,7 +54,7 @@ const FormBuilder: React.FC = () => {
   const handleSave = () => {
     // In a real app, this would save to a database
     console.log('Saving form:', { name: formName, elements: formElements });
-    
+
     // Navigate back to admin dashboard
     navigate('/admin/dashboard');
   };
@@ -66,8 +66,8 @@ const FormBuilder: React.FC = () => {
       case 'heading':
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-gray-50">
-            <button 
-              onClick={() => removeElement(id)} 
+            <button
+              onClick={() => removeElement(id)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
@@ -85,8 +85,8 @@ const FormBuilder: React.FC = () => {
       case 'text':
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-white">
-            <button 
-              onClick={() => removeElement(id)} 
+            <button
+              onClick={() => removeElement(id)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
@@ -104,8 +104,33 @@ const FormBuilder: React.FC = () => {
       case 'textbox':
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-white">
-            <button 
-              onClick={() => removeElement(id)} 
+            <button
+              onClick={() => removeElement(id)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+            >
+              <X size={16} />
+            </button>
+            <input
+              type="text"
+              value={content.label || ''}
+              onChange={(e) => updateElement(id, { label: e.target.value })}
+              className="w-full px-3 py-2 mb-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
+              placeholder="Enter field label"
+            />
+            <input
+              type="text"
+              disabled
+              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+              placeholder="Text input field (preview)"
+            />
+          </div>
+        );
+
+      case 'icdtextbox':
+        return (
+          <div className="relative p-4 border rounded-md mb-4 bg-white">
+            <button
+              onClick={() => removeElement(id)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
@@ -129,8 +154,8 @@ const FormBuilder: React.FC = () => {
       case 'dropdown':
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-white">
-            <button 
-              onClick={() => removeElement(id)} 
+            <button
+              onClick={() => removeElement(id)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
@@ -162,8 +187,8 @@ const FormBuilder: React.FC = () => {
       case 'checkbox':
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-white">
-            <button 
-              onClick={() => removeElement(id)} 
+            <button
+              onClick={() => removeElement(id)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
@@ -185,8 +210,8 @@ const FormBuilder: React.FC = () => {
       case 'radio':
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-white">
-            <button 
-              onClick={() => removeElement(id)} 
+            <button
+              onClick={() => removeElement(id)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
@@ -221,8 +246,8 @@ const FormBuilder: React.FC = () => {
       case 'richtext':
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-white">
-            <button 
-              onClick={() => removeElement(id)} 
+            <button
+              onClick={() => removeElement(id)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
@@ -258,51 +283,58 @@ const FormBuilder: React.FC = () => {
         <div className="bg-white p-4 rounded-md shadow-sm border">
           <h2 className="font-semibold mb-4">Add Elements</h2>
           <div className="space-y-2">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start" 
+            <Button
+              variant="outline"
+              className="w-full justify-start"
               onClick={() => addElement('heading')}
             >
               <Type size={16} className="mr-2" /> Heading
             </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start" 
+            <Button
+              variant="outline"
+              className="w-full justify-start"
               onClick={() => addElement('text')}
             >
               <AlignLeft size={16} className="mr-2" /> Text
             </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start" 
+            <Button
+              variant="outline"
+              className="w-full justify-start"
               onClick={() => addElement('textbox')}
             >
               <FileText size={16} className="mr-2" /> Text Field
             </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start" 
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => addElement('icdtextbox')}
+            >
+              <FileText size={16} className="mr-2" /> Text Field (ICD)
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
               onClick={() => addElement('dropdown')}
             >
               <List size={16} className="mr-2" /> Dropdown
             </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start" 
+            <Button
+              variant="outline"
+              className="w-full justify-start"
               onClick={() => addElement('checkbox')}
             >
               <CheckSquare size={16} className="mr-2" /> Checkbox
             </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start" 
+            <Button
+              variant="outline"
+              className="w-full justify-start"
               onClick={() => addElement('radio')}
             >
               <Radio size={16} className="mr-2" /> Radio
             </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start" 
+            <Button
+              variant="outline"
+              className="w-full justify-start"
               onClick={() => addElement('richtext')}
             >
               <FileText size={16} className="mr-2" /> Rich Text

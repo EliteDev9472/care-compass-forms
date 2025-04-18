@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -22,15 +23,14 @@ import EditStaffPage from './pages/admin/EditStaffPage';
 import AddPatientPage from './pages/admin/AddPatientPage';
 import EditPatientPage from './pages/admin/EditPatientPage';
 
-// Staff pages
-import PatientsListPage from './pages/staff/PatientsListPage';
-import PatientFormsPage from './pages/staff/PatientFormsPage';
+// Common pages
+import PatientsListPage from './pages/common/PatientsListPage';
+import PatientFormsPage from './pages/common/PatientFormsPage';
 import FormPage from './pages/staff/FormPage';
 
 // Client pages
 import ReviewFormPage from './pages/client/ReviewFormPage';
-import ClientListPage from './pages/client/ClientListPage';
-
+// commit
 const App = () => (
   <Provider store={store}>
     <PersistGate loading={null} persistor={persistor}>
@@ -39,10 +39,10 @@ const App = () => (
           {/* Public routes */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
-          
+
           {/* Redirect from root to signin */}
           <Route path="/" element={<Navigate to="/signin" replace />} />
-          
+
           {/* Admin routes */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/clients" element={<ClientsPage />} />
@@ -56,17 +56,15 @@ const App = () => (
           <Route path="/admin/staff/:staffId/edit" element={<EditStaffPage />} />
           <Route path="/admin/patients/add" element={<AddPatientPage />} />
           <Route path="/admin/patients/:patientId/edit" element={<EditPatientPage />} />
-          
+
           {/* Staff routes */}
           <Route path="/staff/patients" element={<PatientsListPage />} />
           <Route path="/staff/patients/:patientId/forms" element={<PatientFormsPage />} />
           <Route path="/staff/patients/:patientId/forms/:formId" element={<FormPage />} />
-          
-          {/* Client routes */}
-          <Route path="/client" element={<ClientListPage />} />
-          <Route path="/client/forms" element={<PatientFormsPage />} />
-          <Route path="/client/forms/:formId" element={<ReviewFormPage />} />
-          
+
+          <Route path="/client" element={<PatientsListPage />} />
+          <Route path="/client/patients/:patientId/forms" element={<PatientFormsPage />} />
+          <Route path="/client/patients/:patientId/forms/:formId" element={<ReviewFormPage />} />
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
         </Routes>

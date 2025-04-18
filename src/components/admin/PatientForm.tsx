@@ -3,12 +3,12 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 
 // Mock clients data
@@ -21,10 +21,10 @@ const mockClients = [
 
 // Mock staff data
 const mockStaff = [
-  { id: '1', name: 'Dr. John Smith', clientId: '1' },
-  { id: '2', name: 'Jane Johnson, NP', clientId: '2' },
-  { id: '3', name: 'Robert Lee, PA', clientId: '3' },
-  { id: '4', name: 'Sara Taylor, RN', clientId: '4' },
+  { id: '1', name: 'Dr. John Smith' },
+  { id: '2', name: 'Jane Johnson, NP' },
+  { id: '3', name: 'Robert Lee, PA' },
+  { id: '4', name: 'Sara Taylor, RN' },
 ];
 
 // Mock patient data (for edit mode)
@@ -45,33 +45,25 @@ interface PatientFormProps {
 const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
   const navigate = useNavigate();
   const { patientId } = useParams();
-  
+
   // Initialize state with mock data if in edit mode
   const [patientName, setPatientName] = useState(mode === 'edit' && patientId === '1' ? mockPatient.name : '');
   const [username, setUsername] = useState(mode === 'edit' && patientId === '1' ? mockPatient.username : '');
   const [password, setPassword] = useState(mode === 'edit' && patientId === '1' ? mockPatient.password : '');
   const [enabled, setEnabled] = useState(mode === 'edit' && patientId === '1' ? mockPatient.enabled : true);
-  const [selectedClientId, setSelectedClientId] = useState<string>(
-    mode === 'edit' && patientId === '1' ? mockPatient.clientId : ''
-  );
   const [selectedStaffId, setSelectedStaffId] = useState<string>(
     mode === 'edit' && patientId === '1' ? mockPatient.staffId : ''
   );
 
-  // Filter staff based on selected client
-  const filteredStaff = selectedClientId 
-    ? mockStaff.filter(staff => staff.clientId === selectedClientId)
-    : [];
 
   const handleSave = () => {
     // In a real app, this would save to a database
-    console.log('Saving patient:', { 
-      patientName, 
-      username, 
-      password, 
-      enabled, 
-      selectedClientId, 
-      selectedStaffId 
+    console.log('Saving patient:', {
+      patientName,
+      username,
+      password,
+      enabled,
+      selectedStaffId
     });
     navigate('/admin/dashboard');
   };
@@ -110,48 +102,26 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Assign to Client</label>
-          <Select 
-            value={selectedClientId} 
-            onValueChange={(value) => {
-              setSelectedClientId(value);
-              setSelectedStaffId(''); // Reset staff selection when client changes
-            }}
-          >
+          <label className="block text-sm font-medium text-gray-700 mb-1">Assign to Staff</label>
+          <Select value={selectedStaffId} onValueChange={setSelectedStaffId}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Client" />
+              <SelectValue placeholder="Select Staff" />
             </SelectTrigger>
             <SelectContent>
-              {mockClients.map(client => (
-                <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+              {mockStaff.map(staff => (
+                <SelectItem key={staff.id} value={staff.id}>{staff.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        {selectedClientId && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Assign to Staff</label>
-            <Select value={selectedStaffId} onValueChange={setSelectedStaffId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Staff" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredStaff.map(staff => (
-                  <SelectItem key={staff.id} value={staff.id}>{staff.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
         {mode === 'edit' && (
           <div className="flex items-center">
             <label className="flex items-center cursor-pointer">
               <div className="relative">
-                <input 
-                  type="checkbox" 
-                  className="sr-only" 
+                <input
+                  type="checkbox"
+                  className="sr-only"
                   checked={enabled}
                   onChange={() => setEnabled(!enabled)}
                 />

@@ -22,7 +22,7 @@ const Header: React.FC = () => {
         navigate('/admin/dashboard');
         break;
       case 'client':
-        navigate('/client/patients');
+        navigate('/client');
         break;
       case 'staff':
         navigate('/staff/patients');

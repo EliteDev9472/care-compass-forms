@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks/reduxHooks';
-import { 
-  fetchFormsStart, 
-  fetchFormsSuccess, 
+import {
+  fetchFormsStart,
+  fetchFormsSuccess,
   fetchFormsFailure,
   setCurrentForm
 } from '../../store/patientSlice';
@@ -13,48 +13,49 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInter
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 // Mock forms data - this would come from an API in a real app
 const mockForms = [
-  { 
-    id: '1', 
-    patientId: '1', 
-    name: 'Template1', 
-    type: 'Care Plan', 
-    createdAt: '2023-04-01T10:00:00Z', 
-    updatedAt: '2023-04-01T11:05:00Z', 
+  {
+    id: '1',
+    patientId: '1',
+    name: 'Template1',
+    type: 'Care Plan',
+    createdAt: '2023-04-01T10:00:00Z',
+    updatedAt: '2023-04-01T11:05:00Z',
     billingTime: 65, // 01:05
-    data: {} 
+    data: {}
   },
-  { 
-    id: '2', 
-    patientId: '1', 
-    name: 'Template2', 
-    type: 'Assessment', 
-    createdAt: '2023-04-02T14:00:00Z', 
-    updatedAt: '2023-04-02T16:45:00Z', 
+  {
+    id: '2',
+    patientId: '2',
+    name: 'Template2',
+    type: 'Assessment',
+    createdAt: '2023-04-02T14:00:00Z',
+    updatedAt: '2023-04-02T16:45:00Z',
     billingTime: 165, // 02:45
-    data: {} 
+    data: {}
   },
-  { 
-    id: '3', 
-    patientId: '1', 
-    name: 'Template3', 
-    type: 'Progress Note', 
-    createdAt: '2023-04-03T09:00:00Z', 
-    updatedAt: '2023-04-03T12:33:00Z', 
+  {
+    id: '3',
+    patientId: '3',
+    name: 'Template3',
+    type: 'Progress Note',
+    createdAt: '2023-04-16T09:00:00Z',
+    updatedAt: '2023-04-16T12:33:00Z',
     billingTime: 213, // 03:33
-    data: {} 
+    data: {}
   },
-  { 
-    id: '4', 
-    patientId: '1', 
-    name: 'Template4', 
-    type: 'Medication Review', 
-    createdAt: '2023-04-04T13:00:00Z', 
-    updatedAt: '2023-04-04T17:23:00Z', 
+  {
+    id: '4',
+    patientId: '4',
+    name: 'Template4',
+    type: 'Medication Review',
+    createdAt: '2023-04-16T13:00:00Z',
+    updatedAt: '2023-04-16T17:23:00Z',
     billingTime: 263, // 04:23
-    data: {} 
+    data: {}
   },
 ];
 
@@ -64,15 +65,16 @@ const PatientForms: React.FC = () => {
   const navigate = useNavigate();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
-  
+
   const { currentPatient, forms, loading, error } = useAppSelector(state => state.patients);
-  const [filteredForms, setFilteredForms] = useState<any[]>([]);
-  
+  const [filteredForms, setFilteredForms] = useState<any[]>(mockForms);
+  const { user } = useAppSelector(state => state.auth);
+
   useEffect(() => {
     if (!patientId) return;
-    
+
     dispatch(fetchFormsStart());
-    
+
     // Simulate API call to fetch forms for this patient
     setTimeout(() => {
       try {
@@ -86,7 +88,7 @@ const PatientForms: React.FC = () => {
 
   useEffect(() => {
     if (forms.length === 0 || !date) return;
-    
+
     let filtered = [];
     switch (viewMode) {
       case 'day':
@@ -114,51 +116,54 @@ const PatientForms: React.FC = () => {
       default:
         filtered = forms;
     }
-    setFilteredForms(filtered);
+    // setFilteredForms(filtered);
   }, [forms, date, viewMode]);
-  
+
   const formatTime = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
-  
+
   const handleFormClick = (form: any) => {
     dispatch(setCurrentForm(form));
-    navigate(`/staff/patients/${patientId}/forms/${form.id}`);
+    if (user.role == 'staff')
+      navigate(`/staff/patients/${patientId}/forms/${form.id}`);
+    else
+      navigate(`/client/patients/${patientId}/forms/${form.id}`);
   };
-  
+
   const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
     setViewMode(mode);
   };
-  
+
   if (loading) {
     return <div className="flex justify-center mt-8">Loading forms...</div>;
   }
-  
+
   if (error) {
     return <div className="text-red-500 text-center mt-8">{error}</div>;
   }
-  
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Forms of {currentPatient?.name || patientId}</h1>
         <div className="flex space-x-2">
           <div className="flex rounded-md overflow-hidden">
-            <button 
+            <button
               onClick={() => setViewAndUpdate('day')}
               className={`px-3 py-1 ${viewMode === 'day' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             >
               Day
             </button>
-            <button 
+            <button
               onClick={() => setViewAndUpdate('week')}
               className={`px-3 py-1 ${viewMode === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             >
               Week
             </button>
-            <button 
+            <button
               onClick={() => setViewAndUpdate('month')}
               className={`px-3 py-1 ${viewMode === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             >
@@ -183,18 +188,17 @@ const PatientForms: React.FC = () => {
           </Popover>
         </div>
       </div>
-      
+
       <div className="bg-white shadow-md rounded-md overflow-hidden">
         <div className="grid grid-cols-2 bg-gray-50 border-b">
           <div className="p-4 font-semibold">Forms</div>
           <div className="p-4 font-semibold">Billing Time</div>
         </div>
-        
         {filteredForms.length === 0 ? (
           <div className="p-6 text-center text-gray-500">No forms found for this time period</div>
         ) : (
           filteredForms.map(form => (
-            <div 
+            <div
               key={form.id}
               onClick={() => handleFormClick(form)}
               className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
