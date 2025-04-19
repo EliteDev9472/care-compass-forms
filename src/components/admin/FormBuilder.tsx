@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { X, Type, AlignLeft, CheckSquare, List, Radio, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner'; // Updated import
 import { FormTemplate, FormField, createFormTemplate, getTemplateById, updateTemplate } from '@/services/templateService';
 
 const FormBuilder: React.FC = () => {
   const { formId } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [formElements, setFormElements] = useState<FormField[]>([]);
   const [formName, setFormName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -22,11 +21,7 @@ const FormBuilder: React.FC = () => {
           setFormName(template.name);
           setFormElements(template.fields);
         } catch (error) {
-          toast({
-            title: "Error",
-            description: "Failed to load template",
-            variant: "destructive",
-          });
+          toast.error("Failed to load template"); // Updated toast usage
         } finally {
           setIsLoading(false);
         }
@@ -63,11 +58,7 @@ const FormBuilder: React.FC = () => {
 
   const handleSave = async () => {
     if (!formName) {
-      toast({
-        title: "Error",
-        description: "Please enter a form name",
-        variant: "destructive",
-      });
+      toast.error("Please enter a form name"); // Updated toast usage
       return;
     }
 
@@ -80,25 +71,15 @@ const FormBuilder: React.FC = () => {
 
       if (formId) {
         await updateTemplate(formId, templateData);
-        toast({
-          title: "Success",
-          description: "Template updated successfully",
-        });
+        toast.success("Template updated successfully"); // Updated toast usage
       } else {
         await createFormTemplate(templateData);
-        toast({
-          title: "Success",
-          description: "Template created successfully",
-        });
+        toast.success("Template created successfully"); // Updated toast usage
       }
 
       navigate('/admin/dashboard');
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save template",
-        variant: "destructive",
-      });
+      toast.error("Failed to save template"); // Updated toast usage
     } finally {
       setIsLoading(false);
     }
