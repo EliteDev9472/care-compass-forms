@@ -1,7 +1,6 @@
 
-import axios from 'axios';
-
 import { SERVER_URL } from '@/config';
+import axiosInstance from './axiosConfig';
 
 export interface LoginResponse {
   token: string;
@@ -14,7 +13,7 @@ export const login = async (username: string, password: string): Promise<LoginRe
   params.append('username', username);
   params.append('password', password);
 
-  const response = await axios.post(`${SERVER_URL}/auth/login`, params, {
+  const response = await axiosInstance.post(`${SERVER_URL}/auth/login`, params, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },

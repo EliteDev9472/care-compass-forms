@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../hooks/reduxHooks';
 import { loginStart, loginSuccess, loginFailure, UserRole } from '../../store/authSlice';
 import { login } from '../../services/authService';
-import { useToast } from '../../hooks/use-toast';
+import { toast } from "../../hooks/use-toast";
 
 const SignInForm: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -13,7 +13,6 @@ const SignInForm: React.FC = () => {
   
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +45,11 @@ const SignInForm: React.FC = () => {
         name: response.username, // Using username as name since backend doesn't return a name
         role: userRole,
       }));
+
+      toast({
+        title: "Success",
+        description: "Logged in successfully",
+      });
 
       // Redirect based on role
       switch (userRole) {
