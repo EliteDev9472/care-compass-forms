@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../hooks/reduxHooks';
-import { loginStart, loginSuccess, loginFailure } from '../../store/authSlice';
+import { loginStart, loginSuccess, loginFailure, UserRole } from '../../store/authSlice';
 import { login } from '../../services/authService';
 import { useToast } from '../../hooks/use-toast';
 
@@ -37,15 +37,18 @@ const SignInForm: React.FC = () => {
       // Store the token in localStorage
       localStorage.setItem('token', response.token);
       
+      // Validate and convert the role to UserRole type
+      const userRole = validateRole(response.role);
+      
       dispatch(loginSuccess({
         id: 'temp-id', // The backend doesn't return an id, using a temporary one
         username: response.username,
         name: response.username, // Using username as name since backend doesn't return a name
-        role: response.role,
+        role: userRole,
       }));
 
       // Redirect based on role
-      switch (response.role) {
+      switch (userRole) {
         case 'admin':
           navigate('/admin/dashboard');
           break;
@@ -69,6 +72,24 @@ const SignInForm: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Helper function to validate and convert the role string to UserRole type
+  const validateRole = (role: string): UserRole => {
+    switch (role) {
+      case 'admin':
+        return 'admin';
+      case 'client':
+        return 'client';
+      case 'staff':
+        return 'staff';
+      case 'patient':
+        return 'patient';
+      default:
+        // If the role is not valid, we default to client for safety
+        console.warn(`Unknown role received: ${role}, defaulting to 'client'`);
+        return 'client';
     }
   };
 
