@@ -91,7 +91,7 @@ const FormBuilder: React.FC = () => {
           description: "Template created successfully",
         });
       }
-      
+
       navigate('/admin/dashboard');
     } catch (error) {
       toast({
@@ -110,7 +110,7 @@ const FormBuilder: React.FC = () => {
     switch (type) {
       case 'heading':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-gray-50">
+          <div className="relative p-4 border rounded-md mb-4 bg-gray-50" key={index}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
@@ -129,7 +129,7 @@ const FormBuilder: React.FC = () => {
 
       case 'text-input':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white">
+          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
@@ -148,7 +148,7 @@ const FormBuilder: React.FC = () => {
 
       case 'text-field':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white">
+          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
@@ -173,7 +173,7 @@ const FormBuilder: React.FC = () => {
 
       case 'icd-text':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white">
+          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
@@ -198,7 +198,7 @@ const FormBuilder: React.FC = () => {
 
       case 'dropdown':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white">
+          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
@@ -231,7 +231,7 @@ const FormBuilder: React.FC = () => {
 
       case 'checkbox':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white">
+          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
@@ -254,7 +254,7 @@ const FormBuilder: React.FC = () => {
 
       case 'radio':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white">
+          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
@@ -290,7 +290,7 @@ const FormBuilder: React.FC = () => {
 
       case 'rich-text':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white">
+          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
@@ -407,14 +407,14 @@ const FormBuilder: React.FC = () => {
         </div>
 
         <div className="flex justify-end space-x-4">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => navigate('/admin/dashboard')}
             disabled={isLoading}
           >
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleSave}
             disabled={isLoading}
           >
