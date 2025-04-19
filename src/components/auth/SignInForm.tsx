@@ -2,66 +2,74 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../hooks/reduxHooks';
-import { loginStart, loginSuccess, loginFailure, UserRole } from '../../store/authSlice';
-
-// Mock users data - this would come from an API in a real app
-const mockUsers = [
-  { id: '1', username: 'admin1', password: 'password123', name: 'Admin User', role: 'admin' as UserRole },
-  { id: '2', username: 'client1', password: 'password123', name: 'Client User', role: 'client' as UserRole },
-  { id: '3', username: 'staff1', password: 'password123', name: 'Staff User', role: 'staff' as UserRole },
-  { id: '4', username: 'patient1', password: 'password123', name: 'Patient User', role: 'patient' as UserRole },
-];
+import { loginStart, loginSuccess, loginFailure } from '../../store/authSlice';
+import { login } from '../../services/authService';
+import { useToast } from '../../hooks/use-toast';
 
 const SignInForm: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-
+  const [isLoading, setIsLoading] = useState(false);
+  
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
     if (!username || !password) {
-      setError('Please enter both username and password');
+      toast({
+        title: "Error",
+        description: "Please enter both username and password",
+        variant: "destructive",
+      });
+      setIsLoading(false);
       return;
     }
 
     dispatch(loginStart());
 
-    // Simulate API call
-    setTimeout(() => {
-      const user = mockUsers.find(
-        (user) => user.username === username && user.password === password
-      );
+    try {
+      const response = await login(username, password);
+      
+      // Store the token in localStorage
+      localStorage.setItem('token', response.token);
+      
+      dispatch(loginSuccess({
+        id: 'temp-id', // The backend doesn't return an id, using a temporary one
+        username: response.username,
+        name: response.username, // Using username as name since backend doesn't return a name
+        role: response.role,
+      }));
 
-      if (user) {
-        const { password, ...userWithoutPassword } = user;
-        dispatch(loginSuccess(userWithoutPassword));
-
-        // Redirect based on role
-        switch (user.role) {
-          case 'admin':
-            navigate('/admin/dashboard');
-            break;
-          case 'client':
-            navigate('/client');
-            break;
-          case 'staff':
-            navigate('/staff/patients');
-            break;
-          case 'patient':
-            navigate('/patient/forms');
-            break;
-          default:
-            navigate('/');
-        }
-      } else {
-        dispatch(loginFailure('Invalid username or password'));
-        setError('Invalid username or password');
+      // Redirect based on role
+      switch (response.role) {
+        case 'admin':
+          navigate('/admin/dashboard');
+          break;
+        case 'client':
+          navigate('/client');
+          break;
+        case 'staff':
+          navigate('/staff/patients');
+          break;
+        default:
+          navigate('/');
       }
-    }, 500);
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      dispatch(loginFailure(errorMessage));
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -75,12 +83,6 @@ const SignInForm: React.FC = () => {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="p-3 text-sm text-red-500 bg-red-100 rounded-md">
-              {error}
-            </div>
-          )}
-
           <div className="space-y-4">
             <div>
               <label htmlFor="username" className="sr-only">
@@ -95,6 +97,7 @@ const SignInForm: React.FC = () => {
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                disabled={isLoading}
               />
             </div>
 
@@ -111,6 +114,7 @@ const SignInForm: React.FC = () => {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -118,9 +122,10 @@ const SignInForm: React.FC = () => {
           <div>
             <button
               type="submit"
-              className="w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              disabled={isLoading}
             >
-              SIGN IN
+              {isLoading ? 'Signing in...' : 'SIGN IN'}
             </button>
           </div>
         </form>
