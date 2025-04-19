@@ -105,7 +105,7 @@ const FormBuilder: React.FC = () => {
   };
 
   const renderFormElement = (element: FormField, index: number) => {
-    const { id, type, label, required, options } = element;
+    const { type, label, required, options } = element;
 
     switch (type) {
       case 'heading':
@@ -323,7 +323,6 @@ const FormBuilder: React.FC = () => {
 
   return (
     <div className="grid grid-cols-4 gap-6">
-      {/* Left sidebar with form element buttons */}
       <div className="col-span-1">
         <div className="bg-white p-4 rounded-md shadow-sm border">
           <h2 className="font-semibold mb-4">Add Elements</h2>
@@ -388,7 +387,6 @@ const FormBuilder: React.FC = () => {
         </div>
       </div>
 
-      {/* Right main content area */}
       <div className="col-span-3">
         <div className="bg-white p-6 rounded-md shadow-sm border mb-6">
           <input
