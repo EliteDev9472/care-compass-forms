@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../hooks/reduxHooks';
 import { loginStart, loginSuccess, loginFailure, UserRole } from '../../store/authSlice';
 import { login } from '../../services/authService';
-import { toast } from "../../hooks/use-toast";
+import { toast } from 'sonner';
 
 const SignInForm: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -19,11 +18,7 @@ const SignInForm: React.FC = () => {
     setIsLoading(true);
 
     if (!username || !password) {
-      toast({
-        title: "Error",
-        description: "Please enter both username and password",
-        variant: "destructive",
-      });
+      toast.error('Please enter both username and password');
       setIsLoading(false);
       return;
     }
@@ -46,10 +41,7 @@ const SignInForm: React.FC = () => {
         role: userRole,
       }));
 
-      toast({
-        title: "Success",
-        description: "Logged in successfully",
-      });
+      toast.success('Logged in successfully');
 
       // Redirect based on role
       switch (userRole) {
@@ -69,17 +61,12 @@ const SignInForm: React.FC = () => {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
       dispatch(loginFailure(errorMessage));
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Helper function to validate and convert the role string to UserRole type
   const validateRole = (role: string): UserRole => {
     switch (role) {
       case 'admin':

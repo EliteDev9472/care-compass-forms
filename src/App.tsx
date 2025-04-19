@@ -1,8 +1,8 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './store/store';
+import { Toaster } from 'sonner';
 
 // Pages
 import SignIn from './pages/SignIn';
@@ -30,10 +30,11 @@ import FormPage from './pages/staff/FormPage';
 
 // Client pages
 import ReviewFormPage from './pages/client/ReviewFormPage';
-// commit
+
 const App = () => (
   <Provider store={store}>
     <PersistGate loading={null} persistor={persistor}>
+      <Toaster position="top-right" richColors />
       <BrowserRouter>
         <Routes>
           {/* Public routes */}
