@@ -2,6 +2,7 @@
 import React from 'react';
 import Layout from '../../components/layout/Layout';
 import ProtectedRoute from '../../components/shared/ProtectedRoute';
+import FormBuilder from '../../components/admin/FormBuilder';
 
 const EditFormPage: React.FC = () => {
   return (
@@ -9,8 +10,7 @@ const EditFormPage: React.FC = () => {
       <Layout>
         <div className="max-w-4xl mx-auto p-6">
           <h1 className="text-2xl font-bold mb-6">Edit Form Template</h1>
-          {/* Form editing UI will be implemented later */}
-          <p>Form editing interface coming soon...</p>
+          <FormBuilder />
         </div>
       </Layout>
     </ProtectedRoute>

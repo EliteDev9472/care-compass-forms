@@ -1,119 +1,164 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { X, Type, AlignLeft, CheckSquare, List, Radio, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-type FormElementType = 'heading' | 'text' | 'icdtextbox' | 'textbox' | 'dropdown' | 'checkbox' | 'radio' | 'richtext';
-
-interface FormElement {
-  id: string;
-  type: FormElementType;
-  content: {
-    label?: string;
-    text?: string;
-    options?: string[];
-  };
-}
+import { useToast } from '@/hooks/use-toast';
+import { FormTemplate, FormField, createFormTemplate, getTemplateById, updateTemplate } from '@/services/templateService';
 
 const FormBuilder: React.FC = () => {
   const { formId } = useParams();
   const navigate = useNavigate();
-  const [formElements, setFormElements] = useState<FormElement[]>([]);
+  const { toast } = useToast();
+  const [formElements, setFormElements] = useState<FormField[]>([]);
   const [formName, setFormName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Generate unique ID for form elements
+  useEffect(() => {
+    const loadTemplate = async () => {
+      if (formId) {
+        try {
+          setIsLoading(true);
+          const template = await getTemplateById(formId);
+          setFormName(template.name);
+          setFormElements(template.fields);
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Failed to load template",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadTemplate();
+  }, [formId]);
+
   const generateId = () => `element_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
-  const addElement = (type: FormElementType) => {
-    const newElement: FormElement = {
-      id: generateId(),
+  const addElement = (type: FormField['type']) => {
+    const newElement: FormField = {
       type,
-      content: {
-        label: type === 'heading' ? 'New Heading' : 'New Field',
-        text: '',
-        options: type === 'dropdown' || type === 'radio' ? ['Option 1', 'Option 2'] : undefined
-      }
+      label: type === 'heading' ? 'New Heading' : 'New Field',
+      required: false,
+      options: (type === 'dropdown' || type === 'radio' || type === 'checkbox') ? ['Option 1', 'Option 2'] : undefined,
     };
 
     setFormElements([...formElements, newElement]);
   };
 
-  const updateElement = (id: string, updatedContent: any) => {
+  const updateElement = (index: number, updatedContent: Partial<FormField>) => {
     setFormElements(prevElements =>
-      prevElements.map(el =>
-        el.id === id ? { ...el, content: { ...el.content, ...updatedContent } } : el
+      prevElements.map((el, idx) =>
+        idx === index ? { ...el, ...updatedContent } : el
       )
     );
   };
 
-  const removeElement = (id: string) => {
-    setFormElements(prevElements => prevElements.filter(el => el.id !== id));
+  const removeElement = (index: number) => {
+    setFormElements(prevElements => prevElements.filter((_, idx) => idx !== index));
   };
 
-  const handleSave = () => {
-    // In a real app, this would save to a database
-    console.log('Saving form:', { name: formName, elements: formElements });
+  const handleSave = async () => {
+    if (!formName) {
+      toast({
+        title: "Error",
+        description: "Please enter a form name",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // Navigate back to admin dashboard
-    navigate('/admin/dashboard');
+    try {
+      setIsLoading(true);
+      const templateData = {
+        name: formName,
+        fields: formElements
+      };
+
+      if (formId) {
+        await updateTemplate(formId, templateData);
+        toast({
+          title: "Success",
+          description: "Template updated successfully",
+        });
+      } else {
+        await createFormTemplate(templateData);
+        toast({
+          title: "Success",
+          description: "Template created successfully",
+        });
+      }
+      
+      navigate('/admin/dashboard');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save template",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const renderFormElement = (element: FormElement) => {
-    const { id, type, content } = element;
+  const renderFormElement = (element: FormField, index: number) => {
+    const { id, type, label, required, options } = element;
 
     switch (type) {
       case 'heading':
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-gray-50">
             <button
-              onClick={() => removeElement(id)}
+              onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
             <input
               type="text"
-              value={content.text || content.label || ''}
-              onChange={(e) => updateElement(id, { text: e.target.value })}
+              value={label || ''}
+              onChange={(e) => updateElement(index, { label: e.target.value })}
               className="w-full px-3 py-2 text-xl font-bold bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
               placeholder="Enter heading text"
             />
           </div>
         );
 
-      case 'text':
+      case 'text-input':
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-white">
             <button
-              onClick={() => removeElement(id)}
+              onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
             <input
               type="text"
-              value={content.text || ''}
-              onChange={(e) => updateElement(id, { text: e.target.value })}
+              value={label || ''}
+              onChange={(e) => updateElement(index, { label: e.target.value })}
               className="w-full px-3 py-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
               placeholder="Enter static text"
             />
           </div>
         );
 
-      case 'textbox':
+      case 'text-field':
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-white">
             <button
-              onClick={() => removeElement(id)}
+              onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
             <input
               type="text"
-              value={content.label || ''}
-              onChange={(e) => updateElement(id, { label: e.target.value })}
+              value={label || ''}
+              onChange={(e) => updateElement(index, { label: e.target.value })}
               className="w-full px-3 py-2 mb-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
               placeholder="Enter field label"
             />
@@ -126,19 +171,19 @@ const FormBuilder: React.FC = () => {
           </div>
         );
 
-      case 'icdtextbox':
+      case 'icd-text':
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-white">
             <button
-              onClick={() => removeElement(id)}
+              onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
             <input
               type="text"
-              value={content.label || ''}
-              onChange={(e) => updateElement(id, { label: e.target.value })}
+              value={label || ''}
+              onChange={(e) => updateElement(index, { label: e.target.value })}
               className="w-full px-3 py-2 mb-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
               placeholder="Enter field label"
             />
@@ -155,28 +200,28 @@ const FormBuilder: React.FC = () => {
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-white">
             <button
-              onClick={() => removeElement(id)}
+              onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
             <input
               type="text"
-              value={content.label || ''}
-              onChange={(e) => updateElement(id, { label: e.target.value })}
+              value={label || ''}
+              onChange={(e) => updateElement(index, { label: e.target.value })}
               className="w-full px-3 py-2 mb-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
               placeholder="Enter dropdown label"
             />
             <select className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
-              {content.options?.map((option, idx) => (
+              {options?.map((option, idx) => (
                 <option key={idx} value={option}>{option}</option>
               ))}
             </select>
             <div className="mt-2">
               <p className="text-sm font-medium mb-1">Options (one per line):</p>
               <textarea
-                value={content.options?.join('\n')}
-                onChange={(e) => updateElement(id, { options: e.target.value.split('\n') })}
+                value={options?.join('\n')}
+                onChange={(e) => updateElement(index, { options: e.target.value.split('\n') })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 rows={3}
               />
@@ -188,15 +233,15 @@ const FormBuilder: React.FC = () => {
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-white">
             <button
-              onClick={() => removeElement(id)}
+              onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
             <input
               type="text"
-              value={content.label || ''}
-              onChange={(e) => updateElement(id, { label: e.target.value })}
+              value={label || ''}
+              onChange={(e) => updateElement(index, { label: e.target.value })}
               className="w-full px-3 py-2 mb-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
               placeholder="Enter checkbox label"
             />
@@ -211,22 +256,22 @@ const FormBuilder: React.FC = () => {
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-white">
             <button
-              onClick={() => removeElement(id)}
+              onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
             <input
               type="text"
-              value={content.label || ''}
-              onChange={(e) => updateElement(id, { label: e.target.value })}
+              value={label || ''}
+              onChange={(e) => updateElement(index, { label: e.target.value })}
               className="w-full px-3 py-2 mb-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
               placeholder="Enter radio group label"
             />
             <div className="space-y-1">
-              {content.options?.map((option, idx) => (
+              {options?.map((option, idx) => (
                 <div key={idx} className="flex items-center space-x-2">
-                  <input type="radio" name={`radio_${id}`} className="h-4 w-4" disabled />
+                  <input type="radio" name={`radio_${index}`} className="h-4 w-4" disabled />
                   <span className="text-gray-500">{option}</span>
                 </div>
               ))}
@@ -234,8 +279,8 @@ const FormBuilder: React.FC = () => {
             <div className="mt-2">
               <p className="text-sm font-medium mb-1">Options (one per line):</p>
               <textarea
-                value={content.options?.join('\n')}
-                onChange={(e) => updateElement(id, { options: e.target.value.split('\n') })}
+                value={options?.join('\n')}
+                onChange={(e) => updateElement(index, { options: e.target.value.split('\n') })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 rows={3}
               />
@@ -243,19 +288,19 @@ const FormBuilder: React.FC = () => {
           </div>
         );
 
-      case 'richtext':
+      case 'rich-text':
         return (
           <div className="relative p-4 border rounded-md mb-4 bg-white">
             <button
-              onClick={() => removeElement(id)}
+              onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
             <input
               type="text"
-              value={content.label || ''}
-              onChange={(e) => updateElement(id, { label: e.target.value })}
+              value={label || ''}
+              onChange={(e) => updateElement(index, { label: e.target.value })}
               className="w-full px-3 py-2 mb-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
               placeholder="Enter rich text field label"
             />
@@ -293,23 +338,23 @@ const FormBuilder: React.FC = () => {
             <Button
               variant="outline"
               className="w-full justify-start"
-              onClick={() => addElement('text')}
+              onClick={() => addElement('text-input')}
             >
-              <AlignLeft size={16} className="mr-2" /> Text
+              <FileText size={16} className="mr-2" /> Text Input
             </Button>
             <Button
               variant="outline"
               className="w-full justify-start"
-              onClick={() => addElement('textbox')}
+              onClick={() => addElement('text-field')}
             >
-              <FileText size={16} className="mr-2" /> Text Field
+              <AlignLeft size={16} className="mr-2" /> Text Field
             </Button>
             <Button
               variant="outline"
               className="w-full justify-start"
-              onClick={() => addElement('icdtextbox')}
+              onClick={() => addElement('icd-text')}
             >
-              <FileText size={16} className="mr-2" /> Text Field (ICD)
+              <FileText size={16} className="mr-2" /> ICD Text
             </Button>
             <Button
               variant="outline"
@@ -335,7 +380,7 @@ const FormBuilder: React.FC = () => {
             <Button
               variant="outline"
               className="w-full justify-start"
-              onClick={() => addElement('richtext')}
+              onClick={() => addElement('rich-text')}
             >
               <FileText size={16} className="mr-2" /> Rich Text
             </Button>
@@ -354,7 +399,7 @@ const FormBuilder: React.FC = () => {
             placeholder="Enter form name..."
           />
 
-          {formElements.map(element => renderFormElement(element))}
+          {formElements.map((element, index) => renderFormElement(element, index))}
 
           {formElements.length === 0 && (
             <div className="text-center p-8 border-2 border-dashed rounded-md">
@@ -364,11 +409,18 @@ const FormBuilder: React.FC = () => {
         </div>
 
         <div className="flex justify-end space-x-4">
-          <Button variant="outline" onClick={() => navigate('/admin/dashboard')}>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/admin/dashboard')}
+            disabled={isLoading}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSave}>
-            Save Form
+          <Button 
+            onClick={handleSave}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Saving...' : (formId ? 'Update Form' : 'Save Form')}
           </Button>
         </div>
       </div>
