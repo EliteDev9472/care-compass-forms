@@ -1,25 +1,53 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '../../components/ui/calendar';
-import { format } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Pencil } from 'lucide-react';
-
-// Mock clients data
-const mockClients = [
-  { id: '1', name: 'Acme Healthcare', billingTime: 320 }, // 05:20
-  { id: '2', name: 'MediCorp Services', billingTime: 210 }, // 03:30
-  { id: '3', name: 'HealthFirst Clinic', billingTime: 185 }, // 03:05
-  { id: '4', name: 'Wellness Partners', billingTime: 145 }, // 02:25
-];
+import { CalendarIcon, Pencil, Trash } from 'lucide-react';
+import { getClientsWithBilling, deleteClient, Client } from '@/services/clientService';
+import { toast } from 'sonner';
 
 const AdminClientsList: React.FC = () => {
   const navigate = useNavigate();
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
-  const [clients, setClients] = useState(mockClients);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchClients = async (start: string, end: string) => {
+    try {
+      const data = await getClientsWithBilling(start, end);
+      setClients(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+      toast.error('Failed to load clients');
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let startDate: Date;
+    let endDate: Date;
+
+    switch (viewMode) {
+      case 'week':
+        startDate = startOfWeek(date);
+        endDate = endOfWeek(date);
+        break;
+      case 'month':
+        startDate = startOfMonth(date);
+        endDate = endOfMonth(date);
+        break;
+      default:
+        startDate = date;
+        endDate = date;
+    }
+
+    fetchClients(format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd'));
+  }, [date, viewMode]);
 
   const handleAddClient = () => {
     navigate('/admin/clients/add');
@@ -29,9 +57,20 @@ const AdminClientsList: React.FC = () => {
     navigate(`/admin/clients/${clientId}/edit`);
   };
 
+  const handleDeleteClient = async (clientId: string) => {
+    try {
+      await deleteClient(clientId);
+      toast.success('Client deleted successfully');
+      // Refresh the client list
+      const currentDate = format(date, 'yyyy-MM-dd');
+      await fetchClients(currentDate, currentDate);
+    } catch (error) {
+      toast.error('Failed to delete client');
+    }
+  };
+
   const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
     setViewMode(mode);
-    // In a real app, this would filter clients based on the selected view mode
   };
 
   const formatTime = (minutes: number): string => {
@@ -46,24 +85,15 @@ const AdminClientsList: React.FC = () => {
         <h1 className="text-2xl font-bold">Clients</h1>
         <div className="flex space-x-2">
           <div className="flex rounded-md overflow-hidden">
-            <button 
-              onClick={() => setViewAndUpdate('day')}
-              className={`px-3 py-1 ${viewMode === 'day' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              Day
-            </button>
-            <button 
-              onClick={() => setViewAndUpdate('week')}
-              className={`px-3 py-1 ${viewMode === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              Week
-            </button>
-            <button 
-              onClick={() => setViewAndUpdate('month')}
-              className={`px-3 py-1 ${viewMode === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              Month
-            </button>
+            {['day', 'week', 'month'].map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setViewAndUpdate(mode as 'day' | 'week' | 'month')}
+                className={`px-3 py-1 ${viewMode === mode ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+              >
+                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </button>
+            ))}
           </div>
           <Popover>
             <PopoverTrigger asChild>
@@ -75,7 +105,7 @@ const AdminClientsList: React.FC = () => {
               <Calendar
                 mode="single"
                 selected={date}
-                onSelect={setDate}
+                onSelect={(newDate) => newDate && setDate(newDate)}
                 initialFocus
                 className="p-3 pointer-events-auto"
               />
@@ -90,21 +120,32 @@ const AdminClientsList: React.FC = () => {
 
       <div className="bg-white shadow-md rounded-md overflow-hidden">
         <div className="grid grid-cols-5 bg-gray-50 border-b">
-          <div className="col-span-3 p-4 font-semibold">Client Name</div>
+          <div className="col-span-2 p-4 font-semibold">Client Name</div>
+          <div className="p-4 font-semibold">Status</div>
           <div className="p-4 font-semibold">Billing Time</div>
           <div className="p-4 font-semibold">Actions</div>
         </div>
         
-        {clients.length === 0 ? (
+        {loading ? (
+          <div className="p-6 text-center text-gray-500">Loading clients...</div>
+        ) : clients.length === 0 ? (
           <div className="p-6 text-center text-gray-500">No clients found</div>
         ) : (
           clients.map(client => (
-            <div key={client.id} className="grid grid-cols-5 border-b hover:bg-gray-50">
-              <div className="col-span-3 p-4">{client.name}</div>
-              <div className="p-4">{formatTime(client.billingTime)}</div>
+            <div key={client._id} className="grid grid-cols-5 border-b hover:bg-gray-50">
+              <div className="col-span-2 p-4">{client.name}</div>
               <div className="p-4">
-                <Button variant="ghost" size="sm" onClick={() => handleEditClient(client.id)}>
-                  <Pencil size={16} className="mr-1" /> Edit
+                <span className={`px-2 py-1 rounded text-sm ${client.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  {client.isActive ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+              <div className="p-4">{formatTime(client.billingMinutes)}</div>
+              <div className="p-4 space-x-2">
+                <Button variant="ghost" size="sm" onClick={() => handleEditClient(client._id)}>
+                  <Pencil className="h-4 w-4 mr-1" /> Edit
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleDeleteClient(client._id)}>
+                  <Trash className="h-4 w-4 mr-1" /> Delete
                 </Button>
               </div>
             </div>
