@@ -56,7 +56,7 @@ const AdminTabs: React.FC = () => {
           className="rounded-none rounded-t-lg"
           onClick={() => handleTabChange('staff')}
         >
-          Staff
+          Staffs
         </Button>
         <Button
           variant={activeTab === 'patients' ? 'default' : 'ghost'}

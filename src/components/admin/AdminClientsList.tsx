@@ -120,20 +120,22 @@ const AdminClientsList: React.FC = () => {
 
       <div className="bg-white shadow-md rounded-md overflow-hidden">
         <div className="grid grid-cols-5 bg-gray-50 border-b">
-          <div className="col-span-2 p-4 font-semibold">Client Name</div>
+          <div className="p-4 font-semibold">Client Name</div>
+          <div className="p-4 font-semibold">username</div>
           <div className="p-4 font-semibold">Status</div>
           <div className="p-4 font-semibold">Billing Time</div>
           <div className="p-4 font-semibold">Actions</div>
         </div>
-        
+
         {loading ? (
           <div className="p-6 text-center text-gray-500">Loading clients...</div>
         ) : clients.length === 0 ? (
           <div className="p-6 text-center text-gray-500">No clients found</div>
         ) : (
           clients.map(client => (
-            <div key={client._id} className="grid grid-cols-5 border-b hover:bg-gray-50">
-              <div className="col-span-2 p-4">{client.name}</div>
+            <div key={client._id} className="grid grid-cols-8 border-b hover:bg-gray-50">
+              <div className="p-4">{client.name}</div>
+              <div className="p-4">{client.username}</div>
               <div className="p-4">
                 <span className={`px-2 py-1 rounded text-sm ${client.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                   {client.isActive ? 'Active' : 'Inactive'}

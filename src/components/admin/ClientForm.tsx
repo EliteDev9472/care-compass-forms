@@ -20,8 +20,8 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
   const [loading, setLoading] = useState(false);
   const [clientData, setClientData] = useState<ClientEditData | null>(null);
 
-  const [showStaffSelection, setShowStaffSelection] = useState(false);
-  const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
+  const [showPatientSelection, setShowPatientSelection] = useState(false);
+  const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (mode === 'edit' && clientId) {
@@ -32,7 +32,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
           setClientName(data.name);
           setUsername(data.username);
           setEnabled(data.isActive);
-          setSelectedStaffIds(data.assignedStaff.map(staff => staff._id));
+          setSelectedPatientIds(data.assignedPatient.map(patient => patient._id));
         } catch (error) {
           toast.error('Failed to load client data');
           navigate('/admin/clients');
@@ -56,7 +56,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
           name: clientName,
           password: password || undefined,
           isActive: enabled,
-          staffIds: selectedStaffIds,
+          patientIds: selectedPatientIds,
         });
         toast.success('Client updated successfully');
       } else {
@@ -64,7 +64,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
           username,
           password,
           name: clientName,
-          staffIds: selectedStaffIds,
+          patientIds: selectedPatientIds,
         });
         toast.success('Client created successfully');
       }
@@ -76,16 +76,16 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
     }
   };
 
-  const handleStaffSelection = () => {
-    setShowStaffSelection(true);
+  const handlePatientSelection = () => {
+    setShowPatientSelection(true);
   };
 
-  const handleAddStaff = (staffId: string) => {
-    setSelectedStaffIds([...selectedStaffIds, staffId]);
+  const handleAddPatient = (patientId: string) => {
+    setSelectedPatientIds([...selectedPatientIds, patientId]);
   };
 
-  const handleRemoveStaff = (staffId: string) => {
-    setSelectedStaffIds(selectedStaffIds.filter(id => id !== staffId));
+  const handleRemovePatient = (patientId: string) => {
+    setSelectedPatientIds(selectedPatientIds.filter(id => id !== patientId));
   };
 
   return (
@@ -147,31 +147,31 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
         )}
       </div>
 
-      {!showStaffSelection ? (
+      {!showPatientSelection ? (
         <div className="mb-6">
-          <Button onClick={handleStaffSelection}>
-            {mode === 'add' ? 'Add Staff' : 'Edit Staff'}
+          <Button onClick={handlePatientSelection}>
+            {mode === 'add' ? 'Add Patient' : 'Edit Patient'}
           </Button>
         </div>
       ) : (
         <div className="mb-6">
-          <h3 className="text-lg font-medium mb-4">Assign Staff to Client</h3>
+          <h3 className="text-lg font-medium mb-4">Assign Patient to Client</h3>
 
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium mb-2">Selected Staff</h4>
+              <h4 className="font-medium mb-2">Selected Patient</h4>
               <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                {clientData && clientData.assignedStaff.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No staff selected</p>
+                {clientData && clientData.assignedPatient.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No patient selected</p>
                 ) : (
                   <ul className="space-y-2">
-                    {clientData?.assignedStaff.map(staff => (
-                      <li key={staff._id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-                        <span>{staff.name}</span>
+                    {clientData?.assignedPatient.map(patient => (
+                      <li key={patient._id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
+                        <span>{patient.name}</span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRemoveStaff(staff._id)}
+                          onClick={() => handleRemovePatient(patient._id)}
                         >
                           Remove
                         </Button>
@@ -183,19 +183,19 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
             </div>
 
             <div>
-              <h4 className="font-medium mb-2">Available Staff</h4>
+              <h4 className="font-medium mb-2">Available Patient</h4>
               <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                {clientData && clientData.unassignedStaff.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No staff available</p>
+                {clientData && clientData.unassignedPatient.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No patient available</p>
                 ) : (
                   <ul className="space-y-2">
-                    {clientData?.unassignedStaff.map(staff => (
-                      <li key={staff._id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-                        <span>{staff.name}</span>
+                    {clientData?.unassignedPatient.map(patient => (
+                      <li key={patient._id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
+                        <span>{patient.name}</span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleAddStaff(staff._id)}
+                          onClick={() => handleAddPatient(patient._id)}
                         >
                           Add
                         </Button>

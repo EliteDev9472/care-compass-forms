@@ -89,9 +89,9 @@ const AdminPatientsList: React.FC = () => {
       </div>
 
       <div className="bg-white shadow-md rounded-md overflow-hidden">
-        <div className="grid grid-cols-7 bg-gray-50 border-b">
-          <div className="col-span-2 p-4 font-semibold">Patient Name</div>
-          <div className="col-span-2 p-4 font-semibold">Client</div>
+        <div className="grid grid-cols-5 bg-gray-50 border-b">
+          <div className="p-4 font-semibold">Patient Name</div>
+          <div className="p-4 font-semibold">Client</div>
           <div className="p-4 font-semibold">Staff</div>
           <div className="p-4 font-semibold">Billing Time</div>
           <div className="p-4 font-semibold">Actions</div>
@@ -101,9 +101,9 @@ const AdminPatientsList: React.FC = () => {
           <div className="p-6 text-center text-gray-500">No patients found</div>
         ) : (
           patients.map(patient => (
-            <div key={patient.id} className="grid grid-cols-7 border-b hover:bg-gray-50">
-              <div className="col-span-2 p-4">{patient.name}</div>
-              <div className="col-span-2 p-4">{patient.clientName}</div>
+            <div key={patient.id} className="grid grid-cols-5 border-b hover:bg-gray-50">
+              <div className="p-4">{patient.name}</div>
+              <div className="p-4">{patient.clientName}</div>
               <div className="p-4">{patient.staffName}</div>
               <div className="p-4">{formatTime(patient.billingTime)}</div>
               <div className="p-4">

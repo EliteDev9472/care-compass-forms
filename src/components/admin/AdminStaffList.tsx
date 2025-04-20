@@ -89,9 +89,9 @@ const AdminStaffList: React.FC = () => {
       </div>
 
       <div className="bg-white shadow-md rounded-md overflow-hidden">
-        <div className="grid grid-cols-6 bg-gray-50 border-b">
-          <div className="col-span-2 p-4 font-semibold">Staff Name</div>
-          <div className="col-span-2 p-4 font-semibold">Client</div>
+        <div className="grid grid-cols-4 bg-gray-50 border-b">
+          <div className="p-4 font-semibold">Staff Name</div>
+          <div className="p-4 font-semibold">username</div>
           <div className="p-4 font-semibold">Billing Time</div>
           <div className="p-4 font-semibold">Actions</div>
         </div>
@@ -100,9 +100,9 @@ const AdminStaffList: React.FC = () => {
           <div className="p-6 text-center text-gray-500">No staff found</div>
         ) : (
           staff.map(staffMember => (
-            <div key={staffMember.id} className="grid grid-cols-6 border-b hover:bg-gray-50">
-              <div className="col-span-2 p-4">{staffMember.name}</div>
-              <div className="col-span-2 p-4">{staffMember.clientName}</div>
+            <div key={staffMember.id} className="grid grid-cols-4 border-b hover:bg-gray-50">
+              <div className="p-4">{staffMember.name}</div>
+              <div className="p-4">{staffMember.clientName}</div>
               <div className="p-4">{formatTime(staffMember.billingTime)}</div>
               <div className="p-4">
                 <Button variant="ghost" size="sm" onClick={() => handleEditStaff(staffMember.id)}>

@@ -27,6 +27,7 @@ const mockStaff = [
   { id: '4', name: 'Sara Taylor, RN' },
 ];
 
+
 // Mock patient data (for edit mode)
 const mockPatient = {
   id: '1',
@@ -48,11 +49,12 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
 
   // Initialize state with mock data if in edit mode
   const [patientName, setPatientName] = useState(mode === 'edit' && patientId === '1' ? mockPatient.name : '');
-  const [username, setUsername] = useState(mode === 'edit' && patientId === '1' ? mockPatient.username : '');
-  const [password, setPassword] = useState(mode === 'edit' && patientId === '1' ? mockPatient.password : '');
   const [enabled, setEnabled] = useState(mode === 'edit' && patientId === '1' ? mockPatient.enabled : true);
   const [selectedStaffId, setSelectedStaffId] = useState<string>(
     mode === 'edit' && patientId === '1' ? mockPatient.staffId : ''
+  );
+  const [selectedClientId, setSelectedClientId] = useState<string>(
+    mode === 'edit' && patientId === '1' ? mockPatient.clientId : ''
   );
 
 
@@ -65,7 +67,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
       enabled,
       selectedStaffId
     });
-    navigate('/admin/dashboard');
+    navigate('/admin/patients');
   };
 
   return (
@@ -80,41 +82,6 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             placeholder="Enter patient name"
           />
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-          <Input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter username"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter password"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Assign to Staff</label>
-          <Select value={selectedStaffId} onValueChange={setSelectedStaffId}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Staff" />
-            </SelectTrigger>
-            <SelectContent>
-              {mockStaff.map(staff => (
-                <SelectItem key={staff.id} value={staff.id}>{staff.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         {mode === 'edit' && (
           <div className="flex items-center">
             <label className="flex items-center cursor-pointer">
@@ -137,7 +104,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
       </div>
 
       <div className="flex justify-end space-x-4">
-        <Button variant="outline" onClick={() => navigate('/admin/dashboard')}>
+        <Button variant="outline" onClick={() => navigate('/admin/patients')}>
           Cancel
         </Button>
         <Button onClick={handleSave}>

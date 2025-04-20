@@ -11,13 +11,6 @@ import {
   SelectValue
 } from '@/components/ui/select';
 
-// Mock clients data
-const mockClients = [
-  { id: '1', name: 'Acme Healthcare' },
-  { id: '2', name: 'MediCorp Services' },
-  { id: '3', name: 'HealthFirst Clinic' },
-  { id: '4', name: 'Wellness Partners' },
-];
 
 // Mock patients data
 const mockAllPatients = [
@@ -28,8 +21,8 @@ const mockAllPatients = [
   { id: '5', name: 'David Wilson' },
 ];
 
-// Mock staff data (for edit mode)
-const mockStaff = {
+// Mock patient data (for edit mode)
+const mockPatient = {
   id: '1',
   name: 'Dr. John Smith',
   username: 'jsmith',
@@ -39,56 +32,48 @@ const mockStaff = {
   assignedPatientIds: ['1', '3']
 };
 
-interface StaffFormProps {
+interface PatientFormProps {
   mode?: 'add' | 'edit';
 }
 
-const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
+const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
   const navigate = useNavigate();
-  const { staffId } = useParams();
+  const { patientId } = useParams();
 
   // Initialize state with mock data if in edit mode
-  const [staffName, setStaffName] = useState(mode === 'edit' && staffId === '1' ? mockStaff.name : '');
-  const [username, setUsername] = useState(mode === 'edit' && staffId === '1' ? mockStaff.username : '');
-  const [password, setPassword] = useState(mode === 'edit' && staffId === '1' ? mockStaff.password : '');
-  const [enabled, setEnabled] = useState(mode === 'edit' && staffId === '1' ? mockStaff.enabled : true);
+  const [patientName, setPatientName] = useState(mode === 'edit' && patientId === '1' ? mockPatient.name : '');
+  const [username, setUsername] = useState(mode === 'edit' && patientId === '1' ? mockPatient.username : '');
+  const [password, setPassword] = useState(mode === 'edit' && patientId === '1' ? mockPatient.password : '');
+  const [enabled, setEnabled] = useState(mode === 'edit' && patientId === '1' ? mockPatient.enabled : true);
 
   const [showPatientSelection, setShowPatientSelection] = useState(false);
-  const [showClientSelection, setShowClientSelection] = useState(false);
   const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>(
-    mode === 'edit' && staffId === '1' ? mockStaff.assignedPatientIds : []
+    mode === 'edit' && patientId === '1' ? mockPatient.assignedPatientIds : []
   );
 
-  const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
 
 
   // Get selected and unselected patients
   const selectedPatients = mockAllPatients.filter(patient => selectedPatientIds.includes(patient.id));
   const unselectedPatients = mockAllPatients.filter(patient => !selectedPatientIds.includes(patient.id));
 
-  // Get selected and unselected patients
-  const selectedClients = mockAllPatients.filter(client => selectedClientIds.includes(client.id));
-  const unselectedClients = mockAllPatients.filter(client => !selectedClientIds.includes(client.id));
 
   const handleSave = () => {
     // In a real app, this would save to a database
-    console.log('Saving staff:', {
-      staffName,
+    console.log('Saving patient:', {
+      patientName,
       username,
       password,
       enabled,
       selectedPatientIds
     });
-    navigate('/admin/dashboard');
+    navigate('/admin/patient');
   };
 
   const handlePatientSelection = () => {
     setShowPatientSelection(!showPatientSelection);
   };
 
-  const handleClientSelection = () => {
-    setShowClientSelection(!showClientSelection);
-  };
 
   const handleAddPatient = (patientId: string) => {
     setSelectedPatientIds([...selectedPatientIds, patientId]);
@@ -98,25 +83,17 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
     setSelectedPatientIds(selectedPatientIds.filter(id => id !== patientId));
   };
 
-  const handleAddClient = (clientId: string) => {
-    console.log(clientId)
-    setSelectedClientIds([...selectedClientIds, clientId]);
-  };
-
-  const handleRemoveClient = (clientId: string) => {
-    setSelectedClientIds(selectedClientIds.filter(id => id !== clientId));
-  };
 
   return (
     <div className="bg-white p-6 rounded-md shadow-sm border">
       <div className="grid grid-cols-1 gap-6 mb-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Staff Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Patient Name</label>
           <Input
             type="text"
-            value={staffName}
-            onChange={(e) => setStaffName(e.target.value)}
-            placeholder="Enter staff name"
+            value={patientName}
+            onChange={(e) => setPatientName(e.target.value)}
+            placeholder="Enter patient name"
           />
         </div>
 
@@ -143,71 +120,6 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
         <div className="mb-4">
           <Button
             type="button"
-            onClick={handleClientSelection}
-            variant={showClientSelection ? "outline" : "default"}
-          >
-            {showClientSelection ? 'Hide Client Selection' : (mode === 'add' ? 'Add Clients' : 'Edit Clients')}
-          </Button>
-        </div>
-        {showClientSelection && (
-          <div className="mb-6">
-            <h3 className="text-lg font-medium mb-4">Assign Clients to Staff</h3>
-
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-medium mb-2">Selected Clients</h4>
-                <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                  {selectedClients.length === 0 ? (
-                    <p className="text-gray-500 text-sm">No clients selected</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {selectedClients.map(client => (
-                        <li key={client.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-                          <span>{client.name}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveClient(client.id)}
-                          >
-                            Remove
-                          </Button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-medium mb-2">Unselected Clients</h4>
-                <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                  {unselectedClients.length === 0 ? (
-                    <p className="text-gray-500 text-sm">No clients available</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {unselectedClients.map(client => (
-                        <li key={client.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-                          <span>{client.name}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleAddClient(client.id)}
-                          >
-                            Add
-                          </Button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="mb-4">
-          <Button
-            type="button"
             onClick={handlePatientSelection}
             variant={showPatientSelection ? "outline" : "default"}
           >
@@ -216,7 +128,7 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
         </div>
         {showPatientSelection && (
           <div className="mb-6">
-            <h3 className="text-lg font-medium mb-4">Assign Patients to Staff</h3>
+            <h3 className="text-lg font-medium mb-4">Assign Patients to Patient</h3>
 
             <div className="grid grid-cols-2 gap-6">
               <div>
@@ -299,11 +211,11 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
           Cancel
         </Button>
         <Button onClick={handleSave}>
-          Save Staff
+          Save Patient
         </Button>
       </div>
     </div>
   );
 };
 
-export default StaffForm;
+export default PatientForm;
