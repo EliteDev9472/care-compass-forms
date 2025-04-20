@@ -30,13 +30,13 @@ interface ClientFormProps {
 const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
   const navigate = useNavigate();
   const { clientId } = useParams();
-  
+
   // Initialize state with mock data if in edit mode
   const [clientName, setClientName] = useState(mode === 'edit' && clientId === '1' ? mockClient.name : '');
   const [username, setUsername] = useState(mode === 'edit' && clientId === '1' ? mockClient.username : '');
   const [password, setPassword] = useState(mode === 'edit' && clientId === '1' ? mockClient.password : '');
   const [enabled, setEnabled] = useState(mode === 'edit' && clientId === '1' ? mockClient.enabled : true);
-  
+
   const [showStaffSelection, setShowStaffSelection] = useState(false);
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>(
     mode === 'edit' && clientId === '1' ? mockClient.assignedStaffIds : []
@@ -101,9 +101,9 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
           <div className="flex items-center">
             <label className="flex items-center cursor-pointer">
               <div className="relative">
-                <input 
-                  type="checkbox" 
-                  className="sr-only" 
+                <input
+                  type="checkbox"
+                  className="sr-only"
                   checked={enabled}
                   onChange={() => setEnabled(!enabled)}
                 />
@@ -118,67 +118,59 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
         )}
       </div>
 
-      {!showStaffSelection ? (
-        <div className="mb-6">
-          <Button onClick={handleStaffSelection}>
-            {mode === 'add' ? 'Add Staff' : 'Edit Staff'}
-          </Button>
-        </div>
-      ) : (
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-4">Assign Staff to Client</h3>
-          
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium mb-2">Selected Staff</h4>
-              <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                {selectedStaff.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No staff selected</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {selectedStaff.map(staff => (
-                      <li key={staff.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-                        <span>{staff.name}</span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleRemoveStaff(staff.id)}
-                        >
-                          Remove
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+      <div className="mb-6">
+        <h3 className="text-lg font-medium mb-4">Assign Staff to Client</h3>
+
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <h4 className="font-medium mb-2">Selected Staff</h4>
+            <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
+              {selectedStaff.length === 0 ? (
+                <p className="text-gray-500 text-sm">No staff selected</p>
+              ) : (
+                <ul className="space-y-2">
+                  {selectedStaff.map(staff => (
+                    <li key={staff.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
+                      <span>{staff.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveStaff(staff.id)}
+                      >
+                        Remove
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-            
-            <div>
-              <h4 className="font-medium mb-2">Unselected Staff</h4>
-              <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                {unselectedStaff.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No staff available</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {unselectedStaff.map(staff => (
-                      <li key={staff.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-                        <span>{staff.name}</span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleAddStaff(staff.id)}
-                        >
-                          Add
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+          </div>
+
+          <div>
+            <h4 className="font-medium mb-2">Unselected Staff</h4>
+            <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
+              {unselectedStaff.length === 0 ? (
+                <p className="text-gray-500 text-sm">No staff available</p>
+              ) : (
+                <ul className="space-y-2">
+                  {unselectedStaff.map(staff => (
+                    <li key={staff.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
+                      <span>{staff.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleAddStaff(staff.id)}
+                      >
+                        Add
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       <div className="flex justify-end space-x-4">
         <Button variant="outline" onClick={() => navigate('/admin/dashboard')}>
