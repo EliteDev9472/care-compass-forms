@@ -1,27 +1,9 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-
-// Mock staff data
-const mockAllStaff = [
-  { id: '1', name: 'Dr. John Smith' },
-  { id: '2', name: 'Jane Johnson, NP' },
-  { id: '3', name: 'Robert Lee, PA' },
-  { id: '4', name: 'Sara Taylor, RN' },
-  { id: '5', name: 'Michael Brown, PT' },
-];
-
-// Mock client data (for edit mode)
-const mockClient = {
-  id: '1',
-  name: 'Acme Healthcare',
-  username: 'acme',
-  password: 'password123',
-  enabled: true,
-  assignedStaffIds: ['1', '3']
-};
+import { createClient, getClientForEdit, updateClient, ClientEditData } from '@/services/clientService';
+import { toast } from 'sonner';
 
 interface ClientFormProps {
   mode?: 'add' | 'edit';
@@ -31,25 +13,67 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
   const navigate = useNavigate();
   const { clientId } = useParams();
 
-  // Initialize state with mock data if in edit mode
-  const [clientName, setClientName] = useState(mode === 'edit' && clientId === '1' ? mockClient.name : '');
-  const [username, setUsername] = useState(mode === 'edit' && clientId === '1' ? mockClient.username : '');
-  const [password, setPassword] = useState(mode === 'edit' && clientId === '1' ? mockClient.password : '');
-  const [enabled, setEnabled] = useState(mode === 'edit' && clientId === '1' ? mockClient.enabled : true);
+  const [clientName, setClientName] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [enabled, setEnabled] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [clientData, setClientData] = useState<ClientEditData | null>(null);
 
   const [showStaffSelection, setShowStaffSelection] = useState(false);
-  const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>(
-    mode === 'edit' && clientId === '1' ? mockClient.assignedStaffIds : []
-  );
+  const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
 
-  // Get selected and unselected staff
-  const selectedStaff = mockAllStaff.filter(staff => selectedStaffIds.includes(staff.id));
-  const unselectedStaff = mockAllStaff.filter(staff => !selectedStaffIds.includes(staff.id));
+  useEffect(() => {
+    if (mode === 'edit' && clientId) {
+      const fetchClientData = async () => {
+        try {
+          const data = await getClientForEdit(clientId);
+          setClientData(data);
+          setClientName(data.name);
+          setUsername(data.username);
+          setEnabled(data.isActive);
+          setSelectedStaffIds(data.assignedStaff.map(staff => staff._id));
+        } catch (error) {
+          toast.error('Failed to load client data');
+          navigate('/admin/clients');
+        }
+      };
+      fetchClientData();
+    }
+  }, [mode, clientId, navigate]);
 
-  const handleSave = () => {
-    // In a real app, this would save to a database
-    console.log('Saving client:', { clientName, username, password, enabled, selectedStaffIds });
-    navigate('/admin/dashboard');
+  const handleSave = async () => {
+    if (!clientName || !username || (!clientId && !password)) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      if (mode === 'edit' && clientId) {
+        await updateClient(clientId, {
+          username,
+          name: clientName,
+          password: password || undefined,
+          isActive: enabled,
+          staffIds: selectedStaffIds,
+        });
+        toast.success('Client updated successfully');
+      } else {
+        await createClient({
+          username,
+          password,
+          name: clientName,
+          staffIds: selectedStaffIds,
+        });
+        toast.success('Client created successfully');
+      }
+      navigate('/admin/clients');
+    } catch (error) {
+      toast.error(mode === 'edit' ? 'Failed to update client' : 'Failed to create client');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleStaffSelection = () => {
@@ -68,32 +92,37 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
     <div className="bg-white p-6 rounded-md shadow-sm border">
       <div className="grid grid-cols-1 gap-6 mb-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
           <Input
             type="text"
             value={clientName}
             onChange={(e) => setClientName(e.target.value)}
             placeholder="Enter client name"
+            required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
           <Input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Enter username"
+            required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Password {mode === 'edit' ? '(Leave blank to keep current)' : '*'}
+          </label>
           <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter password"
+            required={mode === 'add'}
           />
         </div>
 
@@ -118,66 +147,77 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
         )}
       </div>
 
-      <div className="mb-6">
-        <h3 className="text-lg font-medium mb-4">Assign Staff to Client</h3>
+      {!showStaffSelection ? (
+        <div className="mb-6">
+          <Button onClick={handleStaffSelection}>
+            {mode === 'add' ? 'Add Staff' : 'Edit Staff'}
+          </Button>
+        </div>
+      ) : (
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-4">Assign Staff to Client</h3>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <h4 className="font-medium mb-2">Selected Staff</h4>
-            <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-              {selectedStaff.length === 0 ? (
-                <p className="text-gray-500 text-sm">No staff selected</p>
-              ) : (
-                <ul className="space-y-2">
-                  {selectedStaff.map(staff => (
-                    <li key={staff.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-                      <span>{staff.name}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveStaff(staff.id)}
-                      >
-                        Remove
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-medium mb-2">Selected Staff</h4>
+              <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
+                {clientData && clientData.assignedStaff.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No staff selected</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {clientData?.assignedStaff.map(staff => (
+                      <li key={staff._id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
+                        <span>{staff.name}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveStaff(staff._id)}
+                        >
+                          Remove
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <h4 className="font-medium mb-2">Unselected Staff</h4>
-            <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-              {unselectedStaff.length === 0 ? (
-                <p className="text-gray-500 text-sm">No staff available</p>
-              ) : (
-                <ul className="space-y-2">
-                  {unselectedStaff.map(staff => (
-                    <li key={staff.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-                      <span>{staff.name}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleAddStaff(staff.id)}
-                      >
-                        Add
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+            <div>
+              <h4 className="font-medium mb-2">Available Staff</h4>
+              <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
+                {clientData && clientData.unassignedStaff.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No staff available</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {clientData?.unassignedStaff.map(staff => (
+                      <li key={staff._id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
+                        <span>{staff.name}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleAddStaff(staff._id)}
+                        >
+                          Add
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="flex justify-end space-x-4">
-        <Button variant="outline" onClick={() => navigate('/admin/dashboard')}>
+        <Button variant="outline" onClick={() => navigate('/admin/clients')}>
           Cancel
         </Button>
-        <Button onClick={handleSave}>
-          Save Client
+        <Button
+          onClick={handleSave}
+          disabled={loading || !clientName || !username || (!clientId && !password)}
+        >
+          {loading ? 'Saving...' : 'Save Client'}
         </Button>
       </div>
     </div>
