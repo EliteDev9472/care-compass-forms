@@ -65,6 +65,7 @@ const FormBuilder: React.FC = () => {
     try {
       setIsLoading(true);
       const templateData = {
+        _id: formId ? formId : '',
         name: formName,
         fields: formElements
       };
