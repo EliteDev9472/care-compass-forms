@@ -1,102 +1,124 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+  createStaff,
+  updateStaff,
+  getStaff,
+  StaffCreateData,
+  StaffUpdateData,
+  StaffEditData,
+} from '@/services/staffService';
+import { toast } from 'sonner';
 
-
-// Mock patients data
-const mockAllPatients = [
-  { id: '1', name: 'John Doe' },
-  { id: '2', name: 'Jane Smith' },
-  { id: '3', name: 'Michael Johnson' },
-  { id: '4', name: 'Lisa Brown' },
-  { id: '5', name: 'David Wilson' },
-];
-
-// Mock patient data (for edit mode)
-const mockPatient = {
-  id: '1',
-  name: 'Dr. John Smith',
-  username: 'jsmith',
-  password: 'password123',
-  enabled: true,
-  clientId: '1',
-  assignedPatientIds: ['1', '3']
-};
-
-interface PatientFormProps {
+// StaffFormProps type
+interface StaffFormProps {
   mode?: 'add' | 'edit';
 }
 
-const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
+const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
   const navigate = useNavigate();
-  const { patientId } = useParams();
+  const { staffId } = useParams();
 
-  // Initialize state with mock data if in edit mode
-  const [patientName, setPatientName] = useState(mode === 'edit' && patientId === '1' ? mockPatient.name : '');
-  const [username, setUsername] = useState(mode === 'edit' && patientId === '1' ? mockPatient.username : '');
-  const [password, setPassword] = useState(mode === 'edit' && patientId === '1' ? mockPatient.password : '');
-  const [enabled, setEnabled] = useState(mode === 'edit' && patientId === '1' ? mockPatient.enabled : true);
-
+  // Local state
+  const [staffName, setStaffName] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [enabled, setEnabled] = useState(true);
+  const [assignedPatients, setAssignedPatients] = useState<{ _id: string; name: string }[]>([]);
+  const [unassignedPatients, setUnassignedPatients] = useState<{ _id: string; name: string }[]>([]);
+  const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>([]);
   const [showPatientSelection, setShowPatientSelection] = useState(false);
-  const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>(
-    mode === 'edit' && patientId === '1' ? mockPatient.assignedPatientIds : []
-  );
+  const [loading, setLoading] = useState(false);
 
-
+  // Fetch data if edit mode
+  useEffect(() => {
+    if (mode === 'edit' && staffId) {
+      setLoading(true);
+      getStaff(staffId)
+        .then((data: StaffEditData) => {
+          setStaffName(data.name || '');
+          setUsername(data.username || '');
+          setEnabled(data.isActive ?? true);
+          setAssignedPatients(data.assignedPatients ?? []);
+          setUnassignedPatients(data.unassignedPatients ?? []);
+          setSelectedPatientIds(data.assignedPatients?.map((p) => p._id) ?? []);
+        })
+        .catch(() => {
+          toast.error('Failed to load staff data');
+          navigate('/admin/staff');
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [mode, staffId, navigate]);
 
   // Get selected and unselected patients
-  const selectedPatients = mockAllPatients.filter(patient => selectedPatientIds.includes(patient.id));
-  const unselectedPatients = mockAllPatients.filter(patient => !selectedPatientIds.includes(patient.id));
+  const selectedPatients = assignedPatients.filter((patient) =>
+    selectedPatientIds.includes(patient._id)
+  );
+  const availablePatients = [
+    ...assignedPatients,
+    ...unassignedPatients,
+  ].filter((p) => !selectedPatientIds.includes(p._id));
 
-
-  const handleSave = () => {
-    // In a real app, this would save to a database
-    console.log('Saving patient:', {
-      patientName,
-      username,
-      password,
-      enabled,
-      selectedPatientIds
-    });
-    navigate('/admin/patient');
+  // Handlers
+  const handleSave = async () => {
+    if (!staffName || !username || (mode === 'add' && !password)) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    setLoading(true);
+    try {
+      if (mode === 'edit' && staffId) {
+        const staffData: StaffUpdateData = {
+          username,
+          name: staffName,
+          isActive: enabled,
+          patientIds: selectedPatientIds,
+        };
+        if (password) staffData.password = password;
+        await updateStaff(staffId, staffData);
+        toast.success('Staff updated successfully');
+      } else {
+        const staffData: StaffCreateData = {
+          username,
+          name: staffName,
+          password,
+          patientIds: selectedPatientIds,
+        };
+        await createStaff(staffData);
+        toast.success('Staff created successfully');
+      }
+      navigate('/admin/staff');
+    } catch (error) {
+      toast.error('Failed to save staff');
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const handlePatientSelection = () => {
-    setShowPatientSelection(!showPatientSelection);
-  };
-
 
   const handleAddPatient = (patientId: string) => {
-    setSelectedPatientIds([...selectedPatientIds, patientId]);
+    setSelectedPatientIds((prev) => [...prev, patientId]);
   };
 
   const handleRemovePatient = (patientId: string) => {
-    setSelectedPatientIds(selectedPatientIds.filter(id => id !== patientId));
+    setSelectedPatientIds((prev) => prev.filter((id) => id !== patientId));
   };
-
 
   return (
     <div className="bg-white p-6 rounded-md shadow-sm border">
       <div className="grid grid-cols-1 gap-6 mb-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Patient Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Staff Name</label>
           <Input
             type="text"
-            value={patientName}
-            onChange={(e) => setPatientName(e.target.value)}
-            placeholder="Enter patient name"
+            value={staffName}
+            onChange={(e) => setStaffName(e.target.value)}
+            placeholder="Enter staff name"
           />
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
           <Input
@@ -106,9 +128,10 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             placeholder="Enter username"
           />
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Password{mode === 'edit' ? ' (leave blank to keep unchanged)' : ''}
+          </label>
           <Input
             type="password"
             value={password}
@@ -116,20 +139,18 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             placeholder="Enter password"
           />
         </div>
-
         <div className="mb-4">
           <Button
             type="button"
-            onClick={handlePatientSelection}
-            variant={showPatientSelection ? "outline" : "default"}
+            onClick={() => setShowPatientSelection((v) => !v)}
+            variant={showPatientSelection ? 'outline' : 'default'}
           >
-            {showPatientSelection ? 'Hide Patient Selection' : (mode === 'add' ? 'Add Patients' : 'Edit Patients')}
+            {showPatientSelection ? 'Hide Patient Selection' : 'Edit Patients'}
           </Button>
         </div>
         {showPatientSelection && (
           <div className="mb-6">
-            <h3 className="text-lg font-medium mb-4">Assign Patients to Patient</h3>
-
+            <h3 className="text-lg font-medium mb-4">Assign Patients to Staff</h3>
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <h4 className="font-medium mb-2">Selected Patients</h4>
@@ -138,13 +159,16 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
                     <p className="text-gray-500 text-sm">No patients selected</p>
                   ) : (
                     <ul className="space-y-2">
-                      {selectedPatients.map(patient => (
-                        <li key={patient.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
+                      {selectedPatients.map((patient) => (
+                        <li
+                          key={patient._id}
+                          className="flex justify-between items-center p-2 bg-white rounded shadow-sm"
+                        >
                           <span>{patient.name}</span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleRemovePatient(patient.id)}
+                            onClick={() => handleRemovePatient(patient._id)}
                           >
                             Remove
                           </Button>
@@ -154,21 +178,23 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
                   )}
                 </div>
               </div>
-
               <div>
-                <h4 className="font-medium mb-2">Unselected Patients</h4>
+                <h4 className="font-medium mb-2">Available Patients</h4>
                 <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                  {unselectedPatients.length === 0 ? (
+                  {availablePatients.length === 0 ? (
                     <p className="text-gray-500 text-sm">No patients available</p>
                   ) : (
                     <ul className="space-y-2">
-                      {unselectedPatients.map(patient => (
-                        <li key={patient.id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
+                      {availablePatients.map((patient) => (
+                        <li
+                          key={patient._id}
+                          className="flex justify-between items-center p-2 bg-white rounded shadow-sm"
+                        >
                           <span>{patient.name}</span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleAddPatient(patient.id)}
+                            onClick={() => handleAddPatient(patient._id)}
                           >
                             Add
                           </Button>
@@ -181,7 +207,6 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             </div>
           </div>
         )}
-
         {mode === 'edit' && (
           <div className="flex items-center">
             <label className="flex items-center cursor-pointer">
@@ -190,10 +215,18 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
                   type="checkbox"
                   className="sr-only"
                   checked={enabled}
-                  onChange={() => setEnabled(!enabled)}
+                  onChange={() => setEnabled((v) => !v)}
                 />
-                <div className={`block w-14 h-8 rounded-full transition ${enabled ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform ${enabled ? 'translate-x-6' : ''}`}></div>
+                <div
+                  className={`block w-14 h-8 rounded-full transition ${
+                    enabled ? 'bg-green-500' : 'bg-gray-300'
+                  }`}
+                ></div>
+                <div
+                  className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform ${
+                    enabled ? 'translate-x-6' : ''
+                  }`}
+                ></div>
               </div>
               <div className="ml-3 text-gray-700 font-medium">
                 {enabled ? 'Enabled' : 'Disabled'}
@@ -202,20 +235,19 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
           </div>
         )}
       </div>
-
-
-
-
       <div className="flex justify-end space-x-4">
-        <Button variant="outline" onClick={() => navigate('/admin/dashboard')}>
+        <Button variant="outline" onClick={() => navigate('/admin/staff')}>
           Cancel
         </Button>
-        <Button onClick={handleSave}>
-          Save Patient
+        <Button
+          onClick={handleSave}
+          disabled={loading || !staffName || !username || (mode === 'add' && !password)}
+        >
+          {loading ? 'Saving...' : 'Save Staff'}
         </Button>
       </div>
     </div>
   );
 };
 
-export default PatientForm;
+export default StaffForm;
