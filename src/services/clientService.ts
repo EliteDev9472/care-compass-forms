@@ -15,12 +15,12 @@ export interface ClientEditData {
   username: string;
   name: string;
   isActive: boolean;
-  assignedStaff: Array<{
+  assignedPatient: Array<{
     _id: string;
     username: string;
     name: string;
   }>;
-  unassignedStaff: Array<{
+  unassignedPatient: Array<{
     _id: string;
     username: string;
     name: string;
