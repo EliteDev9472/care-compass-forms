@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { createClient, getClientForEdit, updateClient, ClientEditData, getUnassignedPatientsForClient } from '@/services/clientService';
+import { createClient, getClientForEdit, updateClient, ClientEditData } from '@/services/clientService';
 import { toast } from 'sonner';
-import DeleteConfirmDialog from '../shared/DeleteConfirmDialog';
+import { getUnassignedPatientsForClient } from '@/services/clientService';
 
 interface ClientFormProps {
   mode?: 'add' | 'edit';
@@ -23,8 +22,8 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
   const [clientData, setClientData] = useState<ClientEditData | null>(null);
 
   const [showPatientSelection, setShowPatientSelection] = useState(false);
-  const [selectedPatients, setSelectedPatients] = useState<Array<{ _id: string, name: string, username: string }>>([]);
-  const [unassignedPatient, setUnassignedPatient] = useState<Array<{ _id: string, name: string, username: string }>>([]);
+  const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>([]);
+  const [unassignedPatients, setUnassignedPatients] = useState([]);
 
   useEffect(() => {
     if (mode === 'edit' && clientId) {
@@ -35,8 +34,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
           setClientName(data.name);
           setUsername(data.username);
           setEnabled(data.isActive);
-          setSelectedPatients(data.assignedPatients);
-          setUnassignedPatient(data.unassignedPatients);
+          setSelectedPatientIds(data.assignedPatient.map(patient => patient._id));
         } catch (error) {
           toast.error('Failed to load client data');
           navigate('/admin/clients');
@@ -46,10 +44,10 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
     } else if (mode === 'add') {
       getUnassignedPatientsForClient()
         .then((data) => {
-          setUnassignedPatient(data);
+          setUnassignedPatients(data);
         })
         .catch(() => {
-          toast.error('Failed to load unassigned patient');
+          toast.error('Failed to load unassigned patients');
         });
     }
   }, [mode, clientId, navigate]);
@@ -68,7 +66,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
           name: clientName,
           password: password || undefined,
           isActive: enabled,
-          patientIds: selectedPatients.map(patient => patient._id),
+          patientIds: selectedPatientIds,
         });
         toast.success('Client updated successfully');
       } else {
@@ -76,7 +74,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
           username,
           password,
           name: clientName,
-          patientIds: selectedPatients.map(patient => patient._id),
+          patientIds: selectedPatientIds,
         });
         toast.success('Client created successfully');
       }
@@ -92,14 +90,12 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
     setShowPatientSelection(true);
   };
 
-  const handleAddPatient = (patient: any) => {
-    setSelectedPatients([...selectedPatients, patient]);
-    setUnassignedPatient([...unassignedPatient].filter(id => id !== patient))
+  const handleAddPatient = (patientId: string) => {
+    setSelectedPatientIds([...selectedPatientIds, patientId]);
   };
 
-  const handleRemovePatient = (patient: any) => {
-    setSelectedPatients([...selectedPatients].filter(id => id !== patient));
-    setUnassignedPatient([...unassignedPatient, patient])
+  const handleRemovePatient = (patientId: string) => {
+    setSelectedPatientIds(selectedPatientIds.filter(id => id !== patientId));
   };
 
   return (
@@ -175,17 +171,17 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
             <div>
               <h4 className="font-medium mb-2">Selected Patient</h4>
               <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                {selectedPatients.length === 0 ? (
+                {clientData && clientData.assignedPatient.length === 0 ? (
                   <p className="text-gray-500 text-sm">No patient selected</p>
                 ) : (
                   <ul className="space-y-2">
-                    {selectedPatients.map(patient => (
+                    {clientData?.assignedPatient.map(patient => (
                       <li key={patient._id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
                         <span>{patient.name}</span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRemovePatient(patient)}
+                          onClick={() => handleRemovePatient(patient._id)}
                         >
                           Remove
                         </Button>
@@ -199,17 +195,17 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
             <div>
               <h4 className="font-medium mb-2">Available Patient</h4>
               <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                {unassignedPatient.length === 0 ? (
+                {clientData && clientData.unassignedPatient.length === 0 ? (
                   <p className="text-gray-500 text-sm">No patient available</p>
                 ) : (
                   <ul className="space-y-2">
-                    {unassignedPatient.map(patient => (
+                    {clientData?.unassignedPatient.map(patient => (
                       <li key={patient._id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
                         <span>{patient.name}</span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleAddPatient(patient)}
+                          onClick={() => handleAddPatient(patient._id)}
                         >
                           Add
                         </Button>
