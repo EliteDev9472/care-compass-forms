@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { getAllPatients, deletePatient, Patient } from '@/services/patientServic
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@radix-ui/react-popover';
 import { endOfMonth, endOfWeek, format, startOfMonth, startOfWeek } from 'date-fns';
+import DeleteConfirmDialog from '../shared/DeleteConfirmDialog';
 
 const AdminPatientsList: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ const AdminPatientsList: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
+  const [deletePatientId, setDeletePatientId] = useState<string | null>(null);
 
   const fetchPatients = async (start, end) => {
     try {
@@ -53,7 +54,6 @@ const AdminPatientsList: React.FC = () => {
     setViewMode(mode);
   };
 
-
   const handleAddPatient = () => {
     navigate('/admin/patients/add');
   };
@@ -62,16 +62,22 @@ const AdminPatientsList: React.FC = () => {
     navigate(`/admin/patients/${patientId}/edit`);
   };
 
-  const handleDeletePatient = async (patientId: string) => {
-    try {
-      await deletePatient(patientId);
-      toast.success('Patient deleted successfully');
+  const handleDeleteClick = (patientId: string) => {
+    setDeletePatientId(patientId);
+  };
 
-      const currentDate = format(date, 'yyyy-MM-dd');
-      await fetchPatients(currentDate, currentDate);
-    } catch (error) {
-      toast.error('Failed to delete patient');
+  const handleDeleteConfirm = async () => {
+    if (deletePatientId) {
+      try {
+        await deletePatient(deletePatientId);
+        // Refresh patient list
+        fetchPatients(format(date, 'yyyy-MM-dd'), format(date, 'yyyy-MM-dd'));
+        toast.success('Patient deleted successfully');
+      } catch (error) {
+        toast.error('Failed to delete patient');
+      }
     }
+    setDeletePatientId(null);
   };
 
   return (
@@ -133,7 +139,7 @@ const AdminPatientsList: React.FC = () => {
                 <Button variant="ghost" size="sm" onClick={() => handleEditPatient(patient._id)}>
                   <Pencil className="h-4 w-4 mr-1" /> Edit
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleDeletePatient(patient._id)}>
+                <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(patient._id)}>
                   <Trash className="h-4 w-4 mr-1" /> Delete
                 </Button>
               </div>
@@ -141,6 +147,14 @@ const AdminPatientsList: React.FC = () => {
           ))
         )}
       </div>
+
+      <DeleteConfirmDialog
+        isOpen={!!deletePatientId}
+        onCancel={() => setDeletePatientId(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Patient"
+        description="Are you sure you want to delete this patient? This action cannot be undone."
+      />
     </div>
   );
 };

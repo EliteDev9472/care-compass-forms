@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient, getClientForEdit, updateClient, ClientEditData } from '@/services/clientService';
 import { toast } from 'sonner';
+import { getUnassignedPatientsForClient } from '@/services/clientService';
 
 interface ClientFormProps {
   mode?: 'add' | 'edit';
@@ -23,6 +23,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
 
   const [showPatientSelection, setShowPatientSelection] = useState(false);
   const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>([]);
+  const [unassignedPatients, setUnassignedPatients] = useState([]);
 
   useEffect(() => {
     if (mode === 'edit' && clientId) {
@@ -40,6 +41,14 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
         }
       };
       fetchClientData();
+    } else if (mode === 'add') {
+      getUnassignedPatientsForClient()
+        .then((data) => {
+          setUnassignedPatients(data);
+        })
+        .catch(() => {
+          toast.error('Failed to load unassigned patients');
+        });
     }
   }, [mode, clientId, navigate]);
 

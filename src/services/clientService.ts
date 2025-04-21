@@ -1,4 +1,3 @@
-
 import axiosInstance from './axiosConfig';
 import { SERVER_URL } from '@/config';
 
@@ -61,5 +60,10 @@ export const updateClient = async (clientId: string, clientData: {
 
 export const deleteClient = async (clientId: string) => {
   const response = await axiosInstance.delete(`${SERVER_URL}/admin/delete-user/${clientId}`);
+  return response.data;
+};
+
+export const getUnassignedPatientsForClient = async () => {
+  const response = await axiosInstance.get(`${SERVER_URL}/admin/unassigned-patients`);
   return response.data;
 };

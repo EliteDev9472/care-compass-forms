@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -12,8 +11,8 @@ import {
   StaffEditData,
 } from '@/services/staffService';
 import { toast } from 'sonner';
+import { getUnassignedPatientsForStaff } from '@/services/staffService';
 
-// StaffFormProps type
 interface StaffFormProps {
   mode?: 'add' | 'edit';
 }
@@ -22,7 +21,6 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
   const navigate = useNavigate();
   const { staffId } = useParams();
 
-  // Local state
   const [staffName, setStaffName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -33,8 +31,16 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
   const [showPatientSelection, setShowPatientSelection] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Fetch data if edit mode
   useEffect(() => {
+    if (mode === 'add') {
+      getUnassignedPatientsForStaff()
+        .then((data) => {
+          setUnassignedPatients(data);
+        })
+        .catch(() => {
+          toast.error('Failed to load unassigned patients');
+        });
+    }
     if (mode === 'edit' && staffId) {
       setLoading(true);
       getStaff(staffId)
@@ -54,7 +60,6 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
     }
   }, [mode, staffId, navigate]);
 
-  // Get selected and unselected patients
   const selectedPatients = assignedPatients.filter((patient) =>
     selectedPatientIds.includes(patient._id)
   );
@@ -63,7 +68,6 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
     ...unassignedPatients,
   ].filter((p) => !selectedPatientIds.includes(p._id));
 
-  // Handlers
   const handleSave = async () => {
     if (!staffName || !username || (mode === 'add' && !password)) {
       toast.error('Please fill in all required fields');

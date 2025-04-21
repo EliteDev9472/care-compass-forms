@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Pencil, Trash2 } from 'lucide-react';
 import { getAllStaffs, deleteStaff, Staff } from '@/services/staffService';
 import { toast } from 'sonner';
+import DeleteConfirmDialog from '../shared/DeleteConfirmDialog';
 
 const AdminStaffList: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ const AdminStaffList: React.FC = () => {
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
   const [staff, setStaff] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deleteStaffId, setDeleteStaffId] = useState<string | null>(null);
 
   function getDateRange(): { start: string, end: string } {
     const d = date || new Date();
@@ -61,16 +62,22 @@ const AdminStaffList: React.FC = () => {
     navigate(`/admin/staff/${staffId}/edit`);
   };
 
-  const handleDeleteStaff = async (staffId: string) => {
-    if (window.confirm('Are you sure you want to delete this staff member?')) {
+  const handleDeleteClick = (staffId: string) => {
+    setDeleteStaffId(staffId);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deleteStaffId) {
       try {
-        await deleteStaff(staffId);
-        toast.success('Staff deleted successfully');
+        await deleteStaff(deleteStaffId);
+        // Refresh staff list
         fetchStaffs();
-      } catch {
+        toast.success('Staff deleted successfully');
+      } catch (error) {
         toast.error('Failed to delete staff');
       }
     }
+    setDeleteStaffId(null);
   };
 
   const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
@@ -168,7 +175,7 @@ const AdminStaffList: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDeleteStaff(staffMember._id)}
+                  onClick={() => handleDeleteClick(staffMember._id)}
                 >
                   <Trash2 size={16} className="mr-1" /> Delete
                 </Button>
@@ -177,6 +184,14 @@ const AdminStaffList: React.FC = () => {
           ))
         )}
       </div>
+
+      <DeleteConfirmDialog
+        isOpen={!!deleteStaffId}
+        onCancel={() => setDeleteStaffId(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Staff"
+        description="Are you sure you want to delete this staff member? This action cannot be undone."
+      />
     </div>
   );
 };

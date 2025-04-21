@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, Pencil, Trash } from 'lucide-react';
 import { getClientsWithBilling, deleteClient, Client } from '@/services/clientService';
 import { toast } from 'sonner';
+import DeleteConfirmDialog from '../shared/DeleteConfirmDialog';
 
 const AdminClientsList: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ const AdminClientsList: React.FC = () => {
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteClientId, setDeleteClientId] = useState<string | null>(null);
 
   const fetchClients = async (start: string, end: string) => {
     try {
@@ -57,16 +58,22 @@ const AdminClientsList: React.FC = () => {
     navigate(`/admin/clients/${clientId}/edit`);
   };
 
-  const handleDeleteClient = async (clientId: string) => {
-    try {
-      await deleteClient(clientId);
-      toast.success('Client deleted successfully');
-      // Refresh the client list
-      const currentDate = format(date, 'yyyy-MM-dd');
-      await fetchClients(currentDate, currentDate);
-    } catch (error) {
-      toast.error('Failed to delete client');
+  const handleDeleteClick = (clientId: string) => {
+    setDeleteClientId(clientId);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deleteClientId) {
+      try {
+        await deleteClient(deleteClientId);
+        // Refresh client list
+        fetchClients(format(date, 'yyyy-MM-dd'), format(date, 'yyyy-MM-dd'));
+        toast.success('Client deleted successfully');
+      } catch (error) {
+        toast.error('Failed to delete client');
+      }
     }
+    setDeleteClientId(null);
   };
 
   const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
@@ -146,7 +153,7 @@ const AdminClientsList: React.FC = () => {
                 <Button variant="ghost" size="sm" onClick={() => handleEditClient(client._id)}>
                   <Pencil className="h-4 w-4 mr-1" /> Edit
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleDeleteClient(client._id)}>
+                <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(client._id)}>
                   <Trash className="h-4 w-4 mr-1" /> Delete
                 </Button>
               </div>
@@ -154,6 +161,14 @@ const AdminClientsList: React.FC = () => {
           ))
         )}
       </div>
+
+      <DeleteConfirmDialog
+        isOpen={!!deleteClientId}
+        onCancel={() => setDeleteClientId(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Client"
+        description="Are you sure you want to delete this client? This action cannot be undone."
+      />
     </div>
   );
 };

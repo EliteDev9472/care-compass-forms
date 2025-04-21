@@ -1,4 +1,3 @@
-
 import axiosInstance from './axiosConfig';
 import { SERVER_URL } from '@/config';
 
@@ -60,5 +59,10 @@ export const updateStaff = async (staffId: string, staffData: StaffUpdateData) =
 
 export const deleteStaff = async (staffId: string) => {
   const response = await axiosInstance.delete(`${SERVER_URL}/admin/delete-staff/${staffId}`);
+  return response.data;
+};
+
+export const getUnassignedPatientsForStaff = async () => {
+  const response = await axiosInstance.get(`${SERVER_URL}/admin/unassigned-patients-staff`);
   return response.data;
 };
