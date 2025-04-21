@@ -22,6 +22,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
   const [clientData, setClientData] = useState<ClientEditData | null>(null);
 
   const [showStaffSelection, setShowStaffSelection] = useState(false);
+  // Only manage staffIds, no patientIds here
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -44,7 +45,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
   }, [mode, clientId, navigate]);
 
   const handleSave = async () => {
-    if (!clientName || !username || (!clientId && !password)) {
+    if (!clientName || !username || (mode === "add" && !password)) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -82,11 +83,35 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
   };
 
   const handleAddStaff = (staffId: string) => {
-    setSelectedStaffIds([...selectedStaffIds, staffId]);
+    setSelectedStaffIds((ids) => [...ids, staffId]);
+    setClientData((prev) =>
+      prev
+        ? {
+            ...prev,
+            assignedStaff: [
+              ...prev.assignedStaff,
+              ...prev.unassignedStaff.filter(staff => staff._id === staffId)
+            ],
+            unassignedStaff: prev.unassignedStaff.filter(staff => staff._id !== staffId)
+          }
+        : prev
+    );
   };
 
   const handleRemoveStaff = (staffId: string) => {
-    setSelectedStaffIds(selectedStaffIds.filter(id => id !== staffId));
+    setSelectedStaffIds((ids) => ids.filter(id => id !== staffId));
+    setClientData((prev) =>
+      prev
+        ? {
+            ...prev,
+            assignedStaff: prev.assignedStaff.filter(staff => staff._id !== staffId),
+            unassignedStaff: [
+              ...prev.unassignedStaff,
+              ...prev.assignedStaff.filter(staff => staff._id === staffId)
+            ]
+          }
+        : prev
+    );
   };
 
   return (
@@ -162,7 +187,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
             <div>
               <h4 className="font-medium mb-2">Selected Staff</h4>
               <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                {clientData && clientData.assignedStaff.length === 0 ? (
+                {(clientData?.assignedStaff?.length ?? 0) === 0 ? (
                   <p className="text-gray-500 text-sm">No staff selected</p>
                 ) : (
                   <ul className="space-y-2">
@@ -186,7 +211,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
             <div>
               <h4 className="font-medium mb-2">Available Staff</h4>
               <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                {clientData && clientData.unassignedStaff.length === 0 ? (
+                {(clientData?.unassignedStaff?.length ?? 0) === 0 ? (
                   <p className="text-gray-500 text-sm">No staff available</p>
                 ) : (
                   <ul className="space-y-2">
@@ -216,7 +241,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
         </Button>
         <Button
           onClick={handleSave}
-          disabled={loading || !clientName || !username || (!clientId && !password)}
+          disabled={loading || !clientName || !username || (mode === "add" && !password)}
         >
           {loading ? 'Saving...' : 'Save Client'}
         </Button>
