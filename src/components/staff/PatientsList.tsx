@@ -1,81 +1,40 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppSelector, useAppDispatch } from '../../hooks/reduxHooks';
-import { fetchPatientsStart, fetchPatientsSuccess, setCurrentPatient } from '../../store/patientSlice';
+import { useAppSelector } from '../../hooks/reduxHooks';
+import { getMyAssignedPatients, StaffPatient } from '../../services/staffService';
 import { Calendar } from '../../components/ui/calendar';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
-
-// Mock patients data - this would come from an API in a real app
-const mockPatients = [
-  { id: '1', name: 'Patient1', clientId: '1', assignedStaffIds: ['3'], totalBillingTime: 65 }, // 01:05
-  { id: '2', name: 'Patient2', clientId: '1', assignedStaffIds: ['3'], totalBillingTime: 165 }, // 02:45
-  { id: '3', name: 'Patient3', clientId: '2', assignedStaffIds: ['3'], totalBillingTime: 213 }, // 03:33
-  { id: '4', name: 'Patient4', clientId: '2', assignedStaffIds: ['3'], totalBillingTime: 263 }, // 04:23
-];
+import { toast } from 'sonner';
 
 const PatientsList: React.FC = () => {
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { user } = useAppSelector(state => state.auth);
-  const { patients, loading, error } = useAppSelector(state => state.patients);
+  const [patients, setPatients] = useState<StaffPatient[]>([]);
+  const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
-  const [filteredPatients, setFilteredPatients] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!user) return;
-
-    dispatch(fetchPatientsStart());
-
-    // Simulate API call to fetch patients
-    setTimeout(() => {
-      // Filter patients based on staff ID for staff users
-      const filteredPatients = user.role === 'staff'
-        ? mockPatients.filter(patient => patient.assignedStaffIds.includes(user.id))
-        : mockPatients.filter(patient => patient.clientId === user.id);
-
-      dispatch(fetchPatientsSuccess(filteredPatients));
-    }, 500);
-  }, [dispatch, user]);
-
-  useEffect(() => {
-    if (patients.length === 0) {
-      setFilteredPatients([]);
-      return;
-    }
-
-    // Filter patients based on selected date and view mode
-    // In a real app, this would filter based on activity date from the database
-    let filteredByDate = [...patients];
-
-    if (date) {
-      // Example date filtering logic - in a real app, you would filter based on patient activity dates
-      if (viewMode === 'day') {
-        // Only show patients active on the selected day
-        const dateStr = format(date, 'yyyy-MM-dd');
-        // This is a mock implementation. In a real app, you would check if a patient had activity on this date
-        filteredByDate = patients;
-      } else if (viewMode === 'week') {
-        // Show patients active during the selected week
-        const weekStart = startOfWeek(date);
-        const weekEnd = endOfWeek(date);
-        // This is a mock implementation. In a real app, you would check if a patient had activity in this date range
-        filteredByDate = patients;
-      } else if (viewMode === 'month') {
-        // Show patients active during the selected month
-        const monthStart = startOfMonth(date);
-        const monthEnd = endOfMonth(date);
-        // This is a mock implementation. In a real app, you would check if a patient had activity in this date range
-        filteredByDate = patients;
+    const fetchPatients = async () => {
+      if (!user || user.role !== 'staff') return;
+      
+      setLoading(true);
+      try {
+        const response = await getMyAssignedPatients();
+        setPatients(response);
+      } catch (error) {
+        toast.error('Failed to fetch patients');
+        setPatients([]);
       }
-    }
+      setLoading(false);
+    };
 
-    setFilteredPatients(filteredByDate);
-  }, [patients, date, viewMode]);
+    fetchPatients();
+  }, [user]);
 
   const formatTime = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
@@ -83,11 +42,8 @@ const PatientsList: React.FC = () => {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
-  const handlePatientClick = (patient: any) => {
-    dispatch(setCurrentPatient(patient));
-    // Determine correct route based on user role
-    const baseRoute = user?.role === 'client' ? '/client' : '/staff';
-    navigate(`${baseRoute}/patients/${patient.id}/forms`);
+  const handlePatientClick = (patient: StaffPatient) => {
+    navigate(`/staff/patients/${patient._id}/forms`);
   };
 
   const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
@@ -98,14 +54,10 @@ const PatientsList: React.FC = () => {
     return <div className="flex justify-center mt-8">Loading patients...</div>;
   }
 
-  if (error) {
-    return <div className="text-red-500 text-center mt-8">{error}</div>;
-  }
-
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Patients of {user?.name}</h1>
+        <h1 className="text-2xl font-bold">My Patients</h1>
         <div className="flex space-x-2">
           <div className="flex rounded-md overflow-hidden">
             <button
@@ -152,17 +104,17 @@ const PatientsList: React.FC = () => {
           <div className="p-4 font-semibold">Billing Time</div>
         </div>
 
-        {filteredPatients.length === 0 ? (
+        {patients.length === 0 ? (
           <div className="p-6 text-center text-gray-500">No patients found</div>
         ) : (
-          filteredPatients.map(patient => (
+          patients.map(patient => (
             <div
-              key={patient.id}
+              key={patient._id}
               onClick={() => handlePatientClick(patient)}
               className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
             >
               <div className="p-4">{patient.name}</div>
-              <div className="p-4">{formatTime(patient.totalBillingTime)}</div>
+              <div className="p-4">{formatTime(patient.billingMinutes)}</div>
             </div>
           ))
         )}

@@ -30,6 +30,12 @@ export interface StaffUpdateData {
   patientIds: string[];
 }
 
+export interface StaffPatient {
+  _id: string;
+  name: string;
+  billingMinutes: number;
+}
+
 export const getAllStaffs = async (startDate?: string, endDate?: string) => {
   const params =
     startDate && endDate
@@ -64,5 +70,10 @@ export const deleteStaff = async (staffId: string) => {
 
 export const getUnassignedPatientsForStaff = async () => {
   const response = await axiosInstance.get(`${SERVER_URL}/admin/unassigned-patients-staff`);
+  return response.data;
+};
+
+export const getMyAssignedPatients = async (): Promise<StaffPatient[]> => {
+  const response = await axiosInstance.get(`${SERVER_URL}/staff/my-patients`);
   return response.data;
 };
