@@ -22,9 +22,9 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
   const [loading, setLoading] = useState(false);
   const [clientData, setClientData] = useState<ClientEditData | null>(null);
 
-  const [showStaffSelection, setShowStaffSelection] = useState(false);
-  const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
-  const [unassignedStaff, setUnassignedStaff] = useState<Array<{_id: string, name: string}>>([]);
+  const [showPatientSelection, setShowPatientSelection] = useState(false);
+  const [selectedPatients, setSelectedPatients] = useState<Array<{ _id: string, name: string, username: string }>>([]);
+  const [unassignedPatient, setUnassignedPatient] = useState<Array<{ _id: string, name: string, username: string }>>([]);
 
   useEffect(() => {
     if (mode === 'edit' && clientId) {
@@ -35,7 +35,8 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
           setClientName(data.name);
           setUsername(data.username);
           setEnabled(data.isActive);
-          setSelectedStaffIds(data.assignedStaff.map(staff => staff._id));
+          setSelectedPatients(data.assignedPatients);
+          setUnassignedPatient(data.unassignedPatients);
         } catch (error) {
           toast.error('Failed to load client data');
           navigate('/admin/clients');
@@ -45,10 +46,10 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
     } else if (mode === 'add') {
       getUnassignedPatientsForClient()
         .then((data) => {
-          setUnassignedStaff(data);
+          setUnassignedPatient(data);
         })
         .catch(() => {
-          toast.error('Failed to load unassigned staff');
+          toast.error('Failed to load unassigned patient');
         });
     }
   }, [mode, clientId, navigate]);
@@ -67,7 +68,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
           name: clientName,
           password: password || undefined,
           isActive: enabled,
-          staffIds: selectedStaffIds,
+          patientIds: selectedPatients.map(patient => patient._id),
         });
         toast.success('Client updated successfully');
       } else {
@@ -75,7 +76,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
           username,
           password,
           name: clientName,
-          staffIds: selectedStaffIds,
+          patientIds: selectedPatients.map(patient => patient._id),
         });
         toast.success('Client created successfully');
       }
@@ -87,21 +88,19 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
     }
   };
 
-  const handleStaffSelection = () => {
-    setShowStaffSelection(true);
+  const handlePatientSelection = () => {
+    setShowPatientSelection(true);
   };
 
-  const handleAddStaff = (staffId: string) => {
-    setSelectedStaffIds([...selectedStaffIds, staffId]);
+  const handleAddPatient = (patient: any) => {
+    setSelectedPatients([...selectedPatients, patient]);
+    setUnassignedPatient([...unassignedPatient].filter(id => id !== patient))
   };
 
-  const handleRemoveStaff = (staffId: string) => {
-    setSelectedStaffIds(selectedStaffIds.filter(id => id !== staffId));
+  const handleRemovePatient = (patient: any) => {
+    setSelectedPatients([...selectedPatients].filter(id => id !== patient));
+    setUnassignedPatient([...unassignedPatient, patient])
   };
-
-  // For edit mode, filter the assigned and unassigned staff
-  const selectedStaff = clientData?.assignedStaff || [];
-  const availableStaff = clientData?.unassignedStaff || unassignedStaff || [];
 
   return (
     <div className="bg-white p-6 rounded-md shadow-sm border">
@@ -162,31 +161,31 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
         )}
       </div>
 
-      {!showStaffSelection ? (
+      {!showPatientSelection ? (
         <div className="mb-6">
-          <Button onClick={handleStaffSelection}>
-            {mode === 'add' ? 'Add Staff' : 'Edit Staff'}
+          <Button onClick={handlePatientSelection}>
+            {mode === 'add' ? 'Add Patient' : 'Edit Patient'}
           </Button>
         </div>
       ) : (
         <div className="mb-6">
-          <h3 className="text-lg font-medium mb-4">Assign Staff to Client</h3>
+          <h3 className="text-lg font-medium mb-4">Assign Patient to Client</h3>
 
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium mb-2">Selected Staff</h4>
+              <h4 className="font-medium mb-2">Selected Patient</h4>
               <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                {selectedStaff.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No staff selected</p>
+                {selectedPatients.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No patient selected</p>
                 ) : (
                   <ul className="space-y-2">
-                    {selectedStaff.map(staff => (
-                      <li key={staff._id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-                        <span>{staff.name}</span>
+                    {selectedPatients.map(patient => (
+                      <li key={patient._id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
+                        <span>{patient.name}</span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRemoveStaff(staff._id)}
+                          onClick={() => handleRemovePatient(patient)}
                         >
                           Remove
                         </Button>
@@ -198,19 +197,19 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
             </div>
 
             <div>
-              <h4 className="font-medium mb-2">Available Staff</h4>
+              <h4 className="font-medium mb-2">Available Patient</h4>
               <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                {availableStaff.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No staff available</p>
+                {unassignedPatient.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No patient available</p>
                 ) : (
                   <ul className="space-y-2">
-                    {availableStaff.map(staff => (
-                      <li key={staff._id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-                        <span>{staff.name}</span>
+                    {unassignedPatient.map(patient => (
+                      <li key={patient._id} className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
+                        <span>{patient.name}</span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleAddStaff(staff._id)}
+                          onClick={() => handleAddPatient(patient)}
                         >
                           Add
                         </Button>
