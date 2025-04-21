@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,9 +10,9 @@ import {
   StaffCreateData,
   StaffUpdateData,
   StaffEditData,
+  getUnassignedPatientsForStaff
 } from '@/services/staffService';
 import { toast } from 'sonner';
-import { getUnassignedPatientsForStaff } from '@/services/staffService';
 
 interface StaffFormProps {
   mode?: 'add' | 'edit';
@@ -60,13 +61,14 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
     }
   }, [mode, staffId, navigate]);
 
-  const selectedPatients = assignedPatients.filter((patient) =>
-    selectedPatientIds.includes(patient._id)
-  );
-  const availablePatients = [
-    ...assignedPatients,
-    ...unassignedPatients,
-  ].filter((p) => !selectedPatientIds.includes(p._id));
+  // Calculate selected and available patients based on mode
+  const selectedPatients = mode === 'edit' 
+    ? assignedPatients.filter(patient => selectedPatientIds.includes(patient._id))
+    : unassignedPatients.filter(patient => selectedPatientIds.includes(patient._id));
+    
+  const availablePatients = mode === 'edit'
+    ? [...assignedPatients, ...unassignedPatients].filter(p => !selectedPatientIds.includes(p._id))
+    : unassignedPatients.filter(p => !selectedPatientIds.includes(p._id));
 
   const handleSave = async () => {
     if (!staffName || !username || (mode === 'add' && !password)) {

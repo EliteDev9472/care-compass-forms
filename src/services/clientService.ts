@@ -1,3 +1,4 @@
+
 import axiosInstance from './axiosConfig';
 import { SERVER_URL } from '@/config';
 
@@ -14,12 +15,12 @@ export interface ClientEditData {
   username: string;
   name: string;
   isActive: boolean;
-  assignedPatient: Array<{
+  assignedStaff: Array<{
     _id: string;
     username: string;
     name: string;
   }>;
-  unassignedPatient: Array<{
+  unassignedStaff: Array<{
     _id: string;
     username: string;
     name: string;
@@ -36,7 +37,7 @@ export const createClient = async (clientData: {
   username: string;
   password: string;
   name: string;
-  patientIds: string[];
+  staffIds: string[];
 }) => {
   const response = await axiosInstance.post(`${SERVER_URL}/admin/create-client`, clientData);
   return response.data;
@@ -52,7 +53,7 @@ export const updateClient = async (clientId: string, clientData: {
   name: string;
   password?: string;
   isActive: boolean;
-  patientIds: string[];
+  staffIds: string[];
 }) => {
   const response = await axiosInstance.put(`${SERVER_URL}/admin/edit-client/${clientId}`, clientData);
   return response.data;
