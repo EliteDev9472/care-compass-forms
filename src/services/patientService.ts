@@ -5,31 +5,19 @@ import { SERVER_URL } from '@/config';
 export interface Patient {
   _id: string;
   name: string;
-  client: {
-    _id: string;
-    username: string;
-    name: string;
-  };
-  assignedStaff: {
-    _id: string;
-    username: string;
-    name: string;
-  };
+  billingMinutes: number;
 }
 
 export interface PatientCreateData {
   name: string;
-  clientId: string;
-  staffId: string;
 }
 
 export interface PatientUpdateData {
   name: string;
-  staffId: string;
 }
 
-export const getAllPatients = async () => {
-  const response = await axiosInstance.get(`${SERVER_URL}/admin/patients`);
+export const getAllPatients = async (startDate?: string, endDate?: string) => {
+  const response = await axiosInstance.get(`${SERVER_URL}/admin/patients/?start=${startDate}&end=${endDate}`);
   return response.data;
 };
 

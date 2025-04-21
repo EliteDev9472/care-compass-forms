@@ -29,6 +29,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode = 'add' }) => {
       const fetchClientData = async () => {
         try {
           const data = await getClientForEdit(clientId);
+          console.log('----------------->', data)
           setClientData(data);
           setClientName(data.name);
           setUsername(data.username);

@@ -40,8 +40,6 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
           const data = await getPatient(patientId);
           setPatientData(data);
           setPatientName(data.name);
-          setSelectedClientId(data.client._id);
-          setSelectedStaffId(data.assignedStaff._id);
         } catch (error) {
           toast.error('Failed to load patient data');
           navigate('/admin/patients');
@@ -52,7 +50,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
   }, [mode, patientId, navigate]);
 
   const handleSave = async () => {
-    if (!patientName || (!patientId && (!selectedClientId || !selectedStaffId))) {
+    if (!patientName) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -62,15 +60,12 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
       if (mode === 'edit' && patientId) {
         const updateData: PatientUpdateData = {
           name: patientName,
-          staffId: selectedStaffId
         };
         await updatePatient(patientId, updateData);
         toast.success('Patient updated successfully');
       } else {
         const createData: PatientCreateData = {
           name: patientName,
-          clientId: selectedClientId,
-          staffId: selectedStaffId
         };
         await createPatient(createData);
         toast.success('Patient created successfully');
@@ -97,39 +92,6 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
           />
         </div>
 
-        {mode === 'add' && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Select Client *</label>
-            <Select value={selectedClientId} onValueChange={setSelectedClientId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a client" />
-              </SelectTrigger>
-              <SelectContent>
-                {patientData?.client && (
-                  <SelectItem value={patientData.client._id}>
-                    {patientData.client.name}
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Staff *</label>
-          <Select value={selectedStaffId} onValueChange={setSelectedStaffId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select staff member" />
-            </SelectTrigger>
-            <SelectContent>
-              {patientData?.assignedStaff && (
-                <SelectItem value={patientData.assignedStaff._id}>
-                  {patientData.assignedStaff.name}
-                </SelectItem>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       <div className="flex justify-end space-x-4">
@@ -138,7 +100,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
         </Button>
         <Button
           onClick={handleSave}
-          disabled={loading || !patientName || (!patientId && (!selectedClientId || !selectedStaffId))}
+          disabled={loading || !patientName}
         >
           {loading ? 'Saving...' : 'Save Patient'}
         </Button>

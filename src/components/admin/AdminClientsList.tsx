@@ -133,7 +133,7 @@ const AdminClientsList: React.FC = () => {
           <div className="p-6 text-center text-gray-500">No clients found</div>
         ) : (
           clients.map(client => (
-            <div key={client._id} className="grid grid-cols-8 border-b hover:bg-gray-50">
+            <div key={client._id} className="grid grid-cols-5 border-b hover:bg-gray-50">
               <div className="p-4">{client.name}</div>
               <div className="p-4">{client.username}</div>
               <div className="p-4">
