@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,9 +10,9 @@ import {
   StaffCreateData,
   StaffUpdateData,
   StaffEditData,
+  getUnassignedPatientsForStaff
 } from '@/services/staffService';
 import { toast } from 'sonner';
-import { getUnassignedPatientsForStaff } from '@/services/staffService';
 
 interface StaffFormProps {
   mode?: 'add' | 'edit';
@@ -27,7 +28,6 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
   const [enabled, setEnabled] = useState(true);
   const [assignedPatients, setAssignedPatients] = useState<{ _id: string; name: string }[]>([]);
   const [unassignedPatients, setUnassignedPatients] = useState<{ _id: string; name: string }[]>([]);
-  const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>([]);
   const [showPatientSelection, setShowPatientSelection] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -50,7 +50,6 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
           setEnabled(data.isActive ?? true);
           setAssignedPatients(data.assignedPatients ?? []);
           setUnassignedPatients(data.unassignedPatients ?? []);
-          setSelectedPatientIds(data.assignedPatients?.map((p) => p._id) ?? []);
         })
         .catch(() => {
           toast.error('Failed to load staff data');
@@ -59,14 +58,6 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
         .finally(() => setLoading(false));
     }
   }, [mode, staffId, navigate]);
-
-  const selectedPatients = assignedPatients.filter((patient) =>
-    selectedPatientIds.includes(patient._id)
-  );
-  const availablePatients = [
-    ...assignedPatients,
-    ...unassignedPatients,
-  ].filter((p) => !selectedPatientIds.includes(p._id));
 
   const handleSave = async () => {
     if (!staffName || !username || (mode === 'add' && !password)) {
@@ -80,7 +71,7 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
           username,
           name: staffName,
           isActive: enabled,
-          patientIds: selectedPatientIds,
+          patientIds: assignedPatients.map(patient => patient._id),
         };
         if (password) staffData.password = password;
         await updateStaff(staffId, staffData);
@@ -90,7 +81,7 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
           username,
           name: staffName,
           password,
-          patientIds: selectedPatientIds,
+          patientIds: unassignedPatients.map(patient => patient._id),
         };
         await createStaff(staffData);
         toast.success('Staff created successfully');
@@ -103,12 +94,14 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
     }
   };
 
-  const handleAddPatient = (patientId: string) => {
-    setSelectedPatientIds((prev) => [...prev, patientId]);
+  const handleAddPatient = (patient: { _id: string, name: string }) => {
+    setAssignedPatients((prev) => [...prev, patient]);
+    setUnassignedPatients(prev => [...prev].filter(id =>  id !== patient));
   };
 
-  const handleRemovePatient = (patientId: string) => {
-    setSelectedPatientIds((prev) => prev.filter((id) => id !== patientId));
+  const handleRemovePatient = (patient: { _id: string, name: string }) => {
+    setUnassignedPatients((prev) => [...prev, patient]);
+    setAssignedPatients(prev => [...prev].filter(id =>  id !== patient));
   };
 
   return (
@@ -159,11 +152,11 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
               <div>
                 <h4 className="font-medium mb-2">Selected Patients</h4>
                 <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                  {selectedPatients.length === 0 ? (
+                  {assignedPatients.length === 0 ? (
                     <p className="text-gray-500 text-sm">No patients selected</p>
                   ) : (
                     <ul className="space-y-2">
-                      {selectedPatients.map((patient) => (
+                      {assignedPatients.map((patient) => (
                         <li
                           key={patient._id}
                           className="flex justify-between items-center p-2 bg-white rounded shadow-sm"
@@ -172,7 +165,7 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleRemovePatient(patient._id)}
+                            onClick={() => handleRemovePatient(patient)}
                           >
                             Remove
                           </Button>
@@ -185,11 +178,11 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
               <div>
                 <h4 className="font-medium mb-2">Available Patients</h4>
                 <div className="border rounded-md p-4 bg-gray-50 min-h-[200px]">
-                  {availablePatients.length === 0 ? (
+                  {unassignedPatients.length === 0 ? (
                     <p className="text-gray-500 text-sm">No patients available</p>
                   ) : (
                     <ul className="space-y-2">
-                      {availablePatients.map((patient) => (
+                      {unassignedPatients.map((patient) => (
                         <li
                           key={patient._id}
                           className="flex justify-between items-center p-2 bg-white rounded shadow-sm"
@@ -198,7 +191,7 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleAddPatient(patient._id)}
+                            onClick={() => handleAddPatient(patient)}
                           >
                             Add
                           </Button>
@@ -222,14 +215,12 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
                   onChange={() => setEnabled((v) => !v)}
                 />
                 <div
-                  className={`block w-14 h-8 rounded-full transition ${
-                    enabled ? 'bg-green-500' : 'bg-gray-300'
-                  }`}
+                  className={`block w-14 h-8 rounded-full transition ${enabled ? 'bg-green-500' : 'bg-gray-300'
+                    }`}
                 ></div>
                 <div
-                  className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform ${
-                    enabled ? 'translate-x-6' : ''
-                  }`}
+                  className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform ${enabled ? 'translate-x-6' : ''
+                    }`}
                 ></div>
               </div>
               <div className="ml-3 text-gray-700 font-medium">
