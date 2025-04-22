@@ -8,56 +8,14 @@ import {
   fetchFormsFailure,
   setCurrentForm
 } from '../../store/patientSlice';
+import { getPatientFormsByTemplate, FormTemplate } from '../../services/templateService';
 import { Calendar } from '../../components/ui/calendar';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
 import { useSelector } from 'react-redux';
-
-// Mock forms data - this would come from an API in a real app
-const mockForms = [
-  {
-    id: '1',
-    patientId: '1',
-    name: 'Template1',
-    type: 'Care Plan',
-    createdAt: '2023-04-01T10:00:00Z',
-    updatedAt: '2023-04-01T11:05:00Z',
-    billingTime: 65, // 01:05
-    data: {}
-  },
-  {
-    id: '2',
-    patientId: '2',
-    name: 'Template2',
-    type: 'Assessment',
-    createdAt: '2023-04-02T14:00:00Z',
-    updatedAt: '2023-04-02T16:45:00Z',
-    billingTime: 165, // 02:45
-    data: {}
-  },
-  {
-    id: '3',
-    patientId: '3',
-    name: 'Template3',
-    type: 'Progress Note',
-    createdAt: '2023-04-16T09:00:00Z',
-    updatedAt: '2023-04-16T12:33:00Z',
-    billingTime: 213, // 03:33
-    data: {}
-  },
-  {
-    id: '4',
-    patientId: '4',
-    name: 'Template4',
-    type: 'Medication Review',
-    createdAt: '2023-04-16T13:00:00Z',
-    updatedAt: '2023-04-16T17:23:00Z',
-    billingTime: 263, // 04:23
-    data: {}
-  },
-];
+import { toast } from 'sonner';
 
 const PatientForms: React.FC = () => {
   const { patientId } = useParams<{ patientId: string }>();
@@ -65,72 +23,92 @@ const PatientForms: React.FC = () => {
   const navigate = useNavigate();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formTemplates, setFormTemplates] = useState<FormTemplate[]>([]);
 
-  const { currentPatient, forms, loading, error } = useAppSelector(state => state.patients);
-  const [filteredForms, setFilteredForms] = useState<any[]>(mockForms);
+  const { currentPatient } = useAppSelector(state => state.patients);
   const { user } = useAppSelector(state => state.auth);
+
+  const fetchTemplates = async (startDate?: string, endDate?: string) => {
+    if (!patientId) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      dispatch(fetchFormsStart());
+      const templates = await getPatientFormsByTemplate(
+        patientId,
+        startDate,
+        endDate
+      );
+      setFormTemplates(templates);
+      dispatch(fetchFormsSuccess([])); // We're not using the old forms state anymore
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching templates:', err);
+      setError('Failed to fetch form templates');
+      dispatch(fetchFormsFailure('Failed to fetch forms'));
+      setLoading(false);
+      toast.error('Failed to fetch form templates');
+    }
+  };
 
   useEffect(() => {
     if (!patientId) return;
 
-    dispatch(fetchFormsStart());
-
-    // Simulate API call to fetch forms for this patient
-    setTimeout(() => {
-      try {
-        const patientForms = mockForms.filter(form => form.patientId === patientId);
-        dispatch(fetchFormsSuccess(patientForms));
-      } catch (err) {
-        dispatch(fetchFormsFailure('Failed to fetch forms'));
-      }
-    }, 500);
-  }, [dispatch, patientId]);
-
-  useEffect(() => {
-    if (forms.length === 0 || !date) return;
-
-    let filtered = [];
+    let startDate: string;
+    let endDate: string;
+    
     switch (viewMode) {
-      case 'day':
-        filtered = forms.filter(form => {
-          const formDate = new Date(form.updatedAt);
-          return formDate.toDateString() === date.toDateString();
-        });
-        break;
       case 'week':
-        filtered = forms.filter(form => {
-          const formDate = new Date(form.updatedAt);
-          const weekStart = startOfWeek(date);
-          const weekEnd = endOfWeek(date);
-          return isWithinInterval(formDate, { start: weekStart, end: weekEnd });
-        });
+        startDate = format(startOfWeek(date), 'yyyy-MM-dd');
+        endDate = format(endOfWeek(date), 'yyyy-MM-dd');
         break;
       case 'month':
-        filtered = forms.filter(form => {
-          const formDate = new Date(form.updatedAt);
-          const monthStart = startOfMonth(date);
-          const monthEnd = endOfMonth(date);
-          return isWithinInterval(formDate, { start: monthStart, end: monthEnd });
-        });
+        startDate = format(startOfMonth(date), 'yyyy-MM-dd');
+        endDate = format(endOfMonth(date), 'yyyy-MM-dd');
         break;
       default:
-        filtered = forms;
+        startDate = format(date, 'yyyy-MM-dd');
+        endDate = format(date, 'yyyy-MM-dd');
     }
-    // setFilteredForms(filtered);
-  }, [forms, date, viewMode]);
+    
+    fetchTemplates(startDate, endDate);
+  }, [dispatch, patientId, date, viewMode]);
 
   const formatTime = (minutes: number): string => {
+    if (!minutes) return '00:00';
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
-  const handleFormClick = (form: any) => {
+  const handleFormClick = (template: FormTemplate) => {
+    // Transform template to match the current form structure expected by the app
+    const formData = template.submission?.data || {};
+    
+    const form = {
+      id: template._id,
+      patientId: patientId,
+      name: template.name,
+      type: template.name,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      billingTime: template.billingMinutes || 0,
+      data: formData,
+      templateFields: template.fields,
+      submission: template.submission
+    };
+    
     dispatch(setCurrentForm(form));
-    if (user.role == 'staff')
-      navigate(`/staff/patients/${patientId}/forms/${form.id}`);
-    else
-      navigate(`/client/patients/${patientId}/forms/${form.id}`);
+    
+    if (user?.role === 'staff') {
+      navigate(`/staff/patients/${patientId}/forms/${template._id}`);
+    } else {
+      navigate(`/client/patients/${patientId}/forms/${template._id}`);
+    }
   };
 
   const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
@@ -148,7 +126,6 @@ const PatientForms: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        {console.log(currentPatient)}
         <h1 className="text-2xl font-bold">Forms of {currentPatient?.name || patientId}</h1>
         <div className="flex space-x-2">
           <div className="flex rounded-md overflow-hidden">
@@ -195,17 +172,21 @@ const PatientForms: React.FC = () => {
           <div className="p-4 font-semibold">Forms</div>
           <div className="p-4 font-semibold">Billing Time</div>
         </div>
-        {filteredForms.length === 0 ? (
+        {formTemplates.length === 0 ? (
           <div className="p-6 text-center text-gray-500">No forms found for this time period</div>
         ) : (
-          filteredForms.map(form => (
+          formTemplates.map(template => (
             <div
-              key={form.id}
-              onClick={() => handleFormClick(form)}
+              key={template._id}
+              onClick={() => handleFormClick(template)}
               className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
             >
-              <div className="p-4">{form.name}</div>
-              <div className="p-4">{formatTime(form.billingTime)}</div>
+              <div className="p-4">
+                {template.name}
+                {template.submission ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> : 
+                <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
+              </div>
+              <div className="p-4">{formatTime(template.billingMinutes || 0)}</div>
             </div>
           ))
         )}

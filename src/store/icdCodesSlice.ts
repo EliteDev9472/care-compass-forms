@@ -1,5 +1,6 @@
 
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
 
 export interface ICDCode {
   code: string;
@@ -11,7 +12,14 @@ interface ICDCodeState {
   searchTerm: string;
   searchResults: ICDCode[];
   loading: boolean;
+  error: string | null;
 }
+
+// Async thunk to load ICD codes from the JSON file
+export const loadICDCodes = createAsyncThunk('icdCodes/loadICDCodes', async () => {
+  const response = await axios.get('/ICD.json');
+  return response.data;
+});
 
 const initialState: ICDCodeState = {
   codes: [
@@ -28,7 +36,8 @@ const initialState: ICDCodeState = {
   ],
   searchTerm: '',
   searchResults: [],
-  loading: false
+  loading: false,
+  error: null
 };
 
 const icdCodesSlice = createSlice({
@@ -37,20 +46,37 @@ const icdCodesSlice = createSlice({
   reducers: {
     setSearchTerm(state, action: PayloadAction<string>) {
       state.searchTerm = action.payload;
-      // Filter search results
+      // Filter search results and limit to top 10
       if (action.payload.trim() === '') {
         state.searchResults = [];
       } else {
-        state.searchResults = state.codes.filter(code => 
-          code.code.toLowerCase().includes(action.payload.toLowerCase()) || 
-          code.description.toLowerCase().includes(action.payload.toLowerCase())
-        );
+        state.searchResults = state.codes
+          .filter(code => 
+            code.code.toLowerCase().includes(action.payload.toLowerCase()) || 
+            code.description.toLowerCase().includes(action.payload.toLowerCase())
+          )
+          .slice(0, 10); // Show only top 10 matches
       }
     },
     clearSearch(state) {
       state.searchTerm = '';
       state.searchResults = [];
     }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(loadICDCodes.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loadICDCodes.fulfilled, (state, action) => {
+        state.codes = action.payload;
+        state.loading = false;
+      })
+      .addCase(loadICDCodes.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to load ICD codes';
+      });
   }
 });
 

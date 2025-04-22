@@ -6,64 +6,114 @@ import Layout from '../../components/layout/Layout';
 import CareForm from '../../components/form/CareForm';
 import ProtectedRoute from '../../components/shared/ProtectedRoute';
 import { setCurrentForm } from '../../store/patientSlice';
-
-// Mock form data - this would come from an API in a real app
-const mockForm = {
-  id: '1',
-  patientId: '1',
-  name: 'Template1',
-  type: 'Care Plan',
-  createdAt: '2023-04-01T10:00:00Z',
-  updatedAt: '2023-04-01T11:05:00Z',
-  billingTime: 65, // 01:05
-  data: {
-    healthGoals: 'Eat healthier',
-    difficulties: 'Diet and nutrition',
-    primaryDiagnosis: 'E11.9 - Type 2 diabetes mellitus without complications',
-    secondaryDiagnosis: 'I10 - Essential (primary) hypertension',
-    medications: 'Metformin 500mg twice daily, Lisinopril 10mg once daily',
-    careObjectives: 'Improve blood sugar control, lose 10 pounds in 3 months',
-    interventions: 'Weekly nutrition counseling, daily glucose monitoring',
-    followUpSchedule: 'Weekly'
-  }
-};
+import { submitFormWithTimerSessions, getPatientFormsByTemplate } from '../../services/templateService';
+import { resetTimer } from '../../store/timerSlice';
+import { toast } from 'sonner';
+import { loadICDCodes } from '../../store/icdCodesSlice';
 
 const FormPage: React.FC = () => {
   const { patientId, formId } = useParams<{ patientId: string, formId: string }>();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   
   const { currentForm } = useAppSelector(state => state.patients);
+  const { timerSessions } = useAppSelector(state => state.timer);
   const [formData, setFormData] = useState<Record<string, any>>({});
   
   useEffect(() => {
-    if (formId === 'new') {
-      // Creating a new form
-      dispatch(setCurrentForm(null));
-      setFormData({});
-    } else if (formId) {
-      // Fetch existing form - this would be an API call
-      dispatch(setCurrentForm(mockForm));
-      setFormData(mockForm.data);
-    }
-  }, [dispatch, formId]);
-  
-  const handleSaveForm = (data: Record<string, any>) => {
-    // This would be an API call to save the form
-    console.log('Saving form data:', data);
+    // Load ICD codes when page loads
+    dispatch(loadICDCodes());
     
-    // Redirect back to the forms list
-    navigate(`/staff/patients/${patientId}/forms`);
+    const fetchFormData = async () => {
+      if (formId === 'new') {
+        // Creating a new form
+        dispatch(setCurrentForm(null));
+        setFormData({});
+      } else if (formId && patientId) {
+        try {
+          // Find the form from the list of templates
+          setLoading(true);
+          const templates = await getPatientFormsByTemplate(patientId);
+          const selectedTemplate = templates.find(template => template._id === formId);
+          
+          if (selectedTemplate) {
+            // Transform template to match the current form structure expected by the app
+            const initialData = selectedTemplate.submission?.data || {};
+            
+            const form = {
+              id: selectedTemplate._id,
+              patientId: patientId,
+              name: selectedTemplate.name,
+              type: selectedTemplate.name,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              billingTime: selectedTemplate.billingMinutes || 0,
+              data: initialData,
+              templateFields: selectedTemplate.fields,
+              submission: selectedTemplate.submission
+            };
+            
+            dispatch(setCurrentForm(form));
+            setFormData(initialData);
+          }
+          setLoading(false);
+        } catch (error) {
+          console.error('Error fetching form data:', error);
+          toast.error('Failed to fetch form data');
+          setLoading(false);
+        }
+      }
+    };
+    
+    fetchFormData();
+  }, [dispatch, formId, patientId]);
+  
+  const handleSaveForm = async (data: Record<string, any>) => {
+    if (!patientId || !formId) {
+      toast.error('Missing patient or form information');
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      // Submit the form with timer sessions
+      await submitFormWithTimerSessions(
+        patientId,
+        formId,
+        data,
+        timerSessions
+      );
+      
+      toast.success('Form saved successfully');
+      
+      // Reset timer after successful submission
+      dispatch(resetTimer());
+      
+      // Redirect back to the forms list
+      navigate(`/staff/patients/${patientId}/forms`);
+    } catch (error) {
+      console.error('Error saving form:', error);
+      toast.error('Failed to save form');
+      setLoading(false);
+    }
   };
   
   return (
     <ProtectedRoute allowedRoles={['staff', 'client']}>
       <Layout>
-        <CareForm 
-          formId={formId || 'new'} 
-          initialData={formData} 
-          onSave={handleSaveForm} 
-        />
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="text-xl">Loading form...</div>
+          </div>
+        ) : (
+          <CareForm 
+            formId={formId || 'new'} 
+            initialData={formData} 
+            onSave={handleSaveForm} 
+          />
+        )}
       </Layout>
     </ProtectedRoute>
   );

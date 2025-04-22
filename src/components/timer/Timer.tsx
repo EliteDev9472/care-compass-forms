@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { startTimer, stopTimer } from '../../store/timerSlice';
+import { toast } from 'sonner';
 
 interface TimerProps {
   formId: string;
@@ -40,12 +41,10 @@ const Timer: React.FC<TimerProps> = ({ formId }) => {
   const handleStartStop = () => {
     if (isRunning) {
       dispatch(stopTimer());
-      
-      // Calculate total minutes for billing (rounded to nearest minute)
-      const totalMinutes = Math.round(elapsedTime / 60000);
-
+      toast.success('Timer stopped and session recorded');
     } else {
       dispatch(startTimer(formId));
+      toast.success('Timer started');
     }
   };
   
