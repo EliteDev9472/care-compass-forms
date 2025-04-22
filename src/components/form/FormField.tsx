@@ -1,8 +1,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { setSearchTerm, clearSearch, loadICDCodes } from '../../store/icdCodesSlice';
+import { useAppSelector } from '../../hooks/reduxHooks';
 import { debounce } from 'lodash';
+import axios from 'axios';
+
+interface ICDCode {
+  code: string;
+  description: string;
+}
 
 interface FormFieldProps {
   label: string;
@@ -21,30 +26,53 @@ const FormField: React.FC<FormFieldProps> = ({
   onChange,
   roleVisibleTo = []
 }) => {
-  const dispatch = useAppDispatch();
   const { user } = useAppSelector(state => state.auth);
-  const { searchResults, loading } = useAppSelector(state => state.icdCodes);
   const [showResults, setShowResults] = useState(false);
   const [localSearchValue, setLocalSearchValue] = useState(value);
+  const [searchResults, setSearchResults] = useState<ICDCode[]>([]);
+  const [loading, setLoading] = useState(false);
   
-  // Debounced search to prevent excessive Redux updates
+  // Debounced search to prevent excessive API calls
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSearch = useCallback(
-    debounce((searchValue: string) => {
-      dispatch(setSearchTerm(searchValue));
+    debounce(async (searchValue: string) => {
+      if (!searchValue.trim()) {
+        setSearchResults([]);
+        return;
+      }
+      
+      setLoading(true);
+      try {
+        const response = await axios.get('/ICD.json');
+        const allCodes: ICDCode[] = response.data;
+        const searchLower = searchValue.toLowerCase();
+        
+        // Filter codes and limit to top 10
+        const filteredResults = allCodes
+          .filter(code => {
+            // First try exact code match (most efficient)
+            if (code.code.toLowerCase().startsWith(searchLower)) return true;
+            
+            // Then try description match, but be more selective
+            return code.description.toLowerCase().includes(searchLower);
+          })
+          .slice(0, 10);
+          
+        setSearchResults(filteredResults);
+      } catch (error) {
+        console.error('Error fetching ICD codes:', error);
+        setSearchResults([]);
+      } finally {
+        setLoading(false);
+      }
     }, 300),
-    [dispatch]
+    []
   );
   
   // Check if current user role is allowed to see this field
   const isVisibleToCurrentUser = roleVisibleTo.length === 0 || 
     (user && roleVisibleTo.includes(user.role));
   
-  useEffect(() => {
-    // Load ICD codes when component mounts
-    dispatch(loadICDCodes());
-  }, [dispatch]);
-
   // When value changes from parent, update local state
   useEffect(() => {
     setLocalSearchValue(value);
@@ -70,7 +98,7 @@ const FormField: React.FC<FormFieldProps> = ({
     const selectedValue = `${code} - ${description}`;
     setLocalSearchValue(selectedValue);
     onChange(selectedValue);
-    dispatch(clearSearch());
+    setSearchResults([]);
     setShowResults(false);
   };
   

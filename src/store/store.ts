@@ -15,7 +15,6 @@ import storage from 'redux-persist/lib/storage';
 import authReducer from './authSlice';
 import patientReducer from './patientSlice';
 import timerReducer from './timerSlice';
-import icdCodesReducer from './icdCodesSlice';
 
 const persistConfig = {
   key: 'root',
@@ -26,8 +25,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
   auth: authReducer,
   patients: patientReducer,
-  timer: timerReducer,
-  icdCodes: icdCodesReducer
+  timer: timerReducer
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -39,8 +37,6 @@ export const store = configureStore({
       serializableCheck: {
         // Ignore these redux-persist actions
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-        // Ignore these paths in the Redux state (for non-serializable data)
-        ignoredPaths: ['icdCodes.codes'],
       },
     }),
 });

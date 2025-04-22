@@ -9,7 +9,8 @@ import { setCurrentForm } from '../../store/patientSlice';
 import { submitFormWithTimerSessions, getPatientFormsByTemplate } from '../../services/templateService';
 import { resetTimer } from '../../store/timerSlice';
 import { toast } from 'sonner';
-import { loadICDCodes } from '../../store/icdCodesSlice';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 const FormPage: React.FC = () => {
   const { patientId, formId } = useParams<{ patientId: string, formId: string }>();
@@ -22,9 +23,6 @@ const FormPage: React.FC = () => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   
   useEffect(() => {
-    // Load ICD codes when page loads
-    dispatch(loadICDCodes());
-    
     const fetchFormData = async () => {
       if (formId === 'new') {
         // Creating a new form
@@ -99,21 +97,38 @@ const FormPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const handleGoBack = () => {
+    navigate(`/staff/patients/${patientId}/forms`);
+  };
   
   return (
     <ProtectedRoute allowedRoles={['staff', 'client']}>
       <Layout>
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="text-xl">Loading form...</div>
+        <div className="container mx-auto">
+          <div className="mb-4">
+            <Button 
+              variant="outline" 
+              onClick={handleGoBack}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft size={16} />
+              Back to Forms
+            </Button>
           </div>
-        ) : (
-          <CareForm 
-            formId={formId || 'new'} 
-            initialData={formData} 
-            onSave={handleSaveForm} 
-          />
-        )}
+          
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="text-xl">Loading form...</div>
+            </div>
+          ) : (
+            <CareForm 
+              formId={formId || 'new'} 
+              initialData={formData} 
+              onSave={handleSaveForm} 
+            />
+          )}
+        </div>
       </Layout>
     </ProtectedRoute>
   );
