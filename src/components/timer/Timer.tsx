@@ -10,7 +10,7 @@ interface TimerProps {
 
 const Timer: React.FC<TimerProps> = ({ formId }) => {
   const dispatch = useAppDispatch();
-  const { isRunning, startTime, elapsedTime, currentFormId } = useAppSelector(state => state.timer);
+  const { isRunning, startTime, elapsedTime, currentFormId, timerSessions } = useAppSelector(state => state.timer);
   const [displayTime, setDisplayTime] = useState('00:00');
   
   // Format time as MM:SS
@@ -41,7 +41,20 @@ const Timer: React.FC<TimerProps> = ({ formId }) => {
   const handleStartStop = () => {
     if (isRunning) {
       dispatch(stopTimer());
-      toast.success('Timer stopped and session recorded');
+      
+      // Check if we have multiple sessions (split across days)
+      if (timerSessions.length > 0) {
+        const lastSessionIndex = timerSessions.length - 1;
+        const prevSessionIndex = timerSessions.length - 2;
+        
+        if (prevSessionIndex >= 0 && timerSessions[lastSessionIndex].startedAt !== timerSessions[prevSessionIndex].startedAt) {
+          toast.success('Timer stopped and multiple sessions recorded across days');
+        } else {
+          toast.success('Timer stopped and session recorded');
+        }
+      } else {
+        toast.success('Timer stopped and session recorded');
+      }
     } else {
       dispatch(startTimer(formId));
       toast.success('Timer started');

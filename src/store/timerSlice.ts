@@ -1,5 +1,6 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { format, differenceInMinutes, addDays, isSameDay } from 'date-fns';
 
 export interface TimerSession {
   startedAt: string;
@@ -23,6 +24,44 @@ const initialState: TimerState = {
   timerSessions: []
 };
 
+// Helper function to split timer sessions across midnight
+const splitTimerSessionsByDate = (startTime: number, endTime: number): TimerSession[] => {
+  const startDate = new Date(startTime);
+  const endDate = new Date(endTime);
+  
+  // If same day, return single session
+  if (isSameDay(startDate, endDate)) {
+    return [{
+      startedAt: new Date(startTime).toISOString(),
+      stoppedAt: new Date(endTime).toISOString(),
+      durationMinutes: Math.round(differenceInMinutes(endDate, startDate))
+    }];
+  }
+  
+  // Find midnight between the dates
+  const midnight = new Date(startDate);
+  midnight.setHours(23, 59, 59, 999);
+  
+  // Create first session (from start to midnight)
+  const firstSession: TimerSession = {
+    startedAt: startDate.toISOString(),
+    stoppedAt: midnight.toISOString(),
+    durationMinutes: Math.round(differenceInMinutes(midnight, startDate))
+  };
+  
+  // Create second session (from midnight+1ms to end)
+  const nextDay = addDays(startDate, 1);
+  nextDay.setHours(0, 0, 0, 0);
+  
+  const secondSession: TimerSession = {
+    startedAt: nextDay.toISOString(),
+    stoppedAt: endDate.toISOString(),
+    durationMinutes: Math.round(differenceInMinutes(endDate, nextDay))
+  };
+  
+  return [firstSession, secondSession];
+};
+
 const timerSlice = createSlice({
   name: 'timer',
   initialState,
@@ -37,16 +76,9 @@ const timerSlice = createSlice({
         const now = Date.now();
         state.elapsedTime += now - state.startTime;
         
-        // Add timer session
-        const startedAt = new Date(state.startTime).toISOString();
-        const stoppedAt = new Date(now).toISOString();
-        const durationMinutes = Math.round((now - state.startTime) / 60000);
-        
-        state.timerSessions.push({
-          startedAt,
-          stoppedAt,
-          durationMinutes
-        });
+        // Split timer session if it crosses midnight
+        const sessions = splitTimerSessionsByDate(state.startTime, now);
+        state.timerSessions.push(...sessions);
       }
       state.isRunning = false;
       state.startTime = null;
