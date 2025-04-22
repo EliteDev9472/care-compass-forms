@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppSelector } from '../../hooks/reduxHooks';
+import { useAppSelector, useAppDispatch } from '../../hooks/reduxHooks';
 import { getMyAssignedPatients, StaffPatient } from '../../services/staffService';
 import { Calendar } from '../../components/ui/calendar';
 import { format } from 'date-fns';
@@ -13,6 +13,7 @@ import { setCurrentPatient } from '@/store/patientSlice';
 
 const PatientsList: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector(state => state.auth);
   const [patients, setPatients] = useState<StaffPatient[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,7 +45,16 @@ const PatientsList: React.FC = () => {
   };
 
   const handlePatientClick = (patient: StaffPatient) => {
-    setCurrentPatient(patient)
+    // Convert StaffPatient to Patient format for the Redux store
+    const patientForStore = {
+      id: patient._id,
+      name: patient.name,
+      clientId: '', // Default empty value
+      assignedStaffIds: [], // Default empty array
+      totalBillingTime: patient.billingMinutes
+    };
+    
+    dispatch(setCurrentPatient(patientForStore));
     navigate(`/staff/patients/${patient._id}/forms`);
   };
 

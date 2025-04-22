@@ -1,4 +1,3 @@
-
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface Patient {
@@ -58,7 +57,6 @@ const patientSlice = createSlice({
       state.currentPatient = action.payload;
     },
     
-    // Forms
     fetchFormsStart(state) {
       state.loading = true;
       state.error = null;
@@ -75,14 +73,12 @@ const patientSlice = createSlice({
       state.currentForm = action.payload;
     },
     
-    // Update form billing time
     updateFormBillingTime(state, action: PayloadAction<{formId: string, time: number}>) {
       const form = state.forms.find(f => f.id === action.payload.formId);
       if (form) {
         form.billingTime = action.payload.time;
       }
       
-      // Also update patient total billing time
       if (state.currentPatient) {
         const patientForms = state.forms.filter(f => f.patientId === state.currentPatient.id);
         const totalTime = patientForms.reduce((sum, form) => sum + form.billingTime, 0);
