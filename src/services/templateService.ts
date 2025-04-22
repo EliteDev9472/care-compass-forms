@@ -39,3 +39,8 @@ export const updateTemplate = async (templateId: string, template: Omit<FormTemp
 export const deleteTemplate = async (templateId: string): Promise<void> => {
   await axiosInstance.delete(`${SERVER_URL}/admin/delete-form-template/${templateId}`);
 };
+
+export const getAllTemplatesWithInfo = async (): Promise<FormTemplate[]> => {
+  const response = await axiosInstance.get(`${SERVER_URL}/forms/templates`);
+  return response.data;
+};

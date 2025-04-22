@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { setCurrentPatient } from '@/store/patientSlice';
 
 const PatientsList: React.FC = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const PatientsList: React.FC = () => {
   useEffect(() => {
     const fetchPatients = async () => {
       if (!user || user.role !== 'staff') return;
-      
+
       setLoading(true);
       try {
         const response = await getMyAssignedPatients();
@@ -43,6 +44,7 @@ const PatientsList: React.FC = () => {
   };
 
   const handlePatientClick = (patient: StaffPatient) => {
+    setCurrentPatient(patient)
     navigate(`/staff/patients/${patient._id}/forms`);
   };
 
