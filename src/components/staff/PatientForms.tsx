@@ -32,10 +32,10 @@ const PatientForms: React.FC = () => {
 
   const fetchTemplates = async (startDate?: string, endDate?: string) => {
     if (!patientId) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       dispatch(fetchFormsStart());
       const templates = await getPatientFormsByTemplate(
@@ -60,7 +60,7 @@ const PatientForms: React.FC = () => {
 
     let startDate: string;
     let endDate: string;
-    
+
     switch (viewMode) {
       case 'week':
         startDate = format(startOfWeek(date), 'yyyy-MM-dd');
@@ -74,7 +74,7 @@ const PatientForms: React.FC = () => {
         startDate = format(date, 'yyyy-MM-dd');
         endDate = format(date, 'yyyy-MM-dd');
     }
-    
+
     fetchTemplates(startDate, endDate);
   }, [dispatch, patientId, date, viewMode]);
 
@@ -88,7 +88,7 @@ const PatientForms: React.FC = () => {
   const handleFormClick = (template: FormTemplate) => {
     // Transform template to match the current form structure expected by the app
     const formData = template.submission?.data || {};
-    
+
     const form = {
       id: template._id,
       patientId: patientId,
@@ -101,9 +101,9 @@ const PatientForms: React.FC = () => {
       templateFields: template.fields,
       submission: template.submission
     };
-    
+
     dispatch(setCurrentForm(form));
-    
+
     if (user?.role === 'staff') {
       navigate(`/staff/patients/${patientId}/forms/${template._id}`);
     } else {
@@ -183,8 +183,8 @@ const PatientForms: React.FC = () => {
             >
               <div className="p-4">
                 {template.name}
-                {template.submission ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> : 
-                <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
+                {template.submission ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
+                  <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
               </div>
               <div className="p-4">{formatTime(template.billingMinutes || 0)}</div>
             </div>

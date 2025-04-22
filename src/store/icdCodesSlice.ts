@@ -51,8 +51,8 @@ const icdCodesSlice = createSlice({
         state.searchResults = [];
       } else {
         state.searchResults = state.codes
-          .filter(code => 
-            code.code.toLowerCase().includes(action.payload.toLowerCase()) || 
+          .filter(code =>
+            code.code.toLowerCase().includes(action.payload.toLowerCase()) ||
             code.description.toLowerCase().includes(action.payload.toLowerCase())
           )
           .slice(0, 10); // Show only top 10 matches

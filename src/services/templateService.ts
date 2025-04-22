@@ -66,7 +66,7 @@ export const getAllTemplatesWithInfo = async (): Promise<FormTemplate[]> => {
 // New functions for staff role
 export const getPatientFormsByTemplate = async (patientId: string, startDate?: string, endDate?: string): Promise<FormTemplate[]> => {
   const params = startDate && endDate ? `?start=${startDate}&end=${endDate}` : '';
-  const response = await axiosInstance.get(`${SERVER_URL}/api/staff/patients/${patientId}/forms-by-template${params}`);
+  const response = await axiosInstance.get(`${SERVER_URL}/staff/patients/${patientId}/forms-by-template${params}`);
   return response.data;
 };
 
@@ -83,6 +83,6 @@ export const submitFormWithTimerSessions = async (
     timerSessions
   };
   
-  const response = await axiosInstance.post(`${SERVER_URL}/api/staff/form-submit`, payload);
+  const response = await axiosInstance.post(`${SERVER_URL}/staff/form-submit`, payload);
   return response.data;
 };
