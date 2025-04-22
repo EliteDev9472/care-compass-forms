@@ -12,53 +12,9 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInter
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
-import { submitForm } from '@/services/templateService';
+import { getPatientFormsByTemplate, submitForm } from '@/services/templateService';
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
-
-// Mock forms data - this would come from an API in a real app
-const mockForms = [
-  {
-    id: '1',
-    patientId: '1',
-    name: 'Template1',
-    type: 'Care Plan',
-    createdAt: '2023-04-01T10:00:00Z',
-    updatedAt: '2023-04-01T11:05:00Z',
-    billingTime: 65, // 01:05
-    data: {}
-  },
-  {
-    id: '2',
-    patientId: '2',
-    name: 'Template2',
-    type: 'Assessment',
-    createdAt: '2023-04-02T14:00:00Z',
-    updatedAt: '2023-04-02T16:45:00Z',
-    billingTime: 165, // 02:45
-    data: {}
-  },
-  {
-    id: '3',
-    patientId: '3',
-    name: 'Template3',
-    type: 'Progress Note',
-    createdAt: '2023-04-16T09:00:00Z',
-    updatedAt: '2023-04-16T12:33:00Z',
-    billingTime: 213, // 03:33
-    data: {}
-  },
-  {
-    id: '4',
-    patientId: '4',
-    name: 'Template4',
-    type: 'Medication Review',
-    createdAt: '2023-04-16T13:00:00Z',
-    updatedAt: '2023-04-16T17:23:00Z',
-    billingTime: 263, // 04:23
-    data: {}
-  },
-];
 
 const PatientForms: React.FC = () => {
   const { patientId } = useParams<{ patientId: string }>();
@@ -66,26 +22,37 @@ const PatientForms: React.FC = () => {
   const navigate = useNavigate();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const { currentPatient, forms, loading, error } = useAppSelector(state => state.patients);
-  const [filteredForms, setFilteredForms] = useState<any[]>(mockForms);
+  const { currentPatient, forms } = useAppSelector(state => state.patients);
+  const [filteredForms, setFilteredForms] = useState<any[]>([]);
   const { user } = useAppSelector(state => state.auth);
 
   useEffect(() => {
     if (!patientId) return;
 
     dispatch(fetchFormsStart());
+    setLoading(true);
 
-    // Simulate API call to fetch forms for this patient
-    setTimeout(() => {
-      try {
-        const patientForms = mockForms.filter(form => form.patientId === patientId);
-        dispatch(fetchFormsSuccess(patientForms));
-      } catch (err) {
-        dispatch(fetchFormsFailure('Failed to fetch forms'));
-      }
-    }, 500);
+    getPatientFormsByTemplate(patientId)
+      .then((response) => {
+        dispatch(fetchFormsSuccess(response.map(form => ({
+          id: form.templateId,
+          patientId: form.patientId,
+          name: `Template ${form.templateId}`,
+          type: 'Form',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          billingTime: form.durationMinutes,
+          data: form.data
+        }))));
+        setLoading(false);
+      })
+      .catch((error) => {
+        dispatch(fetchFormsFailure(error.message));
+        toast.error('Failed to fetch forms');
+        setLoading(false);
+      });
   }, [dispatch, patientId]);
 
   useEffect(() => {
@@ -118,7 +85,7 @@ const PatientForms: React.FC = () => {
       default:
         filtered = forms;
     }
-    // setFilteredForms(filtered);
+    setFilteredForms(filtered);
   }, [forms, date, viewMode]);
 
   const formatTime = (minutes: number): string => {
@@ -139,7 +106,7 @@ const PatientForms: React.FC = () => {
         });
         toast.success('Form submitted successfully');
         
-        if (user.role === 'staff') {
+        if (user?.role === 'staff') {
           navigate(`/staff/patients/${patientId}/forms/${form.id}`);
         } else {
           navigate(`/client/patients/${patientId}/forms/${form.id}`);
@@ -156,10 +123,6 @@ const PatientForms: React.FC = () => {
 
   if (loading) {
     return <div className="flex justify-center mt-8">Loading forms...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center mt-8">{error}</div>;
   }
 
   return (

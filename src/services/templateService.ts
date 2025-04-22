@@ -22,6 +22,13 @@ export interface FormSubmission {
   durationMinutes: number;
 }
 
+export interface FormsByTemplate {
+  patientId: string;
+  templateId: string;
+  data: Record<string, any>;
+  durationMinutes: number;
+}
+
 export const createFormTemplate = async (template: Omit<FormTemplate, 'id'>): Promise<FormTemplate> => {
   const response = await axiosInstance.post(`${SERVER_URL}/admin/create-form-template`, template);
   return response.data;
@@ -53,4 +60,9 @@ export const getAllTemplatesWithInfo = async (): Promise<FormTemplate[]> => {
 
 export const submitForm = async (submissionData: FormSubmission): Promise<void> => {
   await axiosInstance.post(`${SERVER_URL}/forms/submit`, submissionData);
+};
+
+export const getPatientFormsByTemplate = async (patientId: string): Promise<FormsByTemplate[]> => {
+  const response = await axiosInstance.get(`${SERVER_URL}/api/staff/patient/${patientId}/forms-by-template`);
+  return response.data;
 };
