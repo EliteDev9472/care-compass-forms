@@ -1,3 +1,4 @@
+
 import axiosInstance from './axiosConfig';
 import { SERVER_URL } from '@/config';
 
@@ -13,20 +14,6 @@ export interface FormTemplate {
   _id: string;
   name: string;
   fields: FormField[];
-}
-
-export interface FormSubmission {
-  patientId: string;
-  templateId: string;
-  data: Record<string, any>;
-  durationMinutes: number;
-}
-
-export interface FormsByTemplate {
-  patientId: string;
-  templateId: string;
-  data: Record<string, any>;
-  durationMinutes: number;
 }
 
 export const createFormTemplate = async (template: Omit<FormTemplate, 'id'>): Promise<FormTemplate> => {
@@ -55,14 +42,5 @@ export const deleteTemplate = async (templateId: string): Promise<void> => {
 
 export const getAllTemplatesWithInfo = async (): Promise<FormTemplate[]> => {
   const response = await axiosInstance.get(`${SERVER_URL}/forms/templates`);
-  return response.data;
-};
-
-export const submitForm = async (submissionData: FormSubmission): Promise<void> => {
-  await axiosInstance.post(`${SERVER_URL}/forms/submit`, submissionData);
-};
-
-export const getPatientFormsByTemplate = async (patientId: string): Promise<FormsByTemplate[]> => {
-  const response = await axiosInstance.get(`${SERVER_URL}/api/staff/patient/${patientId}/forms-by-template`);
   return response.data;
 };
