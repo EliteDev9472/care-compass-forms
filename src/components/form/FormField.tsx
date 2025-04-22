@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { setSearchTerm, clearSearch, loadICDCodes } from '../../store/icdCodesSlice';
+import { debounce } from 'lodash';
 
 interface FormFieldProps {
   label: string;
@@ -24,6 +25,16 @@ const FormField: React.FC<FormFieldProps> = ({
   const { user } = useAppSelector(state => state.auth);
   const { searchResults, loading } = useAppSelector(state => state.icdCodes);
   const [showResults, setShowResults] = useState(false);
+  const [localSearchValue, setLocalSearchValue] = useState(value);
+  
+  // Debounced search to prevent excessive Redux updates
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debouncedSearch = useCallback(
+    debounce((searchValue: string) => {
+      dispatch(setSearchTerm(searchValue));
+    }, 300),
+    [dispatch]
+  );
   
   // Check if current user role is allowed to see this field
   const isVisibleToCurrentUser = roleVisibleTo.length === 0 || 
@@ -33,6 +44,11 @@ const FormField: React.FC<FormFieldProps> = ({
     // Load ICD codes when component mounts
     dispatch(loadICDCodes());
   }, [dispatch]);
+
+  // When value changes from parent, update local state
+  useEffect(() => {
+    setLocalSearchValue(value);
+  }, [value]);
   
   if (!isVisibleToCurrentUser) {
     return null;
@@ -44,15 +60,25 @@ const FormField: React.FC<FormFieldProps> = ({
   
   const handleIcdSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchValue = e.target.value;
+    setLocalSearchValue(searchValue);
     onChange(searchValue);
-    dispatch(setSearchTerm(searchValue));
+    debouncedSearch(searchValue);
     setShowResults(true);
   };
   
   const handleSelectIcdCode = (code: string, description: string) => {
-    onChange(`${code} - ${description}`);
+    const selectedValue = `${code} - ${description}`;
+    setLocalSearchValue(selectedValue);
+    onChange(selectedValue);
     dispatch(clearSearch());
     setShowResults(false);
+  };
+  
+  const handleBlur = () => {
+    // Delay hiding results slightly to allow for clicks
+    setTimeout(() => {
+      setShowResults(false);
+    }, 200);
   };
   
   // For backward compatibility, treat textbox as text
@@ -90,9 +116,10 @@ const FormField: React.FC<FormFieldProps> = ({
         <div className="relative">
           <input
             type="text"
-            value={value}
+            value={localSearchValue}
             onChange={handleIcdSearch}
             onFocus={() => setShowResults(true)}
+            onBlur={handleBlur}
             placeholder="Type to search ICD codes"
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           />

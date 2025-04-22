@@ -50,11 +50,16 @@ const icdCodesSlice = createSlice({
       if (action.payload.trim() === '') {
         state.searchResults = [];
       } else {
+        // Use a more efficient search algorithm
+        const searchLower = action.payload.toLowerCase();
         state.searchResults = state.codes
-          .filter(code => 
-            code.code.toLowerCase().includes(action.payload.toLowerCase()) || 
-            code.description.toLowerCase().includes(action.payload.toLowerCase())
-          )
+          .filter(code => {
+            // First try exact code match (most efficient)
+            if (code.code.toLowerCase().startsWith(searchLower)) return true;
+            
+            // Then try description match, but be more selective
+            return code.description.toLowerCase().includes(searchLower);
+          })
           .slice(0, 10); // Show only top 10 matches
       }
     },
@@ -70,7 +75,10 @@ const icdCodesSlice = createSlice({
         state.error = null;
       })
       .addCase(loadICDCodes.fulfilled, (state, action) => {
-        state.codes = action.payload;
+        // Only update if we actually got data
+        if (Array.isArray(action.payload) && action.payload.length > 0) {
+          state.codes = action.payload;
+        }
         state.loading = false;
       })
       .addCase(loadICDCodes.rejected, (state, action) => {
