@@ -37,7 +37,10 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
+        // Ignore these redux-persist actions
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        // Ignore these paths in the Redux state (for non-serializable data)
+        ignoredPaths: ['icdCodes.codes'],
       },
     }),
 });
