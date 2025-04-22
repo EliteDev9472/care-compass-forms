@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks/reduxHooks';
@@ -13,6 +12,8 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInter
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
+import { submitForm } from '@/services/templateService';
+import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
 
 // Mock forms data - this would come from an API in a real app
@@ -65,6 +66,7 @@ const PatientForms: React.FC = () => {
   const navigate = useNavigate();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
+  const [submitting, setSubmitting] = useState(false);
 
   const { currentPatient, forms, loading, error } = useAppSelector(state => state.patients);
   const [filteredForms, setFilteredForms] = useState<any[]>(mockForms);
@@ -125,12 +127,27 @@ const PatientForms: React.FC = () => {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
-  const handleFormClick = (form: any) => {
+  const handleFormClick = async (form: any) => {
     dispatch(setCurrentForm(form));
-    if (user.role == 'staff')
-      navigate(`/staff/patients/${patientId}/forms/${form.id}`);
-    else
-      navigate(`/client/patients/${patientId}/forms/${form.id}`);
+    if (patientId) {
+      try {
+        await submitForm({
+          patientId,
+          templateId: form.id,
+          data: form.data,
+          durationMinutes: form.billingTime
+        });
+        toast.success('Form submitted successfully');
+        
+        if (user.role === 'staff') {
+          navigate(`/staff/patients/${patientId}/forms/${form.id}`);
+        } else {
+          navigate(`/client/patients/${patientId}/forms/${form.id}`);
+        }
+      } catch (error) {
+        toast.error('Failed to submit form');
+      }
+    }
   };
 
   const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
