@@ -4,38 +4,57 @@ import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../hooks/reduxHooks';
 import { getMyAssignedPatients, StaffPatient } from '../../services/staffService';
 import { Calendar } from '../../components/ui/calendar';
-import { format } from 'date-fns';
+import { endOfMonth, endOfWeek, format, startOfMonth, startOfWeek } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { setCurrentPatient } from '@/store/patientSlice';
+import { useDispatch } from 'react-redux';
 
 const PatientsList: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user } = useAppSelector(state => state.auth);
   const [patients, setPatients] = useState<StaffPatient[]>([]);
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
 
+  const fetchPatients = async (start, end) => {
+    if (!user || user.role !== 'staff') return;
+
+    setLoading(true);
+    try {
+      const response = await getMyAssignedPatients(start, end);
+      setPatients(response);
+    } catch (error) {
+      toast.error('Failed to fetch patients');
+      setPatients([]);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchPatients = async () => {
-      if (!user || user.role !== 'staff') return;
+    let startDate: Date;
+    let endDate: Date;
 
-      setLoading(true);
-      try {
-        const response = await getMyAssignedPatients();
-        setPatients(response);
-      } catch (error) {
-        toast.error('Failed to fetch patients');
-        setPatients([]);
-      }
-      setLoading(false);
-    };
+    switch (viewMode) {
+      case 'week':
+        startDate = startOfWeek(date);
+        endDate = endOfWeek(date);
+        break;
+      case 'month':
+        startDate = startOfMonth(date);
+        endDate = endOfMonth(date);
+        break;
+      default:
+        startDate = date;
+        endDate = date;
+    }
 
-    fetchPatients();
-  }, [user]);
+    fetchPatients(format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd'));
+  }, [date, viewMode]);
 
   const formatTime = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
@@ -44,7 +63,7 @@ const PatientsList: React.FC = () => {
   };
 
   const handlePatientClick = (patient: StaffPatient) => {
-    setCurrentPatient(patient)
+    dispatch(setCurrentPatient(patient))
     navigate(`/staff/patients/${patient._id}/forms`);
   };
 

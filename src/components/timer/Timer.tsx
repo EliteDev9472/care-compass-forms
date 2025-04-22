@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { startTimer, stopTimer } from '../../store/timerSlice';
-import { updateFormBillingTime } from '../../store/patientSlice';
 
 interface TimerProps {
   formId: string;
@@ -44,7 +43,7 @@ const Timer: React.FC<TimerProps> = ({ formId }) => {
       
       // Calculate total minutes for billing (rounded to nearest minute)
       const totalMinutes = Math.round(elapsedTime / 60000);
-      dispatch(updateFormBillingTime({ formId, time: totalMinutes }));
+
     } else {
       dispatch(startTimer(formId));
     }

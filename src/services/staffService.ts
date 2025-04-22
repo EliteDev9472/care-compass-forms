@@ -73,7 +73,7 @@ export const getUnassignedPatientsForStaff = async () => {
   return response.data;
 };
 
-export const getMyAssignedPatients = async (): Promise<StaffPatient[]> => {
-  const response = await axiosInstance.get(`${SERVER_URL}/staff/my-patients`);
+export const getMyAssignedPatients = async (start, end): Promise<StaffPatient[]> => {
+  const response = await axiosInstance.get(`${SERVER_URL}/staff/my-patients?start=${start}&end=${end}`);
   return response.data;
 };

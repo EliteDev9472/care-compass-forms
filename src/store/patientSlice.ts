@@ -1,4 +1,5 @@
 
+import { StaffPatient } from '@/services/staffService';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface Patient {
@@ -25,7 +26,7 @@ interface PatientState {
   forms: PatientForm[];
   loading: boolean;
   error: string | null;
-  currentPatient: Patient | null;
+  currentPatient: StaffPatient | null;
   currentForm: PatientForm | null;
 }
 
@@ -54,10 +55,10 @@ const patientSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
-    setCurrentPatient(state, action: PayloadAction<Patient | null>) {
+    setCurrentPatient(state, action: PayloadAction<StaffPatient | null>) {
       state.currentPatient = action.payload;
     },
-    
+
     // Forms
     fetchFormsStart(state) {
       state.loading = true;
@@ -74,25 +75,6 @@ const patientSlice = createSlice({
     setCurrentForm(state, action: PayloadAction<PatientForm | null>) {
       state.currentForm = action.payload;
     },
-    
-    // Update form billing time
-    updateFormBillingTime(state, action: PayloadAction<{formId: string, time: number}>) {
-      const form = state.forms.find(f => f.id === action.payload.formId);
-      if (form) {
-        form.billingTime = action.payload.time;
-      }
-      
-      // Also update patient total billing time
-      if (state.currentPatient) {
-        const patientForms = state.forms.filter(f => f.patientId === state.currentPatient.id);
-        const totalTime = patientForms.reduce((sum, form) => sum + form.billingTime, 0);
-        
-        const patientIndex = state.patients.findIndex(p => p.id === state.currentPatient?.id);
-        if (patientIndex !== -1) {
-          state.patients[patientIndex].totalBillingTime = totalTime;
-        }
-      }
-    }
   }
 });
 
@@ -104,8 +86,7 @@ export const {
   fetchFormsStart,
   fetchFormsSuccess,
   fetchFormsFailure,
-  setCurrentForm,
-  updateFormBillingTime
+  setCurrentForm
 } = patientSlice.actions;
 
 export default patientSlice.reducer;
