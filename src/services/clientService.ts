@@ -1,6 +1,7 @@
 
 import axiosInstance from './axiosConfig';
 import { SERVER_URL } from '@/config';
+import { StaffPatient } from './staffService';
 
 export interface Client {
   _id: string;
@@ -66,5 +67,10 @@ export const deleteClient = async (clientId: string) => {
 
 export const getUnassignedPatientsForClient = async () => {
   const response = await axiosInstance.get(`${SERVER_URL}/admin/unassigned-patients`);
+  return response.data;
+};
+
+export const getMyAssignedPatientsForClient = async (start, end): Promise<StaffPatient[]> => {
+  const response = await axiosInstance.get(`${SERVER_URL}/client/patients?start=${start}&end=${end}`);
   return response.data;
 };

@@ -1,152 +1,245 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAppSelector } from '../../hooks/reduxHooks';
 import Timer from '../timer/Timer';
-import FormField from './FormField';
+import { AlignLeft, Type } from 'lucide-react';
+import { FormField } from '@/services/templateService';
+import { debounce } from 'lodash';
+import axios from 'axios';
+
+interface ICDCode {
+  code: string;
+  description: string;
+}
 
 interface CareFormProps {
   formId: string;
-  initialData?: Record<string, any>;
+  initialData?: (string | boolean)[];
   onSave: (data: Record<string, any>) => void;
 }
 
-// Define our form template
-const formTemplate = {
-  sections: [
-    {
-      title: "PATIENT'S GOALS OF CARE",
-      fields: [
-        {
-          id: 'healthGoals',
-          label: 'Health Goals',
-          type: 'text' as const
-        },
-        {
-          id: 'difficulties',
-          label: 'What have you had difficulty with?',
-          type: 'dropdown' as const,
-          options: [
-            'Medication management',
-            'Physical activity',
-            'Diet and nutrition',
-            'Sleep',
-            'Mental health',
-            'Social support'
-          ]
-        }
-      ]
-    },
-    {
-      title: 'MEDICAL INFORMATION',
-      fields: [
-        {
-          id: 'primaryDiagnosis',
-          label: 'Primary Diagnosis (ICD Code)',
-          type: 'icd' as const
-        },
-        {
-          id: 'secondaryDiagnosis',
-          label: 'Secondary Diagnosis (ICD Code)',
-          type: 'icd' as const
-        },
-        {
-          id: 'medications',
-          label: 'Current Medications',
-          type: 'text' as const
-        }
-      ]
-    },
-    {
-      title: 'CARE PLAN',
-      fields: [
-        {
-          id: 'careObjectives',
-          label: 'Care Objectives',
-          type: 'text' as const
-        },
-        {
-          id: 'interventions',
-          label: 'Planned Interventions',
-          type: 'text' as const
-        },
-        {
-          id: 'followUpSchedule',
-          label: 'Follow-up Schedule',
-          type: 'dropdown' as const,
-          options: [
-            'Weekly',
-            'Bi-weekly',
-            'Monthly',
-            'As needed'
-          ]
-        }
-      ]
-    }
-  ]
-};
-
-const CareForm: React.FC<CareFormProps> = ({ formId, initialData = {}, onSave }) => {
-  const [formData, setFormData] = useState<Record<string, any>>(initialData);
-  const form = useAppSelector(state => 
-    state.patients.forms.find(f => f.id === formId)
+const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave }) => {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<(string | boolean)[]>(initialData);
+  const { currentForm } = useAppSelector(state =>
+    state.patients
   );
-  
+
+  const [searchResults, setSearchResults] = useState<ICDCode[]>([]);
+  const [localSearchValue, setLocalSearchValue] = useState('');
+  const [showResults, setShowResults] = useState(false);
+
   // Initialize form data from template if no initial data
   useEffect(() => {
     if (Object.keys(initialData).length === 0) {
-      const defaultData: Record<string, any> = {};
-      
-      formTemplate.sections.forEach(section => {
-        section.fields.forEach(field => {
-          defaultData[field.id] = '';
-        });
+      const defaultData: (string | boolean)[] = [];
+
+      currentForm.templateFields.forEach(field => {
+        if (field.type == 'checkbox')
+          defaultData.push(false);
+        else
+          defaultData.push('');
       });
-      
+
       setFormData(defaultData);
     } else {
       setFormData(initialData);
     }
   }, [initialData]);
-  
-  const handleFieldChange = (fieldId: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [fieldId]: value
-    }));
+
+  const handleFieldChange = (index: number, value: string | boolean) => {
+    const temp = [...formData];
+    temp[index] = value;
+    setFormData(temp);
   };
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
   };
-  
-  return (
-    <div className="max-w-4xl mx-auto my-8 bg-white p-6 rounded-lg shadow-md">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-center mb-6">Community Care Questionnaire</h1>
-        <Timer formId={formId} />
-      </div>
-      
-      <form onSubmit={handleSubmit}>
-        {formTemplate.sections.map((section, sectionIndex) => (
-          <div key={sectionIndex} className="mb-8">
-            <h2 className="text-xl font-bold mb-4">{sectionIndex + 1} - {section.title}</h2>
-            
-            <div className="space-y-4">
-              {section.fields.map((field) => (
-                <FormField
-                  key={field.id}
-                  label={field.label}
-                  type={field.type}
-                  options={field.options}
-                  value={formData[field.id] || ''}
-                  onChange={(value) => handleFieldChange(field.id, value)}
-                />
+
+  const debouncedSearch = useCallback(
+    debounce(async (searchValue: string) => {
+      if (!searchValue.trim()) {
+        setSearchResults([]);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await axios.get('/ICD.json');
+        const allCodes: ICDCode[] = response.data;
+
+        // Filter codes and limit to top 10
+        const filteredResults = allCodes
+          .filter(code => {
+            // First try exact code match (most efficient)
+            if (!code.code || !code.description) return false
+            if (code.code.startsWith(searchValue)) return true;
+
+            // Then try description match, but be more selective
+            return code.description.includes(searchValue);
+          })
+          .slice(0, 10);
+        setSearchResults(filteredResults);
+      } catch (error) {
+        console.error('Error fetching ICD codes:', error);
+        setSearchResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300),
+    []
+  );
+
+  const handleIcdSearch = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const searchValue = e.target.value;
+    setLocalSearchValue(searchValue);
+    handleFieldChange(index, searchValue);
+    debouncedSearch(searchValue);
+    setShowResults(true);
+  };
+
+  const handleSelectIcdCode = (index: number, code: string, description: string) => {
+    const selectedValue = `${description}`;
+    setLocalSearchValue(selectedValue);
+    handleFieldChange(index, selectedValue);
+    setSearchResults([]);
+    setShowResults(false);
+  };
+
+  const renderFormElement = (element: FormField, index: number) => {
+    const { type, label, required, options } = element;
+
+    switch (type) {
+      case 'heading':
+        return (
+          <div className="relative p-4 rounded-md mb-4 " key={index}>
+            {label}
+          </div>
+        );
+
+      case 'text-input':
+        return (
+          <div className="relative p-4 mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+            <input
+              type="text"
+              value={formData[index] as string}
+              onChange={(e) => handleFieldChange(index, e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md "
+              placeholder="Enter Text"
+            />
+          </div>
+        );
+
+      case 'text-field':
+        return (
+          <div className="relative p-4 -md mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+          </div>
+        );
+
+      case 'icd-text':
+        return (
+          <div className="relative p-4 -md mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+            <input
+              type="text"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              value={formData[index] as string}
+              placeholder="Input ICD"
+              onChange={(e) => handleIcdSearch(index, e)}
+            />
+            {loading && (
+              <div className="absolute right-3 top-3 text-sm text-gray-500">Loading...</div>
+            )}
+
+            {showResults && searchResults.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                {searchResults.map((result) => (
+                  <div
+                    key={result.code}
+                    className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSelectIcdCode(index, result.code, result.description)}
+                  >
+                    <div className="font-semibold">{result.code}</div>
+                    <div className="text-sm text-gray-600">{result.description}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'dropdown':
+        return (
+          <div className="relative p-4 -md mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+            <select className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              value={formData[index] as string}
+              onChange={(e) => handleFieldChange(index, e.target.value)}>
+              <option value=""> </option>
+              {options?.map((option, idx) => (
+                <option key={idx} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+        );
+
+      case 'checkbox':
+        return (
+          <div className="relative p-4 -md mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+            <div className="flex items-center space-x-2">
+              <input type="checkbox" className="h-4 w-4" checked={formData[index] as boolean} onChange={(e) => handleFieldChange(index, e.target.checked)} />
+            </div>
+          </div>
+        );
+
+      case 'radio':
+        return (
+          <div className="relative p-4 -md mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+            <div className="space-y-1">
+              {options?.map((option, idx) => (
+                <div key={idx} className="flex items-center space-x-2">
+                  <input type="radio" name={`radio_${index}`} className="h-4 w-4" onChange={(e) => handleFieldChange(index, option)} checked={formData[index] == option} />
+                  <span className="text-gray-500">{option}</span>
+                </div>
               ))}
             </div>
           </div>
-        ))}
-        
+        );
+
+      case 'rich-text':
+        return (
+          <div className="relative p-4 -md mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+            <div className="border border-gray-300 rounded-md p-1 mb-1 bg-gray-100">
+              <textarea className="w-full p-2 h-36 bg-white" placeholder='Rich text editor preview' value={formData[index] as string} onChange={(e) => handleFieldChange(index, e.target.value)} />
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto my-8 bg-white p-6 rounded-lg shadow-md">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-center mb-6">{currentForm.name}</h1>
+        <Timer formId={formId} />
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        {
+          currentForm.templateFields.map((field, index) => {
+            return renderFormElement(field, index)
+          })
+        }
         <div className="mt-8 flex justify-end">
           <button
             type="submit"

@@ -17,28 +17,29 @@ const FormPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  
-  const { currentForm } = useAppSelector(state => state.patients);
+
   const { timerSessions } = useAppSelector(state => state.timer);
-  const [formData, setFormData] = useState<Record<string, any>>({});
-  
+  const [formData, setFormData] = useState<(string | boolean)[]>([]);
+  const [submissionId, setSubmissioId] = useState('');
+  const { user } = useAppSelector(state => state.auth);
   useEffect(() => {
+
     const fetchFormData = async () => {
       if (formId === 'new') {
         // Creating a new form
         dispatch(setCurrentForm(null));
-        setFormData({});
+        setFormData([]);
       } else if (formId && patientId) {
         try {
           // Find the form from the list of templates
           setLoading(true);
           const templates = await getPatientFormsByTemplate(patientId);
           const selectedTemplate = templates.find(template => template._id === formId);
-          
+
           if (selectedTemplate) {
             // Transform template to match the current form structure expected by the app
-            const initialData = selectedTemplate.submission?.data || {};
-            
+            const initialData = selectedTemplate.submission?.data || [];
+
             const form = {
               id: selectedTemplate._id,
               patientId: patientId,
@@ -46,13 +47,14 @@ const FormPage: React.FC = () => {
               type: selectedTemplate.name,
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
-              billingTime: selectedTemplate.billingMinutes || 0,
+              billingTime: selectedTemplate.billingMinutes || "00:00",
               data: initialData,
               templateFields: selectedTemplate.fields,
-              submission: selectedTemplate.submission
+              submission: selectedTemplate.submission,
             };
-            
+
             dispatch(setCurrentForm(form));
+            setSubmissioId(selectedTemplate.submission?._id || null);
             setFormData(initialData);
           }
           setLoading(false);
@@ -63,32 +65,37 @@ const FormPage: React.FC = () => {
         }
       }
     };
-    
+
     fetchFormData();
   }, [dispatch, formId, patientId]);
-  
-  const handleSaveForm = async (data: Record<string, any>) => {
+
+  const handleSaveForm = async (data: (string | boolean)[]) => {
     if (!patientId || !formId) {
       toast.error('Missing patient or form information');
       return;
     }
-    
+
+    if (!timerSessions.length) {
+      toast.error('Please check timer');
+      return;
+    }
     setLoading(true);
-    
+
     try {
       // Submit the form with timer sessions
       await submitFormWithTimerSessions(
         patientId,
         formId,
         data,
-        timerSessions
+        timerSessions,
+        submissionId
       );
-      
+
       toast.success('Form saved successfully');
-      
+
       // Reset timer after successful submission
       dispatch(resetTimer());
-      
+
       // Redirect back to the forms list
       navigate(`/staff/patients/${patientId}/forms`);
     } catch (error) {
@@ -97,38 +104,38 @@ const FormPage: React.FC = () => {
       setLoading(false);
     }
   };
-
   const handleGoBack = () => {
-    navigate(`/staff/patients/${patientId}/forms`);
+    if (user?.role === 'staff') {
+      navigate('/staff/patients');
+    } else {
+      navigate('/client');
+    }
   };
-  
+
   return (
     <ProtectedRoute allowedRoles={['staff', 'client']}>
       <Layout>
-        <div className="container mx-auto">
-          <div className="mb-4">
-            <Button 
-              variant="outline" 
-              onClick={handleGoBack}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft size={16} />
-              Back to Forms
-            </Button>
-          </div>
-          
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="text-xl">Loading form...</div>
-            </div>
-          ) : (
-            <CareForm 
-              formId={formId || 'new'} 
-              initialData={formData} 
-              onSave={handleSaveForm} 
-            />
-          )}
+        <div className="mb-4">
+          <Button
+            variant="outline"
+            onClick={handleGoBack}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft size={16} />
+            Back to Patients
+          </Button>
         </div>
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="text-xl">Loading form...</div>
+          </div>
+        ) : (
+          <CareForm
+            formId={formId || 'new'}
+            initialData={formData}
+            onSave={handleSaveForm}
+          />
+        )}
       </Layout>
     </ProtectedRoute>
   );

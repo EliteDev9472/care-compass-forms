@@ -17,8 +17,10 @@ export interface PatientForm {
   type: string;
   createdAt: string;
   updatedAt: string;
-  billingTime: number; // Time in minutes
-  data: Record<string, any>; // Form data
+  templateFields: any;
+  billingTime: string; // Time in minutes
+  data: (string | boolean)[]; // Form data
+
 }
 
 interface PatientState {

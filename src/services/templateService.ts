@@ -22,7 +22,7 @@ export interface FormSubmission {
   template: string;
   patient: string;
   staff: string;
-  data: Record<string, any>;
+  data: (string | boolean)[];
   timerSessions: TimerSession[];
 }
 
@@ -31,7 +31,9 @@ export interface FormTemplate {
   name: string;
   fields: FormField[];
   submission?: FormSubmission | null;
-  billingMinutes?: number;
+  billingMinutes?: string;
+  template?: FormTemplate
+  data?: (string | boolean)[]
 }
 
 export const createFormTemplate = async (template: Omit<FormTemplate, 'id'>): Promise<FormTemplate> => {
@@ -70,19 +72,27 @@ export const getPatientFormsByTemplate = async (patientId: string, startDate?: s
   return response.data;
 };
 
+export const getPatientFormsByTemplateForClient = async (patientId: string, startDate?: string, endDate?: string): Promise<FormTemplate[]> => {
+  const params = startDate && endDate ? `?start=${startDate}&end=${endDate}` : '';
+  const response = await axiosInstance.get(`${SERVER_URL}/client/patient/${patientId}/submissions`);
+  return response.data;
+};
+
 export const submitFormWithTimerSessions = async (
   patientId: string,
   templateId: string,
-  data: Record<string, any>,
-  timerSessions: TimerSession[]
+  data: (string | boolean)[],
+  timerSessions: TimerSession[],
+  submissionId: string
 ): Promise<any> => {
   const payload = {
     patientId,
     templateId,
     data,
-    timerSessions
+    timerSessions,
+    submissionId
   };
-  
   const response = await axiosInstance.post(`${SERVER_URL}/staff/form-submit`, payload);
   return response.data;
+  return
 };

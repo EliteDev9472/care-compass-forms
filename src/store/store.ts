@@ -1,7 +1,7 @@
 
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import { 
-  persistStore, 
+import {
+  persistStore,
   persistReducer,
   FLUSH,
   REHYDRATE,
@@ -19,7 +19,7 @@ import timerReducer from './timerSlice';
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['auth'] // Only persist auth state across sessions
+  whitelist: ['auth', 'patients'] // Only persist auth state across sessions
 };
 
 const rootReducer = combineReducers({

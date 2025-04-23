@@ -9,7 +9,7 @@ const SignInForm: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -27,13 +27,13 @@ const SignInForm: React.FC = () => {
 
     try {
       const response = await login(username, password);
-      
+
       // Store the token in localStorage
       localStorage.setItem('token', response.token);
-      
+
       // Validate and convert the role to UserRole type
       const userRole = validateRole(response.role);
-      
+
       dispatch(loginSuccess({
         id: 'temp-id', // The backend doesn't return an id, using a temporary one
         username: response.username,
@@ -57,9 +57,9 @@ const SignInForm: React.FC = () => {
         default:
           navigate('/');
       }
-      
+
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      const errorMessage = error instanceof Error ? error.response.data.message : 'Login failed';
       dispatch(loginFailure(errorMessage));
       toast.error(errorMessage);
     } finally {

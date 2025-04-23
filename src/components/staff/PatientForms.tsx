@@ -8,7 +8,7 @@ import {
   fetchFormsFailure,
   setCurrentForm
 } from '../../store/patientSlice';
-import { getPatientFormsByTemplate, FormTemplate } from '../../services/templateService';
+import { getPatientFormsByTemplate, FormTemplate, getPatientFormsByTemplateForClient } from '../../services/templateService';
 import { Calendar } from '../../components/ui/calendar';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -38,12 +38,22 @@ const PatientForms: React.FC = () => {
 
     try {
       dispatch(fetchFormsStart());
-      const templates = await getPatientFormsByTemplate(
-        patientId,
-        startDate,
-        endDate
-      );
+      let templates: FormTemplate[]
+      if (user.role == 'staff')
+        templates = await getPatientFormsByTemplate(
+          patientId,
+          startDate,
+          endDate
+        );
+
+      else if (user.role == 'client')
+        templates = await getPatientFormsByTemplateForClient(
+          patientId,
+          startDate,
+          endDate
+        );
       setFormTemplates(templates);
+
       dispatch(fetchFormsSuccess([])); // We're not using the old forms state anymore
       setLoading(false);
     } catch (err) {
@@ -86,21 +96,41 @@ const PatientForms: React.FC = () => {
   };
 
   const handleFormClick = (template: FormTemplate) => {
+    let form
     // Transform template to match the current form structure expected by the app
-    const formData = template.submission?.data || {};
+    if (user.role == 'staff') {
+      const formData = template.submission?.data || [];
+      form = {
+        id: template._id,
+        patientId: patientId,
+        name: template.name,
+        type: template.name,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        billingTime: template.billingMinutes || "00:00",
+        data: formData,
+        templateFields: template.fields,
+        submission: template.submission
+      };
+    }
 
-    const form = {
-      id: template._id,
-      patientId: patientId,
-      name: template.name,
-      type: template.name,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      billingTime: template.billingMinutes || 0,
-      data: formData,
-      templateFields: template.fields,
-      submission: template.submission
-    };
+    else if (user.role == 'client') {
+      const temp = template.template
+      const formData = template?.data || [];
+
+      form = {
+        id: template._id,
+        patientId: patientId,
+        name: temp.name,
+        type: temp.name,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        billingTime: template.billingMinutes || "00:00",
+        data: formData,
+        templateFields: temp.fields,
+        submission: temp.submission
+      };
+    }
 
     dispatch(setCurrentForm(form));
 
@@ -134,8 +164,8 @@ const PatientForms: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-4">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={handleGoBack}
           className="flex items-center gap-2"
         >
@@ -143,7 +173,7 @@ const PatientForms: React.FC = () => {
           Back to Patients
         </Button>
       </div>
-      
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Forms of {currentPatient?.name || patientId}</h1>
         <div className="flex space-x-2">
@@ -194,20 +224,35 @@ const PatientForms: React.FC = () => {
         {formTemplates.length === 0 ? (
           <div className="p-6 text-center text-gray-500">No forms found for this time period</div>
         ) : (
-          formTemplates.map(template => (
-            <div
-              key={template._id}
-              onClick={() => handleFormClick(template)}
-              className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
-            >
-              <div className="p-4">
-                {template.name}
-                {template.submission ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
-                  <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
+          user.role == 'staff' ?
+            formTemplates.map(template => (
+              <div
+                key={template._id}
+                onClick={() => handleFormClick(template)}
+                className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
+              >
+                <div className="p-4">
+                  {template.name}
+                  {template.submission ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
+                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
+                </div>
+                <div className="p-4">{template.billingMinutes}</div>
               </div>
-              <div className="p-4">{formatTime(template.billingMinutes || 0)}</div>
-            </div>
-          ))
+            )) :
+            formTemplates.map(template => (
+              <div
+                key={template.template._id}
+                onClick={() => handleFormClick(template)}
+                className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
+              >
+                <div className="p-4">
+                  {template.template.name}
+                  {template.data ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
+                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
+                </div>
+                <div className="p-4">{template.billingMinutes}</div>
+              </div>
+            ))
         )}
       </div>
     </div>

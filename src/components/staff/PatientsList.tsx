@@ -11,6 +11,7 @@ import { CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { setCurrentPatient } from '@/store/patientSlice';
 import { useDispatch } from 'react-redux';
+import { getMyAssignedPatientsForClient } from '@/services/clientService';
 
 const PatientsList: React.FC = () => {
   const navigate = useNavigate();
@@ -22,11 +23,15 @@ const PatientsList: React.FC = () => {
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
 
   const fetchPatients = async (start, end) => {
-    if (!user || user.role !== 'staff') return;
+    if (!user) return;
 
     setLoading(true);
     try {
-      const response = await getMyAssignedPatients(start, end);
+      let response: StaffPatient[]
+      if (user.role == 'staff')
+        response = await getMyAssignedPatients(start, end);
+      else if (user.role == 'client')
+        response = await getMyAssignedPatientsForClient(start, end);
       setPatients(response);
     } catch (error) {
       toast.error('Failed to fetch patients');
@@ -64,7 +69,10 @@ const PatientsList: React.FC = () => {
 
   const handlePatientClick = (patient: StaffPatient) => {
     dispatch(setCurrentPatient(patient))
-    navigate(`/staff/patients/${patient._id}/forms`);
+    if (user.role == 'staff')
+      navigate(`/staff/patients/${patient._id}/forms`);
+    else if (user.role == 'client')
+      navigate(`/client/patients/${patient._id}/forms`);
   };
 
   const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
@@ -135,7 +143,7 @@ const PatientsList: React.FC = () => {
               className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
             >
               <div className="p-4">{patient.name}</div>
-              <div className="p-4">{formatTime(patient.billingMinutes)}</div>
+              <div className="p-4">{patient.billingMinutes}</div>
             </div>
           ))
         )}
