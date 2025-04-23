@@ -32,8 +32,8 @@ const splitTimerSessionsByDate = (startTime: number, endTime: number): TimerSess
   // If same day, return single session
   if (isSameDay(startDate, endDate)) {
     return [{
-      startedAt: new Date(startTime).toISOString(),
-      stoppedAt: new Date(endTime).toISOString(),
+      startedAt: new Date(startTime).toString(),
+      stoppedAt: new Date(endTime).toString(),
       durationMinutes: Math.round(differenceInMinutes(endDate, startDate))
     }];
   }
@@ -44,8 +44,8 @@ const splitTimerSessionsByDate = (startTime: number, endTime: number): TimerSess
   
   // Create first session (from start to midnight)
   const firstSession: TimerSession = {
-    startedAt: startDate.toISOString(),
-    stoppedAt: midnight.toISOString(),
+    startedAt: startDate.toString(),
+    stoppedAt: midnight.toString(),
     durationMinutes: Math.round(differenceInMinutes(midnight, startDate))
   };
   
@@ -54,8 +54,8 @@ const splitTimerSessionsByDate = (startTime: number, endTime: number): TimerSess
   nextDay.setHours(0, 0, 0, 0);
   
   const secondSession: TimerSession = {
-    startedAt: nextDay.toISOString(),
-    stoppedAt: endDate.toISOString(),
+    startedAt: nextDay.toString(),
+    stoppedAt: endDate.toString(),
     durationMinutes: Math.round(differenceInMinutes(endDate, nextDay))
   };
   

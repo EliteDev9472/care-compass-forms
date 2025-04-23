@@ -62,10 +62,10 @@ const SignInForm: React.FC = () => {
     } catch (error) {
       // Fix: Properly type the error and safely access error message
       let errorMessage = 'Login failed';
-      
+
       if (error instanceof Error) {
         // Basic Error object doesn't have response property
-        errorMessage = error.message;
+        errorMessage = error.response?.data.message;
       } else if (typeof error === 'object' && error !== null) {
         // Handle axios error object which might have response data
         // @ts-ignore - We're safely checking for existence before accessing
@@ -74,7 +74,7 @@ const SignInForm: React.FC = () => {
           errorMessage = error.response.data.message;
         }
       }
-      
+
       dispatch(loginFailure(errorMessage));
       toast.error(errorMessage);
     } finally {
