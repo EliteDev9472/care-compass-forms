@@ -148,7 +148,7 @@ const AdminClientsList: React.FC = () => {
                   {client.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
-              <div className="p-4">{formatTime(client.billingMinutes)}</div>
+              <div className="p-4">{client.billingMinutes}</div>
               <div className="p-4 space-x-2">
                 <Button variant="ghost" size="sm" onClick={() => handleEditClient(client._id)}>
                   <Pencil className="h-4 w-4 mr-1" /> Edit

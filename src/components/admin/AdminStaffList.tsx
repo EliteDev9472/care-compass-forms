@@ -96,19 +96,19 @@ const AdminStaffList: React.FC = () => {
         <h1 className="text-2xl font-bold">Staff</h1>
         <div className="flex space-x-2">
           <div className="flex rounded-md overflow-hidden">
-            <button 
+            <button
               onClick={() => setViewAndUpdate('day')}
               className={`px-3 py-1 ${viewMode === 'day' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             >
               Day
             </button>
-            <button 
+            <button
               onClick={() => setViewAndUpdate('week')}
               className={`px-3 py-1 ${viewMode === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             >
               Week
             </button>
-            <button 
+            <button
               onClick={() => setViewAndUpdate('month')}
               className={`px-3 py-1 ${viewMode === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             >
@@ -160,7 +160,7 @@ const AdminStaffList: React.FC = () => {
             <div key={staffMember._id} className="grid grid-cols-5 border-b hover:bg-gray-50">
               <div className="p-4">{staffMember.name}</div>
               <div className="p-4">{staffMember.username}</div>
-              <div className="p-4">{formatTime(staffMember.billingMinutes || 0)}</div>
+              <div className="p-4">{staffMember.billingMinutes || '00:00'}</div>
               <div className="p-4">
                 {staffMember.isActive ? (
                   <span className="px-2 py-1 rounded bg-green-100 text-green-800 text-xs font-medium">Active</span>
