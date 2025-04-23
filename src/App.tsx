@@ -1,8 +1,12 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './store/store';
 import { Toaster } from 'sonner';
+import ProtectedRoute from './components/shared/ProtectedRoute';
+import Index from './pages/Index';
+import { UserRole } from './store/authSlice';
 
 // Pages
 import SignIn from './pages/SignIn';
@@ -41,31 +45,105 @@ const App = () => (
           <Route path="/signin" element={<SignIn />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Redirect from root to signin */}
-          <Route path="/" element={<Navigate to="/signin" replace />} />
+          {/* Index route with role-based redirection */}
+          <Route path="/" element={<Index />} />
 
           {/* Admin routes */}
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/clients" element={<ClientsPage />} />
-          <Route path="/admin/staff" element={<StaffPage />} />
-          <Route path="/admin/patients" element={<PatientsPage />} />
-          <Route path="/admin/forms/create" element={<CreateFormPage />} />
-          <Route path="/admin/forms/:formId/edit" element={<EditFormPage />} />
-          <Route path="/admin/clients/add" element={<AddClientPage />} />
-          <Route path="/admin/clients/:clientId/edit" element={<EditClientPage />} />
-          <Route path="/admin/staff/add" element={<AddStaffPage />} />
-          <Route path="/admin/staff/:staffId/edit" element={<EditStaffPage />} />
-          <Route path="/admin/patients/add" element={<AddPatientPage />} />
-          <Route path="/admin/patients/:patientId/edit" element={<EditPatientPage />} />
+          <Route path="/admin/dashboard" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/clients" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <ClientsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/staff" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <StaffPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/patients" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <PatientsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/forms/create" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <CreateFormPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/forms/:formId/edit" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <EditFormPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/clients/add" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AddClientPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/clients/:clientId/edit" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <EditClientPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/staff/add" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AddStaffPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/staff/:staffId/edit" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <EditStaffPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/patients/add" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AddPatientPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/patients/:patientId/edit" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <EditPatientPage />
+            </ProtectedRoute>
+          } />
 
           {/* Staff routes */}
-          <Route path="/staff/patients" element={<PatientsListPage />} />
-          <Route path="/staff/patients/:patientId/forms" element={<PatientFormsPage />} />
-          <Route path="/staff/patients/:patientId/forms/:formId" element={<FormPage />} />
+          <Route path="/staff/patients" element={
+            <ProtectedRoute allowedRoles={['admin', 'staff']}>
+              <PatientsListPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/staff/patients/:patientId/forms" element={
+            <ProtectedRoute allowedRoles={['admin', 'staff']}>
+              <PatientFormsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/staff/patients/:patientId/forms/:formId" element={
+            <ProtectedRoute allowedRoles={['admin', 'staff']}>
+              <FormPage />
+            </ProtectedRoute>
+          } />
 
-          <Route path="/client" element={<PatientsListPage />} />
-          <Route path="/client/patients/:patientId/forms" element={<PatientFormsPage />} />
-          <Route path="/client/patients/:patientId/forms/:formId" element={<ReviewFormPage />} />
+          {/* Client routes */}
+          <Route path="/client" element={
+            <ProtectedRoute allowedRoles={['admin', 'client']}>
+              <PatientsListPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/client/patients/:patientId/forms" element={
+            <ProtectedRoute allowedRoles={['admin', 'client']}>
+              <PatientFormsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/client/patients/:patientId/forms/:formId" element={
+            <ProtectedRoute allowedRoles={['admin', 'client']}>
+              <ReviewFormPage />
+            </ProtectedRoute>
+          } />
+
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
