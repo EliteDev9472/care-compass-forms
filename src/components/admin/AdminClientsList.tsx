@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { CalendarIcon, Pencil, Trash } from 'lucide-react';
 import { getClientsWithBilling, deleteClient, Client } from '@/services/clientService';
 import { toast } from 'sonner';
 import DeleteConfirmDialog from '../shared/DeleteConfirmDialog';
+import { exportTableToCSV } from '@/utils/exportCsv';
 
 const AdminClientsList: React.FC = () => {
   const navigate = useNavigate();
@@ -86,11 +88,31 @@ const AdminClientsList: React.FC = () => {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
+  const handleExportCSV = () => {
+    if (!clients.length) return;
+    exportTableToCSV(
+      'clients.csv',
+      clients.map(client => ({
+        name: client.name,
+        username: client.username,
+        status: client.isActive ? 'Active' : 'Inactive',
+        billingTime: formatTime(client.billingMinutes || 0),
+      })),
+      [
+        { label: 'Client Name', key: 'name' },
+        { label: 'Username', key: 'username' },
+        { label: 'Status', key: 'status' },
+        { label: 'Billing Time', key: 'billingTime' },
+      ]
+    );
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Clients</h1>
         <div className="flex space-x-2">
+          <Button variant="outline" onClick={handleExportCSV}>Export CSV</Button>
           <div className="flex rounded-md overflow-hidden">
             {['day', 'week', 'month'].map((mode) => (
               <button

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@radix-ui/react-popover';
 import { endOfMonth, endOfWeek, format, startOfMonth, startOfWeek } from 'date-fns';
 import DeleteConfirmDialog from '../shared/DeleteConfirmDialog';
+import { exportTableToCSV } from '@/utils/exportCsv';
 
 const AdminPatientsList: React.FC = () => {
   const navigate = useNavigate();
@@ -80,11 +82,33 @@ const AdminPatientsList: React.FC = () => {
     setDeletePatientId(null);
   };
 
+  const formatTime = (minutes: number): string => {
+    const hours = Math.floor((minutes || 0) / 60);
+    const mins = (minutes || 0) % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  };
+
+  const handleExportCSV = () => {
+    if (!patients.length) return;
+    exportTableToCSV(
+      'patients.csv',
+      patients.map(p => ({
+        name: p.name,
+        billingTime: formatTime(p.billingMinutes || 0),
+      })),
+      [
+        { label: 'Patient Name', key: 'name' },
+        { label: 'Billing Time', key: 'billingTime' },
+      ]
+    );
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Patients</h1>
         <div className="flex space-x-2">
+          <Button variant="outline" onClick={handleExportCSV}>Export CSV</Button>
           <div className="flex rounded-md overflow-hidden">
             {['day', 'week', 'month'].map((mode) => (
               <button
