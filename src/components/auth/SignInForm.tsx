@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../hooks/reduxHooks';
@@ -59,7 +60,21 @@ const SignInForm: React.FC = () => {
       }
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.response.data.message : 'Login failed';
+      // Fix: Properly type the error and safely access error message
+      let errorMessage = 'Login failed';
+      
+      if (error instanceof Error) {
+        // Basic Error object doesn't have response property
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        // Handle axios error object which might have response data
+        // @ts-ignore - We're safely checking for existence before accessing
+        if (error.response?.data?.message) {
+          // @ts-ignore
+          errorMessage = error.response.data.message;
+        }
+      }
+      
       dispatch(loginFailure(errorMessage));
       toast.error(errorMessage);
     } finally {
