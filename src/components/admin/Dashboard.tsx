@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { exportTableToCSV } from '@/utils/exportCsv';
 
 // Mock data
 const mockForms = [
@@ -75,6 +75,39 @@ const AdminDashboard: React.FC = () => {
     navigate(`/admin/patients/${patientId}/edit`);
   };
   
+  const handleClientsExportCSV = () => {
+    exportTableToCSV(
+      'clients.csv',
+      mockClients,
+      [
+        { label: 'Client Name', key: 'name' },
+        { label: 'Billing Time', key: 'totalBillingTime' }
+      ]
+    );
+  };
+  
+  const handleStaffExportCSV = () => {
+    exportTableToCSV(
+      'staffs.csv',
+      mockStaff,
+      [
+        { label: 'Staff Name', key: 'name' },
+        { label: 'Billing Time', key: 'totalBillingTime' }
+      ]
+    );
+  };
+  
+  const handlePatientsExportCSV = () => {
+    exportTableToCSV(
+      'patients.csv',
+      mockPatients,
+      [
+        { label: 'Patient Name', key: 'name' },
+        { label: 'Billing Time', key: 'totalBillingTime' }
+      ]
+    );
+  };
+  
   return (
     <div className="max-w-6xl mx-auto p-6">
       <Tabs defaultValue="forms" value={activeTab} onValueChange={setActiveTab}>
@@ -116,7 +149,12 @@ const AdminDashboard: React.FC = () => {
         <TabsContent value="clients" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Manage Clients</h2>
-            <Button onClick={handleAddClient}>+ Add Client</Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleClientsExportCSV}>
+                Export CSV
+              </Button>
+              <Button onClick={handleAddClient}>+ Add Client</Button>
+            </div>
           </div>
           
           <Table>
@@ -147,7 +185,9 @@ const AdminDashboard: React.FC = () => {
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Manage Staff</h2>
             <div className="flex space-x-2">
-              <Button variant="outline">Export CSV</Button>
+              <Button variant="outline" onClick={handleStaffExportCSV}>
+                Export CSV
+              </Button>
               <Button onClick={handleAddStaff}>+ Add Staff</Button>
             </div>
           </div>
@@ -179,7 +219,12 @@ const AdminDashboard: React.FC = () => {
         <TabsContent value="patients" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Manage Patients</h2>
-            <Button onClick={handleAddPatient}>+ Add Patient</Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handlePatientsExportCSV}>
+                Export CSV
+              </Button>
+              <Button onClick={handleAddPatient}>+ Add Patient</Button>
+            </div>
           </div>
           
           <Table>

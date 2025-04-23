@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../hooks/reduxHooks';
@@ -12,6 +11,7 @@ import { toast } from 'sonner';
 import { setCurrentPatient } from '@/store/patientSlice';
 import { useDispatch } from 'react-redux';
 import { getMyAssignedPatientsForClient } from '@/services/clientService';
+import { exportTableToCSV } from '@/utils/exportCsv';
 
 const PatientsList: React.FC = () => {
   const navigate = useNavigate();
@@ -75,6 +75,18 @@ const PatientsList: React.FC = () => {
       navigate(`/client/patients/${patient._id}/forms`);
   };
 
+  const handleExportCSV = () => {
+    if (!patients.length) return;
+    exportTableToCSV(
+      'patients.csv',
+      patients,
+      [
+        { label: 'Patient Name', key: 'name' },
+        { label: 'Billing Time', key: 'billingMinutes' }
+      ]
+    );
+  };
+
   const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
     setViewMode(mode);
   };
@@ -88,6 +100,9 @@ const PatientsList: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">My Patients</h1>
         <div className="flex space-x-2">
+          <Button variant="outline" onClick={handleExportCSV} className="h-10">
+            Export CSV
+          </Button>
           <div className="flex rounded-md overflow-hidden">
             <button
               onClick={() => setViewAndUpdate('day')}
