@@ -1,14 +1,16 @@
-
 import axiosInstance from './axiosConfig';
 import { SERVER_URL } from '@/config';
 
 export interface FormField {
-  type: 'heading' | 'text-input' | 'text-field' | 'icd-text' | 'dropdown' | 'checkbox' | 'radio' | 'rich-text' | 'textbox' | 'timer';
+  type: 'heading' | 'text-input' | 'text-field' | 'icd-text' | 'dropdown' | 'checkbox' | 'radio' | 'rich-text' | 'textbox' | 'timer' | 'red-text' | 'scored-radio' | 'score-sum' | 'grid-input';
   label: string;
   required?: boolean;
   options?: string[];
+  scores?: number[];  // Added for scored radio buttons
+  gridColumns?: number; // Added for grid layout
   placeholder?: string;
   roleVisibleTo?: string[];
+  relatedScoreFieldIndex?: number; // To link scored-radio with score-sum
 }
 
 export interface TimerSession {

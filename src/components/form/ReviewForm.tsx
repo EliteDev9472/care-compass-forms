@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAppSelector } from '../../hooks/reduxHooks';
 import Timer from '../timer/Timer';
@@ -19,7 +18,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
   );
 
 
-  // Initialize form data from template if no initial data
   useEffect(() => {
     if (Object.keys(initialData).length === 0) {
       const defaultData: (string | boolean)[] = [];
@@ -37,12 +35,78 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
     }
   }, [initialData]);
 
-
-
   const renderFormElement = (element: FormField, index: number) => {
-    const { type, label, required, options } = element;
+    const { type, label, options, scores, gridColumns } = element;
 
     switch (type) {
+      case 'red-text':
+        return (
+          <div className="relative p-4 mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+            <input
+              type="text"
+              value={currentForm.data[index] as string}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-red-500"
+              placeholder="Enter Text"
+              disabled={true}
+            />
+          </div>
+        );
+
+      case 'scored-radio':
+        return (
+          <div className="relative p-4 -md mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+            <div className="space-y-1">
+              {options?.map((option, idx) => (
+                <div key={idx} className="flex items-center space-x-2">
+                  <input 
+                    type="radio" 
+                    name={`radio_${index}`} 
+                    className="h-4 w-4" 
+                    checked={currentForm.data[index] === option}
+                    disabled={true}
+                  />
+                  <span className="text-gray-500">{option} (Score: {scores?.[idx] || 0})</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'score-sum':
+        return (
+          <div className="relative p-4 -md mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+            <input
+              type="text"
+              value={currentForm.data[index] as string}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+              disabled={true}
+            />
+          </div>
+        );
+
+      case 'grid-input':
+        return (
+          <div className="relative p-4 -md mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+            <div className={`grid grid-cols-${gridColumns || 2} gap-4`}>
+              {options?.map((fieldLabel, idx) => (
+                <div key={idx} className="space-y-2">
+                  <label className="text-sm text-gray-600">{fieldLabel}</label>
+                  <input
+                    type="text"
+                    value={Array.isArray(currentForm.data[index]) ? currentForm.data[index][idx] : ''}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    disabled={true}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
       case 'heading':
         return (
           <div className="relative p-4 rounded-md mb-4 " key={index}>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAppSelector } from '../../hooks/reduxHooks';
 import Timer from '../timer/Timer';
@@ -30,7 +29,6 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave })
   const [showResults, setShowResults] = useState(false);
   const [inputingIndex, setInputingIndex] = useState<number>(-1);
 
-  // Initialize form data from template if no initial data
   useEffect(() => {
     if (Object.keys(initialData).length === 0) {
       const defaultData: (string | boolean)[] = [];
@@ -71,14 +69,11 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave })
         const response = await axios.get('/ICD.json');
         const allCodes: ICDCode[] = response.data;
 
-        // Filter codes and limit to top 10
         const filteredResults = allCodes
           .filter(code => {
-            // First try exact code match (most efficient)
             if (!code.code || !code.description) return false
             if (code.code.startsWith(searchValue)) return true;
 
-            // Then try description match, but be more selective
             return code.description.includes(searchValue);
           })
           .slice(0, 10);
@@ -111,9 +106,86 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave })
   };
 
   const renderFormElement = (element: FormField, index: number) => {
-    const { type, label, required, options } = element;
+    const { type, label, required, options, scores, gridColumns } = element;
 
     switch (type) {
+      case 'red-text':
+        return (
+          <div className="relative p-4 mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+            <input
+              type="text"
+              value={formData[index] as string}
+              onChange={(e) => handleFieldChange(index, e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-red-500"
+              placeholder="Enter Text"
+            />
+          </div>
+        );
+
+      case 'scored-radio':
+        return (
+          <div className="relative p-4 -md mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+            <div className="space-y-1">
+              {options?.map((option, idx) => (
+                <div key={idx} className="flex items-center space-x-2">
+                  <input 
+                    type="radio" 
+                    name={`radio_${index}`} 
+                    className="h-4 w-4" 
+                    onChange={(e) => {
+                      handleFieldChange(index, option);
+                      if (element.relatedScoreFieldIndex !== undefined && scores?.[idx] !== undefined) {
+                        handleFieldChange(element.relatedScoreFieldIndex, scores[idx].toString());
+                      }
+                    }}
+                    checked={formData[index] === option}
+                  />
+                  <span className="text-gray-500">{option} (Score: {scores?.[idx] || 0})</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'score-sum':
+        return (
+          <div className="relative p-4 -md mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+            <input
+              type="text"
+              value={formData[index] as string}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+              readOnly
+            />
+          </div>
+        );
+
+      case 'grid-input':
+        return (
+          <div className="relative p-4 -md mb-4 bg-white" key={index}>
+            <p className='pb-4'>{label}</p>
+            <div className={`grid grid-cols-${gridColumns || 2} gap-4`}>
+              {options?.map((fieldLabel, idx) => (
+                <div key={idx} className="space-y-2">
+                  <label className="text-sm text-gray-600">{fieldLabel}</label>
+                  <input
+                    type="text"
+                    value={Array.isArray(formData[index]) ? formData[index][idx] : ''}
+                    onChange={(e) => {
+                      const newValues = Array.isArray(formData[index]) ? [...formData[index]] : new Array(options.length).fill('');
+                      newValues[idx] = e.target.value;
+                      handleFieldChange(index, newValues);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
       case 'heading':
         return (
           <div className="relative p-4 rounded-md mb-4 " key={index}>
