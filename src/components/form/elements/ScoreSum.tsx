@@ -8,7 +8,7 @@ const ScoreSum: React.FC<FormElementProps> = ({ element, index, value }) => {
       <p className='pb-4'>{element.label}</p>
       <input
         type="text"
-        value={value as string}
+        value={typeof value === 'string' ? value : ''}
         className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
         readOnly
       />

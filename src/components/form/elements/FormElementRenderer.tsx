@@ -12,8 +12,8 @@ import { ICDSearchResult } from '../../../types/form';
 interface FormElementRendererProps {
   element: FormField;
   index: number;
-  value: string | boolean;
-  onChange: (index: number, value: string | boolean) => void;
+  value: string | boolean | string[];
+  onChange: (index: number, value: string | boolean | string[]) => void;
   icdSearchProps?: ICDSearchResult;
 }
 

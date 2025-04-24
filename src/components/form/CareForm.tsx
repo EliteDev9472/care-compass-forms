@@ -7,13 +7,13 @@ import FormElementRenderer from './elements/FormElementRenderer';
 
 interface CareFormProps {
   formId: string;
-  initialData?: (string | boolean)[];
-  onSave: (data: (string | boolean)[]) => void;
+  initialData?: (string | boolean | string[])[];
+  onSave: (data: (string | boolean | string[])[]) => void;
 }
 
 const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave }) => {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<(string | boolean)[]>(initialData);
+  const [formData, setFormData] = useState<(string | boolean | string[])[]>(initialData);
   const { currentForm } = useAppSelector(state => state.patients);
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
@@ -21,8 +21,10 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave })
 
   useEffect(() => {
     if (Object.keys(initialData).length === 0) {
-      const defaultData: (string | boolean)[] = currentForm.templateFields.map(field => 
-        field.type === 'checkbox' ? false : ''
+      const defaultData: (string | boolean | string[])[] = currentForm.templateFields.map(field => 
+        field.type === 'checkbox' ? false : 
+        field.type === 'grid-input' ? [] : 
+        ''
       );
       setFormData(defaultData);
     } else {
@@ -30,7 +32,7 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave })
     }
   }, [initialData, currentForm.templateFields]);
 
-  const handleFieldChange = (index: number, value: string | boolean) => {
+  const handleFieldChange = (index: number, value: string | boolean | string[]) => {
     const newFormData = [...formData];
     newFormData[index] = value;
     setFormData(newFormData);

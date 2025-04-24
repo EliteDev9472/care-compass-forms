@@ -5,8 +5,8 @@ import { FormField } from '../services/templateService';
 export interface FormElementProps {
   element: FormField;
   index: number;
-  value: string | boolean;
-  onChange: (index: number, value: string | boolean) => void;
+  value: string | boolean | string[];
+  onChange: (index: number, value: string | boolean | string[]) => void;
 }
 
 export interface ICDSearchResult {
