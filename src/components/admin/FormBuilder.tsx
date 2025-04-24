@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { X, Type, AlignLeft, CheckSquare, List, Radio, FileText } from 'lucide-react';
+import { 
+  X, Type, AlignLeft, CheckSquare, List, Radio, FileText, 
+  SquareEqual, SquareTerminal, Grid2x2
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner'; // Updated import
+import { toast } from 'sonner';
 import { FormTemplate, FormField, createFormTemplate, getTemplateById, updateTemplate } from '@/services/templateService';
 
 const FormBuilder: React.FC = () => {
@@ -21,7 +24,7 @@ const FormBuilder: React.FC = () => {
           setFormName(template.name);
           setFormElements(template.fields);
         } catch (error) {
-          toast.error("Failed to load template"); // Updated toast usage
+          toast.error("Failed to load template");
         } finally {
           setIsLoading(false);
         }
@@ -38,10 +41,24 @@ const FormBuilder: React.FC = () => {
       type,
       label: type === 'heading' ? 'New Heading' : 'New Field',
       required: false,
-      options: (type === 'dropdown' || type === 'radio' || type === 'checkbox') ? ['Option 1', 'Option 2'] : undefined,
+      options: (type === 'dropdown' || type === 'radio' || type === 'checkbox' || type === 'scored-radio' || type === 'grid-input') 
+        ? ['Option 1', 'Option 2'] 
+        : undefined,
+      scores: type === 'scored-radio' ? [1, 2] : undefined,
+      gridColumns: type === 'grid-input' ? 2 : undefined,
     };
 
-    setFormElements([...formElements, newElement]);
+    
+    if (type === 'scored-radio') {
+      const scoresSumElement: FormField = {
+        type: 'score-sum',
+        label: 'Total Score',
+        relatedScoreFieldIndex: formElements.length,
+      };
+      setFormElements(prevElements => [...prevElements, newElement, scoresSumElement]);
+    } else {
+      setFormElements(prevElements => [...prevElements, newElement]);
+    }
   };
 
   const updateElement = (index: number, updatedContent: Partial<FormField>) => {
@@ -58,7 +75,7 @@ const FormBuilder: React.FC = () => {
 
   const handleSave = async () => {
     if (!formName) {
-      toast.error("Please enter a form name"); // Updated toast usage
+      toast.error("Please enter a form name");
       return;
     }
 
@@ -72,22 +89,22 @@ const FormBuilder: React.FC = () => {
 
       if (formId) {
         await updateTemplate(formId, templateData);
-        toast.success("Template updated successfully"); // Updated toast usage
+        toast.success("Template updated successfully");
       } else {
         await createFormTemplate(templateData);
-        toast.success("Template created successfully"); // Updated toast usage
+        toast.success("Template created successfully");
       }
 
       navigate('/admin/dashboard');
     } catch (error) {
-      toast.error("Failed to save template"); // Updated toast usage
+      toast.error("Failed to save template");
     } finally {
       setIsLoading(false);
     }
   };
 
   const renderFormElement = (element: FormField, index: number) => {
-    const { type, label, required, options } = element;
+    const { type, label, required, options, scores, gridColumns } = element;
 
     switch (type) {
       case 'heading':
@@ -298,6 +315,208 @@ const FormBuilder: React.FC = () => {
           </div>
         );
 
+      case 'red-text':
+        return (
+          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+            <button
+              onClick={() => removeElement(index)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+            >
+              <X size={16} />
+            </button>
+            <input
+              type="text"
+              value={label || ''}
+              onChange={(e) => updateElement(index, { label: e.target.value })}
+              className="w-full px-3 py-2 mb-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
+              placeholder="Enter red text field label"
+            />
+            <input
+              type="text"
+              disabled
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-red-500"
+              placeholder="Red text preview"
+            />
+          </div>
+        );
+
+      case 'scored-radio':
+        return (
+          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+            <button
+              onClick={() => removeElement(index)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+            >
+              <X size={16} />
+            </button>
+            <input
+              type="text"
+              value={label || ''}
+              onChange={(e) => updateElement(index, { label: e.target.value })}
+              className="w-full px-3 py-2 mb-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
+              placeholder="Enter scored radio group label"
+            />
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium mb-1">Options and Scores:</p>
+                {options?.map((option, idx) => (
+                  <div key={idx} className="flex items-center space-x-2 mb-2">
+                    <input type="radio" name={`radio_${index}`} className="h-4 w-4" disabled />
+                    <input
+                      type="text"
+                      value={option}
+                      onChange={(e) => {
+                        const newOptions = [...(options || [])];
+                        newOptions[idx] = e.target.value;
+                        updateElement(index, { options: newOptions });
+                      }}
+                      className="flex-1 px-2 py-1 border border-gray-300 rounded-md"
+                      placeholder={`Option ${idx + 1}`}
+                    />
+                    <input
+                      type="number"
+                      value={scores?.[idx] || 0}
+                      onChange={(e) => {
+                        const newScores = [...(scores || [])];
+                        newScores[idx] = parseInt(e.target.value) || 0;
+                        updateElement(index, { scores: newScores });
+                      }}
+                      className="w-20 px-2 py-1 border border-gray-300 rounded-md"
+                      placeholder="Score"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newOptions = [...(options || []), `Option ${(options?.length || 0) + 1}`];
+                    const newScores = [...(scores || []), 0];
+                    updateElement(index, { options: newOptions, scores: newScores });
+                  }}
+                >
+                  Add Option
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newOptions = options?.slice(0, -1);
+                    const newScores = scores?.slice(0, -1);
+                    updateElement(index, { options: newOptions, scores: newScores });
+                  }}
+                >
+                  Remove Last
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'score-sum':
+        return (
+          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+            <button
+              onClick={() => removeElement(index)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+            >
+              <X size={16} />
+            </button>
+            <input
+              type="text"
+              value={label || ''}
+              onChange={(e) => updateElement(index, { label: e.target.value })}
+              className="w-full px-3 py-2 mb-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
+              placeholder="Enter score sum field label"
+            />
+            <input
+              type="text"
+              disabled
+              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+              placeholder="Score sum field (calculated automatically)"
+            />
+          </div>
+        );
+
+      case 'grid-input':
+        return (
+          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+            <button
+              onClick={() => removeElement(index)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+            >
+              <X size={16} />
+            </button>
+            <input
+              type="text"
+              value={label || ''}
+              onChange={(e) => updateElement(index, { label: e.target.value })}
+              className="w-full px-3 py-2 mb-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
+              placeholder="Enter grid layout label"
+            />
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Number of Columns:</label>
+                <select
+                  value={gridColumns || 2}
+                  onChange={(e) => updateElement(index, { gridColumns: parseInt(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value={2}>2 Columns</option>
+                  <option value={3}>3 Columns</option>
+                  <option value={4}>4 Columns</option>
+                </select>
+              </div>
+              <div>
+                <p className="text-sm font-medium mb-1">Field Labels:</p>
+                {options?.map((fieldLabel, idx) => (
+                  <div key={idx} className="mb-2">
+                    <input
+                      type="text"
+                      value={fieldLabel}
+                      onChange={(e) => {
+                        const newLabels = [...(options || [])];
+                        newLabels[idx] = e.target.value;
+                        updateElement(index, { options: newLabels });
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      placeholder={`Field ${idx + 1} Label`}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newLabels = [...(options || []), `Field ${(options?.length || 0) + 1}`];
+                    updateElement(index, { options: newLabels });
+                  }}
+                >
+                  Add Field
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newLabels = options?.slice(0, -1);
+                    updateElement(index, { options: newLabels });
+                  }}
+                >
+                  Remove Last
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -364,6 +583,34 @@ const FormBuilder: React.FC = () => {
               onClick={() => addElement('rich-text')}
             >
               <FileText size={16} className="mr-2" /> Rich Text
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => addElement('red-text')}
+            >
+              <SquareTerminal size={16} className="mr-2" /> Red Text
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => addElement('scored-radio')}
+            >
+              <Radio size={16} className="mr-2" /> Scored Radio
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => addElement('score-sum')}
+            >
+              <SquareEqual size={16} className="mr-2" /> Score Sum
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => addElement('grid-input')}
+            >
+              <Grid2x2 size={16} className="mr-2" /> Grid Input
             </Button>
           </div>
         </div>
