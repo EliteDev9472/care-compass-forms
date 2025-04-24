@@ -99,7 +99,7 @@ const AdminStaffList: React.FC = () => {
       staff.map(staffMember => ({
         name: staffMember.name,
         username: staffMember.username,
-        billingTime: formatTime(staffMember.billingMinutes || 0),
+        billingTime: staffMember.billingMinutes || 0,
         status: staffMember.isActive ? 'Active' : 'Inactive',
       })),
       [

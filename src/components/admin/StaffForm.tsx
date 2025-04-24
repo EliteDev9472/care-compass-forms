@@ -81,7 +81,7 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
           username,
           name: staffName,
           password,
-          patientIds: unassignedPatients.map(patient => patient._id),
+          patientIds: assignedPatients.map(patient => patient._id),
         };
         await createStaff(staffData);
         toast.success('Staff created successfully');
@@ -96,12 +96,12 @@ const StaffForm: React.FC<StaffFormProps> = ({ mode = 'add' }) => {
 
   const handleAddPatient = (patient: { _id: string, name: string }) => {
     setAssignedPatients((prev) => [...prev, patient]);
-    setUnassignedPatients(prev => [...prev].filter(id =>  id !== patient));
+    setUnassignedPatients(prev => [...prev].filter(id => id !== patient));
   };
 
   const handleRemovePatient = (patient: { _id: string, name: string }) => {
     setUnassignedPatients((prev) => [...prev, patient]);
-    setAssignedPatients(prev => [...prev].filter(id =>  id !== patient));
+    setAssignedPatients(prev => [...prev].filter(id => id !== patient));
   };
 
   return (

@@ -96,7 +96,7 @@ const AdminClientsList: React.FC = () => {
         name: client.name,
         username: client.username,
         status: client.isActive ? 'Active' : 'Inactive',
-        billingTime: formatTime(client.billingMinutes || 0),
+        billingTime: client.billingMinutes || 0,
       })),
       [
         { label: 'Client Name', key: 'name' },

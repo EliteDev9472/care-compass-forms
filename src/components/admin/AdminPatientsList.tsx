@@ -94,7 +94,7 @@ const AdminPatientsList: React.FC = () => {
       'patients.csv',
       patients.map(p => ({
         name: p.name,
-        billingTime: formatTime(p.billingMinutes || 0),
+        billingTime: p.billingMinutes || 0,
       })),
       [
         { label: 'Patient Name', key: 'name' },

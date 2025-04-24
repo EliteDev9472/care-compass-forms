@@ -112,34 +112,34 @@ const App = () => (
 
           {/* Staff routes */}
           <Route path="/staff/patients" element={
-            <ProtectedRoute allowedRoles={['admin', 'staff']}>
+            <ProtectedRoute allowedRoles={['staff']}>
               <PatientsListPage />
             </ProtectedRoute>
           } />
           <Route path="/staff/patients/:patientId/forms" element={
-            <ProtectedRoute allowedRoles={['admin', 'staff']}>
+            <ProtectedRoute allowedRoles={['staff']}>
               <PatientFormsPage />
             </ProtectedRoute>
           } />
           <Route path="/staff/patients/:patientId/forms/:formId" element={
-            <ProtectedRoute allowedRoles={['admin', 'staff']}>
+            <ProtectedRoute allowedRoles={['staff']}>
               <FormPage />
             </ProtectedRoute>
           } />
 
           {/* Client routes */}
           <Route path="/client" element={
-            <ProtectedRoute allowedRoles={['admin', 'client']}>
+            <ProtectedRoute allowedRoles={['client']}>
               <PatientsListPage />
             </ProtectedRoute>
           } />
           <Route path="/client/patients/:patientId/forms" element={
-            <ProtectedRoute allowedRoles={['admin', 'client']}>
+            <ProtectedRoute allowedRoles={['client']}>
               <PatientFormsPage />
             </ProtectedRoute>
           } />
           <Route path="/client/patients/:patientId/forms/:formId" element={
-            <ProtectedRoute allowedRoles={['admin', 'client']}>
+            <ProtectedRoute allowedRoles={['client']}>
               <ReviewFormPage />
             </ProtectedRoute>
           } />

@@ -28,6 +28,7 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave })
   const [searchResults, setSearchResults] = useState<ICDCode[]>([]);
   const [localSearchValue, setLocalSearchValue] = useState('');
   const [showResults, setShowResults] = useState(false);
+  const [inputingIndex, setInputingIndex] = useState<number>(-1);
 
   // Initialize form data from template if no initial data
   useEffect(() => {
@@ -93,6 +94,7 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave })
   );
 
   const handleIcdSearch = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputingIndex(index);
     const searchValue = e.target.value;
     setLocalSearchValue(searchValue);
     handleFieldChange(index, searchValue);
@@ -123,13 +125,6 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave })
         return (
           <div className="relative p-4 mb-4 bg-white" key={index}>
             <p className='pb-4'>{label}</p>
-            <input
-              type="text"
-              value={formData[index] as string}
-              onChange={(e) => handleFieldChange(index, e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md "
-              placeholder="Enter Text"
-            />
           </div>
         );
 
@@ -137,6 +132,13 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave })
         return (
           <div className="relative p-4 -md mb-4 bg-white" key={index}>
             <p className='pb-4'>{label}</p>
+            <input
+              type="text"
+              value={formData[index] as string}
+              onChange={(e) => handleFieldChange(index, e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md "
+              placeholder="Enter Text"
+            />
           </div>
         );
 
@@ -151,11 +153,11 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave })
               placeholder="Input ICD"
               onChange={(e) => handleIcdSearch(index, e)}
             />
-            {loading && (
+            {inputingIndex == index && loading && (
               <div className="absolute right-3 top-3 text-sm text-gray-500">Loading...</div>
             )}
 
-            {showResults && searchResults.length > 0 && (
+            {inputingIndex == index && showResults && searchResults.length > 0 && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                 {searchResults.map((result) => (
                   <div
