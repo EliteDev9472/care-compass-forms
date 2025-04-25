@@ -42,14 +42,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
       case 'red-text':
         return (
           <div className="relative p-4 mb-4 bg-white" key={index}>
-            <p className='pb-4'>{label}</p>
-            <input
-              type="text"
-              value={currentForm.data[index] as string}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-red-500"
-              placeholder="Enter Text"
-              disabled={true}
-            />
+            <p className='pb-4 text-red-500'>{label}</p>
           </div>
         );
 
@@ -57,17 +50,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
         return (
           <div className="relative p-4 -md mb-4 bg-white" key={index}>
             <p className='pb-4'>{label}</p>
+
             <div className="space-y-1">
               {options?.map((option, idx) => (
                 <div key={idx} className="flex items-center space-x-2">
-                  <input 
-                    type="radio" 
-                    name={`radio_${index}`} 
-                    className="h-4 w-4" 
-                    checked={currentForm.data[index] === option}
-                    disabled={true}
-                  />
-                  <span className="text-gray-500">{option} (Score: {scores?.[idx] || 0})</span>
+                  {
+                    currentForm.data[index] === option && <p>{currentForm.data[index]} (Score: {scores?.[idx] || 0})</p>
+                  }
+
                 </div>
               ))}
             </div>
@@ -78,29 +68,30 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
         return (
           <div className="relative p-4 -md mb-4 bg-white" key={index}>
             <p className='pb-4'>{label}</p>
-            <input
+            <p>{currentForm.data[index]}</p>
+            {/* <input
               type="text"
               value={currentForm.data[index] as string}
               className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
               disabled={true}
-            />
+            /> */}
           </div>
         );
 
       case 'grid-input':
         return (
           <div className="relative p-4 -md mb-4 bg-white" key={index}>
-            <p className='pb-4'>{label}</p>
+            {/* <p className='pb-4'>{label}</p> */}
             <div className={`grid grid-cols-${gridColumns || 2} gap-4`}>
               {options?.map((fieldLabel, idx) => (
                 <div key={idx} className="space-y-2">
-                  <label className="text-sm text-gray-600">{fieldLabel}</label>
-                  <input
+                  <label className="text-sm text-gray-600">{fieldLabel}: {currentForm.data[index]}</label>
+                  {/* <input
                     type="text"
                     value={Array.isArray(currentForm.data[index]) ? currentForm.data[index][idx] : ''}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     disabled={true}
-                  />
+                  /> */}
                 </div>
               ))}
             </div>
@@ -109,7 +100,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
 
       case 'heading':
         return (
-          <div className="relative p-4 rounded-md mb-4 " key={index}>
+          <div className="relative p-4 rounded-md mb-4 font-bold" key={index}>
             {label}
           </div>
         );
@@ -118,13 +109,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
         return (
           <div className="relative p-4 mb-4 bg-white" key={index}>
             <p className='pb-4'>{label}</p>
-            <input
-              type="text"
-              value={currentForm.data[index] as string}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md "
-              placeholder="Enter Text"
-              disabled={true}
-            />
           </div>
         );
 
@@ -132,6 +116,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
         return (
           <div className="relative p-4 -md mb-4 bg-white" key={index}>
             <p className='pb-4'>{label}</p>
+            <p>{currentForm.data[index]}</p>
+            {/* <input
+              type="text"
+              value={currentForm.data[index] as string}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md "
+              placeholder="Enter Text"
+              disabled={true}
+            /> */}
           </div>
         );
 
@@ -139,13 +131,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
         return (
           <div className="relative p-4 -md mb-4 bg-white" key={index}>
             <p className='pb-4'>{label}</p>
-            <input
+            <p>{currentForm.data[index]}</p>
+            {/* <input
               type="text"
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
               value={currentForm.data[index] as string}
               placeholder="Input ICD"
               disabled={true}
-            />
+            /> */}
           </div>
         );
 
@@ -153,13 +146,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
         return (
           <div className="relative p-4 -md mb-4 bg-white" key={index}>
             <p className='pb-4'>{label}</p>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            <p>{currentForm.data[index]}</p>
+            {/* <select className="w-full px-3 py-2 border border-gray-300 rounded-md"
               value={currentForm.data[index] as string} disabled={true}>
               <option value=""> </option>
               {options?.map((option, idx) => (
                 <option key={idx} value={option}>{option}</option>
               ))}
-            </select>
+            </select> */}
           </div>
         );
 
@@ -167,9 +161,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
         return (
           <div className="relative p-4 -md mb-4 bg-white" key={index}>
             <p className='pb-4'>{label}</p>
-            <div className="flex items-center space-x-2">
+            <p>{currentForm.data[index] ? 'Yes' : 'No'}</p>
+            {/* <div className="flex items-center space-x-2">
               <input type="checkbox" className="h-4 w-4" checked={currentForm.data[index] as boolean} disabled={true} />
-            </div>
+            </div> */}
           </div>
         );
 
@@ -177,14 +172,15 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
         return (
           <div className="relative p-4 -md mb-4 bg-white" key={index}>
             <p className='pb-4'>{label}</p>
-            <div className="space-y-1">
+            <p>{currentForm.data[index]}</p>
+            {/* <div className="space-y-1">
               {options?.map((option, idx) => (
                 <div key={idx} className="flex items-center space-x-2">
                   <input type="radio" name={`radio_${index}`} className="h-4 w-4" checked={currentForm.data[index] == option} disabled={true} />
                   <span className="text-gray-500">{option}</span>
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
         );
 
@@ -192,13 +188,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
         return (
           <div className="relative p-4 -md mb-4 bg-white" key={index}>
             <p className='pb-4'>{label}</p>
-            <div className="border border-gray-300 rounded-md p-1 mb-1 bg-gray-100">
+            <pre>{currentForm.data[index]}</pre>
+            {/* <div className="border border-gray-300 rounded-md p-1 mb-1 bg-gray-100">
               <div className="flex space-x-1 border-b p-1">
                 <button disabled className="p-1 text-gray-400"><Type size={16} /></button>
                 <button disabled className="p-1 text-gray-400"><AlignLeft size={16} /></button>
               </div>
               <textarea className="w-full p-2 h-36 bg-white" placeholder='Rich text editor preview' value={currentForm.data[index] as string} disabled={true} />
-            </div>
+            </div> */}
           </div>
         );
 

@@ -20,7 +20,6 @@ export interface PatientForm {
   templateFields: any;
   billingTime: string; // Time in minutes
   data: (string | boolean)[]; // Form data
-
 }
 
 interface PatientState {

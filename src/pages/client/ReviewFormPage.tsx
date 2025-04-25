@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import ReviewForm from '@/components/form/ReviewForm';
+import { jsPDF } from 'jspdf'
 
 const ReviewFormPage: React.FC = () => {
     const { patientId, formId } = useParams<{ patientId: string, formId: string }>();
@@ -76,6 +77,25 @@ const ReviewFormPage: React.FC = () => {
         }
     };
 
+    const handleDownloadPDF = () => {
+        const doc = new jsPDF();
+
+        // Capture the element with the given id or class
+        const pageContent = document.querySelector('.max-w-4xl') as HTMLElement;
+
+        // Add the content of the div to the PDF
+        doc.html(pageContent, {
+            callback: function (doc) {
+                // Save the PDF with the given file name
+                doc.save('element.pdf');
+            },
+            x: -30,
+            y: 10,
+            width: 250, // Width to scale the content (adjust this based on your layout)
+            windowWidth: document.body.scrollWidth, // Adjust this for content width scaling
+        });
+    };
+
     return (
         <ProtectedRoute allowedRoles={['client']}>
             <Layout>
@@ -87,6 +107,9 @@ const ReviewFormPage: React.FC = () => {
                     >
                         <ArrowLeft size={16} />
                         Back to Patients
+                    </Button>
+                    <Button onClick={handleDownloadPDF} className="mt-4">
+                        Download PDF
                     </Button>
                 </div>
                 {loading ? (

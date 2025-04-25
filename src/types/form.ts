@@ -7,6 +7,7 @@ export interface FormElementProps {
   index: number;
   value: string | boolean | string[];
   onChange: (index: number, value: string | boolean | string[]) => void;
+  sumupArray?: number[];
 }
 
 export interface ICDSearchResult {

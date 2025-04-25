@@ -6,11 +6,14 @@ export interface FormField {
   label: string;
   required?: boolean;
   options?: string[];
-  scores?: number[];  // Added for scored radio buttons
-  gridColumns?: number; // Added for grid layout
+  scores?: number[];
+  gridColumns?: number;
   placeholder?: string;
   roleVisibleTo?: string[];
-  relatedScoreFieldIndex?: number; // To link scored-radio with score-sum
+  relatedScoreFieldIndex?: number;
+  controlledByScoreSum?: number;
+  threshold?: number;
+  condition?: boolean;
 }
 
 export interface TimerSession {
@@ -67,7 +70,6 @@ export const getAllTemplatesWithInfo = async (): Promise<FormTemplate[]> => {
   return response.data;
 };
 
-// New functions for staff role
 export const getPatientFormsByTemplate = async (patientId: string, startDate?: string, endDate?: string): Promise<FormTemplate[]> => {
   const params = startDate && endDate ? `?start=${startDate}&end=${endDate}` : '';
   const response = await axiosInstance.get(`${SERVER_URL}/staff/patients/${patientId}/forms-by-template${params}`);
@@ -96,5 +98,4 @@ export const submitFormWithTimerSessions = async (
   };
   const response = await axiosInstance.post(`${SERVER_URL}/staff/form-submit`, payload);
   return response.data;
-  return
 };

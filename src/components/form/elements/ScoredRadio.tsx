@@ -9,15 +9,27 @@ const ScoredRadio: React.FC<FormElementProps> = ({ element, index, value, onChan
       <div className="space-y-1">
         {element.options?.map((option, idx) => (
           <div key={idx} className="flex items-center space-x-2">
-            <input 
-              type="radio" 
-              name={`radio_${index}`} 
-              className="h-4 w-4" 
+            <input
+              type="radio"
+              name={`radio_${index}`}
+              className="h-4 w-4"
               onChange={() => {
-                onChange(index, option);
-                if (element.relatedScoreFieldIndex !== undefined && element.scores?.[idx] !== undefined) {
-                  onChange(element.relatedScoreFieldIndex, element.scores[idx].toString());
+
+                if (element.type == 'scored-radio') {
+                  onChange(index, element.scores[idx].toString());
+                  onChange(index, option);
                 }
+                else
+                  onChange(index, option);
+                // const score = element.scores[idx];
+                // // Update all related score sums with this radio's score
+                // if (element.scores?.[idx] !== undefined) {
+                //   if (element.relatedScoreFieldIndex !== undefined) {
+                //     console.log(element.scores, idx)
+
+                //     onChange(element.relatedScoreFieldIndex, element.scores[idx].toString());
+                //   }
+                // }
               }}
               checked={value === option}
             />

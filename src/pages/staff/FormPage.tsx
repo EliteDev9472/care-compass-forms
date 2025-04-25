@@ -22,6 +22,9 @@ const FormPage: React.FC = () => {
   const [formData, setFormData] = useState<(string | boolean)[]>([]);
   const [submissionId, setSubmissioId] = useState('');
   const { user } = useAppSelector(state => state.auth);
+  const [sumupArray, setSumupArray] = useState<number[]>([]);
+  const [threshold, setThresHold] = useState<number>(0);
+
   useEffect(() => {
 
     const fetchFormData = async () => {
@@ -52,7 +55,12 @@ const FormPage: React.FC = () => {
               templateFields: selectedTemplate.fields,
               submission: selectedTemplate.submission,
             };
-
+            let tempArray = new Array(selectedTemplate.fields.length).fill(0)
+            setSumupArray(tempArray)
+            form.templateFields.map((item, index) => {
+              if (item.threshold && item.type == 'score-sum')
+                setThresHold(item.threshold)
+            })
             dispatch(setCurrentForm(form));
             setSubmissioId(selectedTemplate.submission?._id || null);
             setFormData(initialData);
@@ -134,6 +142,9 @@ const FormPage: React.FC = () => {
             formId={formId || 'new'}
             initialData={formData}
             onSave={handleSaveForm}
+            sumupArray={sumupArray}
+            setSumupArray={setSumupArray}
+            thresHold={threshold}
           />
         )}
       </Layout>

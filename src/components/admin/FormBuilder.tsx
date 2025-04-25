@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { 
-  X, Type, AlignLeft, CheckSquare, List, Radio, FileText, 
-  SquareEqual, SquareTerminal, Grid2x2
-} from 'lucide-react';
+import { X, Type, AlignLeft, CheckSquare, List, Radio, FileText, SquareEqual, SquareTerminal, Grid2x2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { FormTemplate, FormField, createFormTemplate, getTemplateById, updateTemplate } from '@/services/templateService';
@@ -14,6 +11,7 @@ const FormBuilder: React.FC = () => {
   const [formElements, setFormElements] = useState<FormField[]>([]);
   const [formName, setFormName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedElementIndex, setSelectedElementIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const loadTemplate = async () => {
@@ -41,24 +39,24 @@ const FormBuilder: React.FC = () => {
       type,
       label: type === 'heading' ? 'New Heading' : 'New Field',
       required: false,
-      options: (type === 'dropdown' || type === 'radio' || type === 'checkbox' || type === 'scored-radio' || type === 'grid-input') 
-        ? ['Option 1', 'Option 2'] 
+      options: (type === 'dropdown' || type === 'radio' || type === 'checkbox' || type === 'scored-radio' || type === 'grid-input')
+        ? ['Option 1', 'Option 2']
         : undefined,
       scores: type === 'scored-radio' ? [1, 2] : undefined,
       gridColumns: type === 'grid-input' ? 2 : undefined,
+      condition: false
     };
 
-    
-    if (type === 'scored-radio') {
-      const scoresSumElement: FormField = {
-        type: 'score-sum',
-        label: 'Total Score',
-        relatedScoreFieldIndex: formElements.length,
-      };
-      setFormElements(prevElements => [...prevElements, newElement, scoresSumElement]);
-    } else {
-      setFormElements(prevElements => [...prevElements, newElement]);
-    }
+    setFormElements(prevElements => {
+      if (selectedElementIndex !== null) {
+        const newElements = [...prevElements];
+        newElements.splice(selectedElementIndex + 1, 0, newElement);
+        return newElements;
+      }
+      return [...prevElements, newElement];
+    });
+
+    setSelectedElementIndex(selectedElementIndex !== null ? selectedElementIndex + 1 : formElements.length);
   };
 
   const updateElement = (index: number, updatedContent: Partial<FormField>) => {
@@ -104,18 +102,34 @@ const FormBuilder: React.FC = () => {
   };
 
   const renderFormElement = (element: FormField, index: number) => {
-    const { type, label, required, options, scores, gridColumns } = element;
+    const { type, label, required, options, scores, gridColumns, condition } = element;
+    const isSelected = index === selectedElementIndex;
+
+    const scoreSumsAbove = formElements
+      .slice(0, index)
+      .filter(el => el.type === 'score-sum')
+      .map((el, idx) => ({ index: formElements.indexOf(el), label: el.label }));
+
+    const baseElementStyle = `relative p-4 border rounded-md mb-4 ${type === 'heading' ? 'bg-gray-50' : 'bg-white'
+      } ${isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'}`;
+
+    const handleElementClick = () => {
+      setSelectedElementIndex(index);
+    };
 
     switch (type) {
       case 'heading':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-gray-50" key={index}>
+          <div className={baseElementStyle} key={index} onClick={handleElementClick}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
+            <div>
+              <input type="checkbox" checked={condition} onChange={(e) => updateElement(index, { condition: e.target.checked })} />condition
+            </div>
             <input
               type="text"
               value={label || ''}
@@ -128,13 +142,16 @@ const FormBuilder: React.FC = () => {
 
       case 'text-input':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+          <div className={baseElementStyle} key={index} onClick={handleElementClick}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
+            <div>
+              <input type="checkbox" checked={condition} onChange={(e) => updateElement(index, { condition: e.target.checked })} />condition
+            </div>
             <input
               type="text"
               value={label || ''}
@@ -147,13 +164,16 @@ const FormBuilder: React.FC = () => {
 
       case 'text-field':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+          <div className={baseElementStyle} key={index} onClick={handleElementClick}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
+            <div>
+              <input type="checkbox" checked={condition} onChange={(e) => updateElement(index, { condition: e.target.checked })} />condition
+            </div>
             <input
               type="text"
               value={label || ''}
@@ -172,13 +192,16 @@ const FormBuilder: React.FC = () => {
 
       case 'icd-text':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+          <div className={baseElementStyle} key={index} onClick={handleElementClick}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
+            <div>
+              <input type="checkbox" checked={condition} onChange={(e) => updateElement(index, { condition: e.target.checked })} />condition
+            </div>
             <input
               type="text"
               value={label || ''}
@@ -197,13 +220,16 @@ const FormBuilder: React.FC = () => {
 
       case 'dropdown':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+          <div className={baseElementStyle} key={index} onClick={handleElementClick}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
+            <div>
+              <input type="checkbox" checked={condition} onChange={(e) => updateElement(index, { condition: e.target.checked })} />condition
+            </div>
             <input
               type="text"
               value={label || ''}
@@ -212,6 +238,7 @@ const FormBuilder: React.FC = () => {
               placeholder="Enter dropdown label"
             />
             <select className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
+              <option value="">Please Select</option>
               {options?.map((option, idx) => (
                 <option key={idx} value={option}>{option}</option>
               ))}
@@ -230,13 +257,16 @@ const FormBuilder: React.FC = () => {
 
       case 'checkbox':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+          <div className={baseElementStyle} key={index} onClick={handleElementClick}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
+            <div>
+              <input type="checkbox" checked={condition} onChange={(e) => updateElement(index, { condition: e.target.checked })} />condition
+            </div>
             <input
               type="text"
               value={label || ''}
@@ -253,13 +283,16 @@ const FormBuilder: React.FC = () => {
 
       case 'radio':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+          <div className={baseElementStyle} key={index} onClick={handleElementClick}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
+            <div>
+              <input type="checkbox" checked={condition} onChange={(e) => updateElement(index, { condition: e.target.checked })} />condition
+            </div>
             <input
               type="text"
               value={label || ''}
@@ -289,13 +322,16 @@ const FormBuilder: React.FC = () => {
 
       case 'rich-text':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+          <div className={baseElementStyle} key={index} onClick={handleElementClick}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
+            <div>
+              <input type="checkbox" checked={condition} onChange={(e) => updateElement(index, { condition: e.target.checked })} />condition
+            </div>
             <input
               type="text"
               value={label || ''}
@@ -317,32 +353,29 @@ const FormBuilder: React.FC = () => {
 
       case 'red-text':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+          <div className={baseElementStyle} key={index} onClick={handleElementClick}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
-            <input
-              type="text"
+            <div>
+              <input type="checkbox" checked={condition} onChange={(e) => updateElement(index, { condition: e.target.checked })} />condition
+            </div>
+            <textarea
+              rows={5}
               value={label || ''}
               onChange={(e) => updateElement(index, { label: e.target.value })}
               className="w-full px-3 py-2 mb-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
               placeholder="Enter red text field label"
-            />
-            <input
-              type="text"
-              disabled
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-red-500"
-              placeholder="Red text preview"
             />
           </div>
         );
 
       case 'scored-radio':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+          <div className={baseElementStyle} key={index} onClick={handleElementClick}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
@@ -419,7 +452,7 @@ const FormBuilder: React.FC = () => {
 
       case 'score-sum':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+          <div className={baseElementStyle} key={index} onClick={handleElementClick}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
@@ -431,26 +464,41 @@ const FormBuilder: React.FC = () => {
               value={label || ''}
               onChange={(e) => updateElement(index, { label: e.target.value })}
               className="w-full px-3 py-2 mb-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
-              placeholder="Enter score sum field label"
+              placeholder="Enter score sum label"
             />
+            <div className="flex gap-4 mb-4">
+              <input
+                type="number"
+                value={element.threshold || 0}
+                onChange={(e) => updateElement(index, { threshold: Number(e.target.value) })}
+                className="w-32 px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="Threshold"
+              />
+              <span className="text-sm text-gray-500 self-center">
+                Set threshold value to control visibility of elements below
+              </span>
+            </div>
             <input
               type="text"
               disabled
               className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
-              placeholder="Score sum field (calculated automatically)"
+              placeholder="Score sum (calculated automatically)"
             />
           </div>
         );
 
       case 'grid-input':
         return (
-          <div className="relative p-4 border rounded-md mb-4 bg-white" key={index}>
+          <div className={baseElementStyle} key={index} onClick={handleElementClick}>
             <button
               onClick={() => removeElement(index)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
             </button>
+            <div>
+              <input type="checkbox" checked={condition} onChange={(e) => updateElement(index, { condition: e.target.checked })} />condition
+            </div>
             <input
               type="text"
               value={label || ''}
@@ -518,7 +566,67 @@ const FormBuilder: React.FC = () => {
         );
 
       default:
-        return null;
+        const baseElement = (
+          <div className={baseElementStyle} key={index} onClick={handleElementClick}>
+            <button
+              onClick={() => removeElement(index)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+            >
+              <X size={16} />
+            </button>
+            <div>
+              <input type="checkbox" checked={condition} onChange={(e) => updateElement(index, { condition: e.target.checked })} />condition
+            </div>
+            <input
+              type="text"
+              value={label || ''}
+              onChange={(e) => updateElement(index, { label: e.target.value })}
+              className="w-full px-3 py-2 mb-2 bg-transparent border-b border-dashed focus:outline-none focus:border-blue-500"
+              placeholder="Enter field label"
+            />
+          </div>
+        );
+
+        const scoreSumsPresent = scoreSumsAbove.length > 0;
+        if (scoreSumsPresent) {
+          return (
+            <div key={index}>
+              {baseElement}
+              <div className="mt-2 p-2 border-t">
+                <p className="text-sm font-medium mb-1">Show this element when score sum reaches:</p>
+                <select
+                  value={element.controlledByScoreSum ?? ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    updateElement(index, {
+                      controlledByScoreSum: value ? Number(value) : undefined,
+                      threshold: element.threshold || 0
+                    });
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
+                >
+                  <option value="">Not controlled by score</option>
+                  {scoreSumsAbove.map(sum => (
+                    <option key={sum.index} value={sum.index}>
+                      {sum.label || `Score Sum ${sum.index + 1}`}
+                    </option>
+                  ))}
+                </select>
+                {element.controlledByScoreSum !== undefined && (
+                  <input
+                    type="number"
+                    value={element.threshold || 0}
+                    onChange={(e) => updateElement(index, { threshold: Number(e.target.value) })}
+                    className="w-32 px-3 py-2 border border-gray-300 rounded-md"
+                    placeholder="Threshold value"
+                  />
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        return baseElement;
     }
   };
 
@@ -616,7 +724,7 @@ const FormBuilder: React.FC = () => {
         </div>
       </div>
 
-      <div className="col-span-3">
+      <div className="col-span-3 h-[80vh] overflow-y-auto">
         <div className="bg-white p-6 rounded-md shadow-sm border mb-6">
           <input
             type="text"
