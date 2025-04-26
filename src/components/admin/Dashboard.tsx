@@ -36,78 +36,78 @@ const mockPatients = [
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("forms");
-  
+
   const formatTime = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
-  
+
   const handleCreateForm = () => {
     navigate('/admin/forms/create');
   };
-  
+
   const handleEditForm = (formId: string) => {
     navigate(`/admin/forms/${formId}/edit`);
   };
-  
+
   const handleAddClient = () => {
     navigate('/admin/clients/add');
   };
-  
+
   const handleEditClient = (clientId: string) => {
     navigate(`/admin/clients/${clientId}/edit`);
   };
-  
+
   const handleAddStaff = () => {
     navigate('/admin/staff/add');
   };
-  
+
   const handleEditStaff = (staffId: string) => {
     navigate(`/admin/staff/${staffId}/edit`);
   };
-  
+
   const handleAddPatient = () => {
     navigate('/admin/patients/add');
   };
-  
+
   const handleEditPatient = (patientId: string) => {
     navigate(`/admin/patients/${patientId}/edit`);
   };
-  
-  const handleClientsExportCSV = () => {
-    exportTableToCSV(
-      'clients.csv',
-      mockClients,
-      [
-        { label: 'Client Name', key: 'name' },
-        { label: 'Billing Time', key: 'totalBillingTime' }
-      ]
-    );
-  };
-  
-  const handleStaffExportCSV = () => {
-    exportTableToCSV(
-      'staffs.csv',
-      mockStaff,
-      [
-        { label: 'Staff Name', key: 'name' },
-        { label: 'Billing Time', key: 'totalBillingTime' }
-      ]
-    );
-  };
-  
-  const handlePatientsExportCSV = () => {
-    exportTableToCSV(
-      'patients.csv',
-      mockPatients,
-      [
-        { label: 'Patient Name', key: 'name' },
-        { label: 'Billing Time', key: 'totalBillingTime' }
-      ]
-    );
-  };
-  
+
+  // const handleClientsExportCSV = () => {
+  //   exportTableToCSV(
+  //     'clients.csv',
+  //     mockClients,
+  //     [
+  //       { label: 'Client Name', key: 'name' },
+  //       { label: 'Billing Time', key: 'totalBillingTime' }
+  //     ]
+  //   );
+  // };
+
+  // const handleStaffExportCSV = () => {
+  //   exportTableToCSV(
+  //     'staffs.csv',
+  //     mockStaff,
+  //     [
+  //       { label: 'Staff Name', key: 'name' },
+  //       { label: 'Billing Time', key: 'totalBillingTime' }
+  //     ]
+  //   );
+  // };
+
+  // const handlePatientsExportCSV = () => {
+  //   exportTableToCSV(
+  //     'patients.csv',
+  //     mockPatients,
+  //     [
+  //       { label: 'Patient Name', key: 'name' },
+  //       { label: 'Billing Time', key: 'totalBillingTime' }
+  //     ]
+  //   );
+  // };
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       <Tabs defaultValue="forms" value={activeTab} onValueChange={setActiveTab}>
@@ -117,13 +117,13 @@ const AdminDashboard: React.FC = () => {
           <TabsTrigger value="staff">Staffs</TabsTrigger>
           <TabsTrigger value="patients">Patients</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="forms" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Templates</h2>
             <Button onClick={handleCreateForm}>+ Create Form</Button>
           </div>
-          
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -145,18 +145,16 @@ const AdminDashboard: React.FC = () => {
             </TableBody>
           </Table>
         </TabsContent>
-        
+
         <TabsContent value="clients" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Manage Clients</h2>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleClientsExportCSV}>
-                Export CSV
-              </Button>
+
               <Button onClick={handleAddClient}>+ Add Client</Button>
             </div>
           </div>
-          
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -180,18 +178,16 @@ const AdminDashboard: React.FC = () => {
             </TableBody>
           </Table>
         </TabsContent>
-        
+
         <TabsContent value="staff" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Manage Staff</h2>
             <div className="flex space-x-2">
-              <Button variant="outline" onClick={handleStaffExportCSV}>
-                Export CSV
-              </Button>
+
               <Button onClick={handleAddStaff}>+ Add Staff</Button>
             </div>
           </div>
-          
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -215,18 +211,16 @@ const AdminDashboard: React.FC = () => {
             </TableBody>
           </Table>
         </TabsContent>
-        
+
         <TabsContent value="patients" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Manage Patients</h2>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handlePatientsExportCSV}>
-                Export CSV
-              </Button>
+
               <Button onClick={handleAddPatient}>+ Add Patient</Button>
             </div>
           </div>
-          
+
           <Table>
             <TableHeader>
               <TableRow>

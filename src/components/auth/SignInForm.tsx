@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../hooks/reduxHooks';
@@ -61,15 +62,16 @@ const SignInForm: React.FC = () => {
     } catch (error) {
       // Fix: Properly type the error and safely access error message
       let errorMessage = 'Login failed';
-      console.log(error)
-      if (error instanceof Error) {
-        errorMessage = error.response.data.message;
-      } else if (typeof error === 'object' && error !== null) {
-        // Handle axios error object which might have response data
-        // @ts-ignore - We're safely checking for existence before accessing
-        if (error && error.response && error.response.data && error.response.data.message) {
-          // @ts-ignore
-          errorMessage = error.response.data.message;
+      console.log(error);
+
+      // Safe type checking for various error formats
+      if (typeof error === 'object' && error !== null) {
+        // Access error.response.data.message safely with optional chaining
+        const anyError = error as any;
+        if (anyError.response?.data?.message) {
+          errorMessage = anyError.response.data.message;
+        } else if (anyError.message) {
+          errorMessage = anyError.message;
         }
       }
 

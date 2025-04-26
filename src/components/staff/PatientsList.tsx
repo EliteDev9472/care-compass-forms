@@ -70,22 +70,22 @@ const PatientsList: React.FC = () => {
   const handlePatientClick = (patient: StaffPatient) => {
     dispatch(setCurrentPatient(patient))
     if (user.role == 'staff')
-      navigate(`/staff/patients/${patient._id}/forms`);
+      navigate(`/staff/patients/${patient._id}/forms/${patient.name}`);
     else if (user.role == 'client')
       navigate(`/client/patients/${patient._id}/forms`);
   };
 
-  const handleExportCSV = () => {
-    if (!patients.length) return;
-    exportTableToCSV(
-      'patients.csv',
-      patients,
-      [
-        { label: 'Patient Name', key: 'name' },
-        { label: 'Billing Time', key: 'billingMinutes' }
-      ]
-    );
-  };
+  // const handleExportCSV = () => {
+  //   if (!patients.length) return;
+  //   exportTableToCSV(
+  //     'patients.csv',
+  //     patients,
+  //     [
+  //       { label: 'Patient Name', key: 'name' },
+  //       { label: 'Billing Time', key: 'billingMinutes' }
+  //     ]
+  //   );
+  // };
 
   const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
     setViewMode(mode);
@@ -96,13 +96,13 @@ const PatientsList: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">My Patients</h1>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={handleExportCSV} className="h-10">
+          {/* {user.role == 'staff' && <Button variant="outline" onClick={handleExportCSV} className="h-10">
             Export CSV
-          </Button>
+          </Button>} */}
           <div className="flex rounded-md overflow-hidden">
             <button
               onClick={() => setViewAndUpdate('day')}

@@ -70,13 +70,13 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave, s
   };
 
   return (
-    <div className="max-w-4xl mx-auto my-8 bg-white p-6 rounded-lg shadow-md">
-      <div className="mb-8">
+    <div className="max-w-6xl mx-auto my-8 bg-white p-6 rounded-lg shadow-md">
+      <div className="mb-2">
         <h1 className="text-3xl font-bold text-center mb-6">{currentForm.name}</h1>
         <Timer formId={formId} />
       </div>
 
-      <form onSubmit={handleSubmit} className='h-[70vh] overflow-y-scroll'>
+      <form onSubmit={handleSubmit} className='h-[64vh] overflow-y-scroll'>
         {currentForm.templateFields.map((field, index) => {
           if (field.condition && field.type != 'scored-radio' && [...sumupArray].reduce((a, b) => { return a + b }, 0) < thresHold)
             return <></>
@@ -101,15 +101,15 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave, s
             )
 
         })}
-        <div className="mt-8 flex justify-end">
-          <button
-            type="submit"
-            className="mr-4 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Save Form
-          </button>
-        </div>
       </form>
+      <div className="mt-8 flex justify-end">
+        <button
+          type="submit"
+          className="mr-4 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          Save Form
+        </button>
+      </div>
     </div>
   );
 };

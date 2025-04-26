@@ -92,31 +92,30 @@ const AdminStaffList: React.FC = () => {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
-  const handleExportCSV = () => {
-    if (!staff.length) return;
-    exportTableToCSV(
-      'staff.csv',
-      staff.map(staffMember => ({
-        name: staffMember.name,
-        username: staffMember.username,
-        billingTime: staffMember.billingMinutes || 0,
-        status: staffMember.isActive ? 'Active' : 'Inactive',
-      })),
-      [
-        { label: 'Staff Name', key: 'name' },
-        { label: 'Username', key: 'username' },
-        { label: 'Billing Time', key: 'billingTime' },
-        { label: 'Status', key: 'status' },
-      ]
-    );
-  };
+  // const handleExportCSV = () => {
+  //   if (!staff.length) return;
+  //   exportTableToCSV(
+  //     'staff.csv',
+  //     staff.map(staffMember => ({
+  //       name: staffMember.name,
+  //       username: staffMember.username,
+  //       billingTime: staffMember.billingMinutes || 0,
+  //       status: staffMember.isActive ? 'Active' : 'Inactive',
+  //     })),
+  //     [
+  //       { label: 'Staff Name', key: 'name' },
+  //       { label: 'Username', key: 'username' },
+  //       { label: 'Billing Time', key: 'billingTime' },
+  //       { label: 'Status', key: 'status' },
+  //     ]
+  //   );
+  // };
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Staff</h1>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={handleExportCSV}>Export CSV</Button>
           <div className="flex rounded-md overflow-hidden">
             <button
               onClick={() => setViewAndUpdate('day')}

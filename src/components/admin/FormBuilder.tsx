@@ -723,27 +723,27 @@ const FormBuilder: React.FC = () => {
           </div>
         </div>
       </div>
+      <div className='col-span-3'>
+        <div className=" h-[76vh] overflow-y-auto">
+          <div className="bg-white p-6 rounded-md shadow-sm border mb-6">
+            <input
+              type="text"
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
+              className="w-full text-xl font-bold mb-4 border-b-2 border-dashed pb-2 focus:outline-none focus:border-blue-500"
+              placeholder="Enter form name..."
+            />
 
-      <div className="col-span-3 h-[80vh] overflow-y-auto">
-        <div className="bg-white p-6 rounded-md shadow-sm border mb-6">
-          <input
-            type="text"
-            value={formName}
-            onChange={(e) => setFormName(e.target.value)}
-            className="w-full text-xl font-bold mb-4 border-b-2 border-dashed pb-2 focus:outline-none focus:border-blue-500"
-            placeholder="Enter form name..."
-          />
+            {formElements.map((element, index) => renderFormElement(element, index))}
 
-          {formElements.map((element, index) => renderFormElement(element, index))}
-
-          {formElements.length === 0 && (
-            <div className="text-center p-8 border-2 border-dashed rounded-md">
-              <p className="text-gray-500">Add form elements from the left sidebar</p>
-            </div>
-          )}
+            {formElements.length === 0 && (
+              <div className="text-center p-8 border-2 border-dashed rounded-md">
+                <p className="text-gray-500">Add form elements from the left sidebar</p>
+              </div>
+            )}
+          </div>
         </div>
-
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end space-x-4 mt-6">
           <Button
             variant="outline"
             onClick={() => navigate('/admin/dashboard')}

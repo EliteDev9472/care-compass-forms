@@ -88,27 +88,26 @@ const AdminPatientsList: React.FC = () => {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
-  const handleExportCSV = () => {
-    if (!patients.length) return;
-    exportTableToCSV(
-      'patients.csv',
-      patients.map(p => ({
-        name: p.name,
-        billingTime: p.billingMinutes || 0,
-      })),
-      [
-        { label: 'Patient Name', key: 'name' },
-        { label: 'Billing Time', key: 'billingTime' },
-      ]
-    );
-  };
+  // const handleExportCSV = () => {
+  //   if (!patients.length) return;
+  //   exportTableToCSV(
+  //     'patients.csv',
+  //     patients.map(p => ({
+  //       name: p.name,
+  //       billingTime: p.billingMinutes || 0,
+  //     })),
+  //     [
+  //       { label: 'Patient Name', key: 'name' },
+  //       { label: 'Billing Time', key: 'billingTime' },
+  //     ]
+  //   );
+  // };
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Patients</h1>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={handleExportCSV}>Export CSV</Button>
           <div className="flex rounded-md overflow-hidden">
             {['day', 'week', 'month'].map((mode) => (
               <button

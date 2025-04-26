@@ -12,13 +12,14 @@ import { Calendar } from '../../components/ui/calendar';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, ArrowLeft } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { CalendarIcon, ArrowLeft, Pencil, View } from 'lucide-react';
 import { toast } from 'sonner';
 import { exportTableToCSV } from '@/utils/exportCsv';
+import { getClientName } from '@/services/staffService';
 
 const PatientForms: React.FC = () => {
   const { patientId } = useParams<{ patientId: string }>();
+  const { patientName } = useParams<{ patientName: string }>();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -95,7 +96,7 @@ const PatientForms: React.FC = () => {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
-  const handleFormClick = (template: FormTemplate) => {
+  const handleFormClick = (template: FormTemplate, type: string) => {
     let form
     // Transform template to match the current form structure expected by the app
     if (user.role == 'staff') {
@@ -135,7 +136,10 @@ const PatientForms: React.FC = () => {
     dispatch(setCurrentForm(form));
 
     if (user?.role === 'staff') {
-      navigate(`/staff/patients/${patientId}/forms/${template._id}`);
+      if (type == 'edit')
+        navigate(`/staff/patients/${patientId}/forms/${template._id}`);
+      else if (type == 'view')
+        navigate(`/staff/patients/${patientId}/forms/${template._id}/review`);
     } else {
       navigate(`/client/patients/${patientId}/forms/${template._id}`);
     }
@@ -153,37 +157,46 @@ const PatientForms: React.FC = () => {
     }
   };
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     if (!formTemplates.length) return;
+    let client = {}
     if (user.role === 'staff') {
+      try {
+        client = await getClientName(patientId);
+      }
+      catch (error) {
+        toast.error(error.response.data.message)
+      }
       exportTableToCSV(
         'forms.csv',
         formTemplates.map(t => ({
           name: t.name,
-          status: t.submission ? 'Submitted' : 'New',
+          // status: t.submission ? 'Submitted' : 'New',
           billingMinutes: t.billingMinutes
         })),
         [
           { label: 'Form Name', key: 'name' },
-          { label: 'Status', key: 'status' },
+          // { label: 'Status', key: 'status' },
           { label: 'Billing Time', key: 'billingMinutes' }
-        ]
-      );
-    } else if (user.role === 'client') {
-      exportTableToCSV(
-        'forms.csv',
-        formTemplates.map(t => ({
-          name: t.template?.name,
-          status: t.data ? 'Submitted' : 'New',
-          billingMinutes: t.billingMinutes
-        })),
-        [
-          { label: 'Form Name', key: 'name' },
-          { label: 'Status', key: 'status' },
-          { label: 'Billing Time', key: 'billingMinutes' }
-        ]
+        ],
+        client['clientName'], patientName, user.name
       );
     }
+    // else if (user.role === 'client') {
+    //   exportTableToCSV(
+    //     'forms.csv',
+    //     formTemplates.map(t => ({
+    //       name: t.template?.name,
+    //       status: t.data ? 'Submitted' : 'New',
+    //       billingMinutes: t.billingMinutes
+    //     })),
+    //     [
+    //       { label: 'Form Name', key: 'name' },
+    //       { label: 'Status', key: 'status' },
+    //       { label: 'Billing Time', key: 'billingMinutes' }
+    //     ]
+    //   );
+    // }
   };
 
   if (loading) {
@@ -195,7 +208,7 @@ const PatientForms: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="mb-4 flex justify-between items-center">
         <Button
           variant="outline"
@@ -206,9 +219,9 @@ const PatientForms: React.FC = () => {
           Back to Patients
         </Button>
 
-        <Button variant="outline" onClick={handleExportCSV}>
+        {user.role == 'staff' && <Button variant="outline" onClick={handleExportCSV}>
           Export CSV
-        </Button>
+        </Button>}
       </div>
 
       <div className="flex justify-between items-center mb-6">
@@ -254,9 +267,10 @@ const PatientForms: React.FC = () => {
       </div>
 
       <div className="bg-white shadow-md rounded-md overflow-hidden">
-        <div className="grid grid-cols-2 bg-gray-50 border-b">
-          <div className="p-4 font-semibold">Forms</div>
-          <div className="p-4 font-semibold">Billing Time</div>
+        <div className={`grid grid-cols-${user.role == 'staff' ? 4 : 2} bg-gray-50 border-b`}>
+          <div className={`p-4 font-semibold col-span-${user.role == 'staff' ? 2 : 1}`}>Forms</div>
+          <div className="p-4 font-semibold col-span-1">Billing Time</div>
+          {user.role == 'staff' && <div className="p-4 font-semibold col-span-1">Actions</div>}
         </div>
         {formTemplates.length === 0 ? (
           <div className="p-6 text-center text-gray-500">No forms found for this time period</div>
@@ -265,21 +279,33 @@ const PatientForms: React.FC = () => {
             formTemplates.map(template => (
               <div
                 key={template._id}
-                onClick={() => handleFormClick(template)}
-                className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
+
+                className="grid grid-cols-4 border-b hover:bg-gray-50 cursor-pointer"
               >
-                <div className="p-4">
+                <div className={`p-4 col-span-${user.role == 'staff' ? 2 : 1}`}>
                   {template.name}
                   {template.submission ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
                     <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
                 </div>
-                <div className="p-4">{template.billingMinutes}</div>
+                <div className="p-4 col-span-1">{template.billingMinutes}</div>
+                <div className="p-4 col-span-1 flex justify-left align-middle">
+                  <Button variant="ghost" size="sm" onClick={() => handleFormClick(template, 'edit')}>
+                    <Pencil size={16} className="mr-1" /> Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleFormClick(template, 'view')}
+                  >
+                    <View size={16} className="mr-1" /> View
+                  </Button>
+                </div>
               </div>
             )) :
             formTemplates.map(template => (
               <div
                 key={template.template._id}
-                onClick={() => handleFormClick(template)}
+                onClick={() => handleFormClick(template, '')}
                 className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
               >
                 <div className="p-4">

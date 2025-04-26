@@ -205,10 +205,9 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
   };
 
   return (
-    <div className="max-w-4xl mx-auto my-8 bg-white p-6 rounded-lg shadow-md">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-center mb-6">{currentForm.name}</h1>
-        <Timer formId={formId} />
+    <div className="max-w-6xl mx-auto my-8 bg-white p-6 rounded-lg shadow-md">
+      <div className="mb-2">
+        <h1 className="text-3xl font-bold text-center mb-6">{currentForm.name}</h1>
       </div>
       <form>
         {

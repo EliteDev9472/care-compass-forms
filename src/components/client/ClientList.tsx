@@ -36,24 +36,24 @@ const ClientList: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">My Clients</h1>
         <div className="flex space-x-2">
           <div className="flex rounded-md overflow-hidden">
-            <button 
+            <button
               onClick={() => setViewAndUpdate('day')}
               className={`px-3 py-1 ${viewMode === 'day' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             >
               Day
             </button>
-            <button 
+            <button
               onClick={() => setViewAndUpdate('week')}
               className={`px-3 py-1 ${viewMode === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             >
               Week
             </button>
-            <button 
+            <button
               onClick={() => setViewAndUpdate('month')}
               className={`px-3 py-1 ${viewMode === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             >
@@ -84,12 +84,12 @@ const ClientList: React.FC = () => {
           <div className="p-4 font-semibold">Client Name</div>
           <div className="p-4 font-semibold">Billing Time</div>
         </div>
-        
+
         {clients.length === 0 ? (
           <div className="p-6 text-center text-gray-500">No clients found</div>
         ) : (
           clients.map(client => (
-            <div 
+            <div
               key={client.id}
               onClick={() => handleClientClick(client.id)}
               className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"

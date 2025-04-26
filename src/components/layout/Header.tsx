@@ -59,6 +59,13 @@ const Header: React.FC = () => {
               </div>
               
               <button
+                onClick={() => navigate('/change-password')}
+                className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-md text-sm font-medium mr-2"
+              >
+                Change Password
+              </button>
+              
+              <button
                 onClick={handleLogout}
                 className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-md text-sm font-medium"
               >

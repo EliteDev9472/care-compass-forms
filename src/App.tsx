@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -31,9 +30,13 @@ import EditPatientPage from './pages/admin/EditPatientPage';
 import PatientsListPage from './pages/common/PatientsListPage';
 import PatientFormsPage from './pages/common/PatientFormsPage';
 import FormPage from './pages/staff/FormPage';
+import ChangePasswordPage from './pages/common/ChangePasswordPage';
 
 // Client pages
 import ReviewFormPage from './pages/client/ReviewFormPage';
+
+// Staff pages
+import StaffReviewFormPage from './pages/staff/ReviewFormPage';
 
 const App = () => (
   <Provider store={store}>
@@ -116,7 +119,7 @@ const App = () => (
               <PatientsListPage />
             </ProtectedRoute>
           } />
-          <Route path="/staff/patients/:patientId/forms" element={
+          <Route path="/staff/patients/:patientId/forms/:patientName" element={
             <ProtectedRoute allowedRoles={['staff']}>
               <PatientFormsPage />
             </ProtectedRoute>
@@ -124,6 +127,11 @@ const App = () => (
           <Route path="/staff/patients/:patientId/forms/:formId" element={
             <ProtectedRoute allowedRoles={['staff']}>
               <FormPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/staff/patients/:patientId/forms/:formId/review" element={
+            <ProtectedRoute allowedRoles={['staff']}>
+              <StaffReviewFormPage />
             </ProtectedRoute>
           } />
 
@@ -141,6 +149,13 @@ const App = () => (
           <Route path="/client/patients/:patientId/forms/:formId" element={
             <ProtectedRoute allowedRoles={['client']}>
               <ReviewFormPage />
+            </ProtectedRoute>
+          } />
+
+          {/* Common routes */}
+          <Route path="/change-password" element={
+            <ProtectedRoute allowedRoles={['admin', 'client', 'staff']}>
+              <ChangePasswordPage />
             </ProtectedRoute>
           } />
 

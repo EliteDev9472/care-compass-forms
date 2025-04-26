@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks/reduxHooks';
@@ -77,23 +76,21 @@ const ReviewFormPage: React.FC = () => {
         }
     };
 
-    const handleDownloadPDF = () => {
-        const doc = new jsPDF();
+    const handleDownloadDoc = () => {
+        const element = document.querySelector('.max-w-6xl');
+        if (!element) return;
 
-        // Capture the element with the given id or class
-        const pageContent = document.querySelector('.max-w-4xl') as HTMLElement;
-
-        // Add the content of the div to the PDF
-        doc.html(pageContent, {
-            callback: function (doc) {
-                // Save the PDF with the given file name
-                doc.save('element.pdf');
-            },
-            x: -30,
-            y: 10,
-            width: 250, // Width to scale the content (adjust this based on your layout)
-            windowWidth: document.body.scrollWidth, // Adjust this for content width scaling
-        });
+        const content = element.innerHTML;
+        // Convert HTML content to a Blob
+        const blob = new Blob([content], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'form.doc';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     };
 
     return (
@@ -107,9 +104,6 @@ const ReviewFormPage: React.FC = () => {
                     >
                         <ArrowLeft size={16} />
                         Back to Patients
-                    </Button>
-                    <Button onClick={handleDownloadPDF} className="mt-4">
-                        Download PDF
                     </Button>
                 </div>
                 {loading ? (

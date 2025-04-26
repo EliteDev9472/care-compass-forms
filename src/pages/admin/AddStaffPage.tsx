@@ -8,7 +8,7 @@ const AddStaffPage: React.FC = () => {
   return (
     <ProtectedRoute allowedRoles={['admin']}>
       <Layout>
-        <div className="max-w-4xl mx-auto p-6">
+        <div className="max-w-6xl mx-auto p-6">
           <h1 className="text-2xl font-bold mb-6">Add New Staff</h1>
           <StaffForm />
         </div>
