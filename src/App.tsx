@@ -119,12 +119,12 @@ const App = () => (
               <PatientsListPage />
             </ProtectedRoute>
           } />
-          <Route path="/staff/patients/:patientId/forms/:patientName" element={
+          <Route path="/staff/patients/:patientId/forms" element={
             <ProtectedRoute allowedRoles={['staff']}>
               <PatientFormsPage />
             </ProtectedRoute>
           } />
-          <Route path="/staff/patients/:patientId/forms/:formId" element={
+          <Route path="/staff/patients/:patientId/form/:formId" element={
             <ProtectedRoute allowedRoles={['staff']}>
               <FormPage />
             </ProtectedRoute>

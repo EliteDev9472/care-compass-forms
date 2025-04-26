@@ -70,7 +70,7 @@ const PatientsList: React.FC = () => {
   const handlePatientClick = (patient: StaffPatient) => {
     dispatch(setCurrentPatient(patient))
     if (user.role == 'staff')
-      navigate(`/staff/patients/${patient._id}/forms/${patient.name}`);
+      navigate(`/staff/patients/${patient._id}/forms`);
     else if (user.role == 'client')
       navigate(`/client/patients/${patient._id}/forms`);
   };

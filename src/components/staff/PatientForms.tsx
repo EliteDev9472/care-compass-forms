@@ -19,7 +19,7 @@ import { getClientName } from '@/services/staffService';
 
 const PatientForms: React.FC = () => {
   const { patientId } = useParams<{ patientId: string }>();
-  const { patientName } = useParams<{ patientName: string }>();
+  // const { patientName } = useParams<{ patientName: string }>();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -136,8 +136,9 @@ const PatientForms: React.FC = () => {
     dispatch(setCurrentForm(form));
 
     if (user?.role === 'staff') {
-      if (type == 'edit')
-        navigate(`/staff/patients/${patientId}/forms/${template._id}`);
+      if (type == 'edit') {
+        navigate(`/staff/patients/${patientId}/form/${template._id}/`);
+      }
       else if (type == 'view')
         navigate(`/staff/patients/${patientId}/forms/${template._id}/review`);
     } else {
@@ -179,7 +180,7 @@ const PatientForms: React.FC = () => {
           // { label: 'Status', key: 'status' },
           { label: 'Billing Time', key: 'billingMinutes' }
         ],
-        client['clientName'], patientName, user.name
+        client['clientName'], currentPatient?.name, user.name
       );
     }
     // else if (user.role === 'client') {
@@ -268,7 +269,11 @@ const PatientForms: React.FC = () => {
 
       <div className="bg-white shadow-md rounded-md overflow-hidden">
         <div className={`grid grid-cols-${user.role == 'staff' ? 4 : 2} bg-gray-50 border-b`}>
-          <div className={`p-4 font-semibold col-span-${user.role == 'staff' ? 2 : 1}`}>Forms</div>
+          {
+            user.role == 'staff' ?
+              <div className={`p-4 font-semibold col-span-2`}>Forms</div>
+              : <div className={`p-4 font-semibold col-span-1`}>Forms</div>
+          }
           <div className="p-4 font-semibold col-span-1">Billing Time</div>
           {user.role == 'staff' && <div className="p-4 font-semibold col-span-1">Actions</div>}
         </div>

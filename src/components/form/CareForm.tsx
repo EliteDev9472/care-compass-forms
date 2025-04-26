@@ -46,7 +46,6 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave, s
     }
     const newFormData = [...formData];
     newFormData[index] = value;
-    console.log(newFormData)
     setFormData(newFormData);
   };
 
@@ -76,40 +75,43 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave, s
         <Timer formId={formId} />
       </div>
 
-      <form onSubmit={handleSubmit} className='h-[64vh] overflow-y-scroll'>
-        {currentForm.templateFields.map((field, index) => {
-          if (field.condition && field.type != 'scored-radio' && [...sumupArray].reduce((a, b) => { return a + b }, 0) < thresHold)
-            return <></>
-          else
-            return (
-              <FormElementRenderer
-                key={index}
-                element={field}
-                index={index}
-                value={formData[index]}
-                onChange={handleFieldChange}
-                allValues={formData}
-                sumupArray={sumupArray}
-                icdSearchProps={field.type === 'icd-text' ? {
-                  loading,
-                  searchResults,
-                  showResults,
-                  onSelect: handleSelectIcdCode,
-                  inputingIndex
-                } : undefined}
-              />
-            )
+      <form onSubmit={handleSubmit}>
+        <div className='w-full h-[64vh] overflow-y-scroll'>
+          {currentForm.templateFields.map((field, index) => {
+            if (field.condition && field.type != 'scored-radio' && [...sumupArray].reduce((a, b) => { return a + b }, 0) < thresHold)
+              return <></>
+            else
+              return (
+                <FormElementRenderer
+                  key={index}
+                  element={field}
+                  index={index}
+                  value={formData[index]}
+                  onChange={handleFieldChange}
+                  allValues={formData}
+                  sumupArray={sumupArray}
+                  icdSearchProps={field.type === 'icd-text' ? {
+                    loading,
+                    searchResults,
+                    showResults,
+                    onSelect: handleSelectIcdCode,
+                    inputingIndex
+                  } : undefined}
+                />
+              )
 
-        })}
+          })}
+        </div>
+
+        <div className="mt-8 flex justify-end">
+          <button
+            type="submit"
+            className="mr-4 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Save Form
+          </button>
+        </div>
       </form>
-      <div className="mt-8 flex justify-end">
-        <button
-          type="submit"
-          className="mr-4 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          Save Form
-        </button>
-      </div>
     </div>
   );
 };
