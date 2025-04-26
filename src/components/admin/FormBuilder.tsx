@@ -648,14 +648,14 @@ const FormBuilder: React.FC = () => {
               className="w-full justify-start"
               onClick={() => addElement('text-input')}
             >
-              <FileText size={16} className="mr-2" /> Text Input
+              <FileText size={16} className="mr-2" /> Text Label
             </Button>
             <Button
               variant="outline"
               className="w-full justify-start"
               onClick={() => addElement('text-field')}
             >
-              <AlignLeft size={16} className="mr-2" /> Text Field
+              <AlignLeft size={16} className="mr-2" /> Text Input
             </Button>
             <Button
               variant="outline"
