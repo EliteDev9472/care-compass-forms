@@ -44,17 +44,24 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave, s
       temp[index] = parseInt(value);
       setSumupArray(temp);
     }
+
+    if (currentForm.templateFields[index].type == 'icd-text') {
+      setInputingIndex(index);
+      searchICDCodes(value, setLoading, setSearchResults);
+      setShowResults(true);
+    }
+
     const newFormData = [...formData];
     newFormData[index] = value;
     setFormData(newFormData);
   };
 
-  const handleIcdSearch = (index: number, value: string) => {
-    setInputingIndex(index);
-    handleFieldChange(index, value);
-    searchICDCodes(value, setLoading, setSearchResults);
-    setShowResults(true);
-  };
+  // const handleIcdSearch = (index: number, value: string) => {
+  //   setInputingIndex(index);
+  //   handleFieldChange(index, value);
+  //   searchICDCodes(value, setLoading, setSearchResults);
+  //   setShowResults(true);
+  // };
 
   const handleSelectIcdCode = (index: number, code: string, description: string) => {
     const selectedValue = `${description}`;
@@ -80,6 +87,35 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave, s
           {currentForm.templateFields.map((field, index) => {
             if (field.condition && field.type != 'scored-radio' && [...sumupArray].reduce((a, b) => { return a + b }, 0) < thresHold)
               return <></>
+            else if (field.type == 'icd-text')
+              return (<div className="relative p-4 -md mb-4 bg-white">
+                <p className='pb-4'>{field.label}</p>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData[index] as string}
+                  placeholder="Input ICD"
+                  onChange={(e) => { handleFieldChange(index, e.target.value) }}
+                />
+                {inputingIndex === index && loading && (
+                  <div className="absolute right-3 top-3 text-sm text-gray-500">Loading...</div>
+                )}
+
+                {inputingIndex === index && showResults && searchResults.length > 0 && handleSelectIcdCode && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    {searchResults.map((result) => (
+                      <div
+                        key={result.code}
+                        className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSelectIcdCode(index, result.code, result.description)}
+                      >
+                        <div className="font-semibold">{result.code}</div>
+                        <div className="text-sm text-gray-600">{result.description}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>)
             else
               return (
                 <FormElementRenderer

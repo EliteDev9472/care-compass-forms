@@ -3,12 +3,12 @@ import React from 'react';
 import { FormElementProps } from '../../../types/form';
 import { ICDSearchResult } from '../../../types/form';
 
-interface ICDInputProps extends FormElementProps, Partial<ICDSearchResult> {}
+interface ICDInputProps extends FormElementProps, Partial<ICDSearchResult> { }
 
-const ICDInput: React.FC<ICDInputProps> = ({ 
-  element, 
-  index, 
-  value, 
+const ICDInput: React.FC<ICDInputProps> = ({
+  element,
+  index,
+  value,
   onChange,
   loading,
   searchResults = [],

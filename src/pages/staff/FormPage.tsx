@@ -58,8 +58,9 @@ const FormPage: React.FC = () => {
             let tempArray = new Array(selectedTemplate.fields.length).fill(0)
             setSumupArray(tempArray)
             form.templateFields.map((item, index) => {
-              if (item.threshold && item.type == 'score-sum')
+              if (item.threshold && item.type == 'score-sum') {
                 setThresHold(item.threshold)
+              }
             })
             dispatch(setCurrentForm(form));
             setSubmissioId(selectedTemplate.submission?._id || null);

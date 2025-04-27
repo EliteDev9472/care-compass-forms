@@ -8,6 +8,8 @@ import ProtectedRoute from '../../components/shared/ProtectedRoute';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { saveAs } from 'file-saver';
+import htmlDocx from 'html-docx-js/dist/html-docx';
 
 const ReviewFormPage: React.FC = () => {
     const { patientId, formId } = useParams<{ patientId: string, formId: string }>();
@@ -23,12 +25,26 @@ const ReviewFormPage: React.FC = () => {
         const element = document.querySelector('.max-w-6xl');
         if (!element) return;
 
-        const content = element.innerHTML;
-        const blob = new Blob([content], { type: 'application/msword' });
+        // Wrap the HTML in Word-compatible headers
+        const header = `
+  <html xmlns:o='urn:schemas-microsoft-com:office:office' 
+        xmlns:w='urn:schemas-microsoft-com:office:word' 
+        xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset='utf-8'></head><body>`;
+        const footer = `</body></html>`;
+
+        const sourceHTML = header + element.innerHTML + footer;
+
+        // Create a Blob with the correct MIME type
+        const blob = new Blob([sourceHTML], {
+            type: 'application/msword;charset=utf-8'
+        });
+
+        // Create a download link
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'form.doc';
+        a.download = 'form.docx';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

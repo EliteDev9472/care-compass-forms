@@ -145,7 +145,7 @@ const PatientsList: React.FC = () => {
       <div className="bg-white shadow-md rounded-md overflow-hidden">
         <div className="grid grid-cols-2 bg-gray-50 border-b">
           <div className="p-4 font-semibold">Patient Name</div>
-          <div className="p-4 font-semibold">Billing Time</div>
+          {user.role == 'staff' && <div className="p-4 font-semibold">Billing Time</div>}
         </div>
 
         {patients.length === 0 ? (
@@ -158,7 +158,7 @@ const PatientsList: React.FC = () => {
               className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
             >
               <div className="p-4">{patient.name}</div>
-              <div className="p-4">{patient.billingMinutes}</div>
+              {user.role == 'staff' && <div className="p-4">{patient.billingMinutes}</div>}
             </div>
           ))
         )}

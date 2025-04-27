@@ -274,7 +274,7 @@ const PatientForms: React.FC = () => {
               <div className={`p-4 font-semibold col-span-2`}>Forms</div>
               : <div className={`p-4 font-semibold col-span-1`}>Forms</div>
           }
-          <div className="p-4 font-semibold col-span-1">Billing Time</div>
+          {user.role == 'staff' && <div className="p-4 font-semibold col-span-1">Billing Time</div>}
           {user.role == 'staff' && <div className="p-4 font-semibold col-span-1">Actions</div>}
         </div>
         {formTemplates.length === 0 ? (
@@ -318,7 +318,7 @@ const PatientForms: React.FC = () => {
                   {template.data ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
                     <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
                 </div>
-                <div className="p-4">{template.billingMinutes}</div>
+                {/* <div className="p-4">{template.billingMinutes}</div> */}
               </div>
             ))
         )}
