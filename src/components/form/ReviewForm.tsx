@@ -84,15 +84,23 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
             {/* <p className='pb-4'>{label}</p> */}
             <div className={`grid grid-cols-${gridColumns || 2} gap-4`}>
               {options?.map((fieldLabel, idx) => (
-                <div key={idx} className="space-y-2">
-                  <label className="text-sm text-gray-600">{fieldLabel}: {currentForm.data[index]}</label>
-                  {/* <input
-                    type="text"
-                    value={Array.isArray(currentForm.data[index]) ? currentForm.data[index][idx] : ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    disabled={true}
-                  /> */}
-                </div>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>{fieldLabel}</td>
+                      <td>{currentForm.data[index]}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                // <div key={idx} className="space-y-2">
+                //   <label className="text-sm text-gray-600">{fieldLabel}: {currentForm.data[index]}</label>
+                //   {/* <input
+                //     type="text"
+                //     value={Array.isArray(currentForm.data[index]) ? currentForm.data[index][idx] : ''}
+                //     className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                //     disabled={true}
+                //   /> */}
+                // </div>
               ))}
             </div>
           </div>
