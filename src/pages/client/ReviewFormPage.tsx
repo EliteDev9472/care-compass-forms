@@ -76,23 +76,6 @@ const ReviewFormPage: React.FC = () => {
         }
     };
 
-    const handleDownloadDoc = () => {
-        const element = document.querySelector('.max-w-6xl');
-        if (!element) return;
-
-        const content = element.innerHTML;
-        // Convert HTML content to a Blob
-        const blob = new Blob([content], { type: 'application/msword' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'form.doc';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    };
-
     return (
         <ProtectedRoute allowedRoles={['client']}>
             <Layout>

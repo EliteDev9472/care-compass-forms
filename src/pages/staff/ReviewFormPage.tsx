@@ -7,48 +7,57 @@ import ReviewForm from '../../components/form/ReviewForm';
 import ProtectedRoute from '../../components/shared/ProtectedRoute';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
-import { saveAs } from 'file-saver';
-import htmlDocx from 'html-docx-js/dist/html-docx';
+// import { saveAs } from 'file-saver';
+// import htmlDocx from 'html-docx-js/dist/html-docx';
 
 const ReviewFormPage: React.FC = () => {
     const { patientId, formId } = useParams<{ patientId: string, formId: string }>();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState<(string | boolean)[]>([]);
-
+    // State to track whether the export is triggered
+    const [isExporting, setIsExporting] = useState(false);
     const handleGoBack = () => {
         navigate('/staff/patients');
     };
 
     const handleDownloadDoc = () => {
+        if (isExporting) return;
+
+        setIsExporting(true); // Mark as exporting
+
         const element = document.querySelector('.max-w-6xl');
         if (!element) return;
 
-        // Wrap the HTML in Word-compatible headers
+        const content = element.innerHTML;
+
+        // Wrap the HTML content in Word-compatible format
         const header = `
-  <html xmlns:o='urn:schemas-microsoft-com:office:office' 
-        xmlns:w='urn:schemas-microsoft-com:office:word' 
-        xmlns='http://www.w3.org/TR/REC-html40'>
-  <head><meta charset='utf-8'></head><body>`;
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' 
+            xmlns:w='urn:schemas-microsoft-com:office:word' 
+            xmlns='http://www.w3.org/TR/REC-html40'>
+      <head><meta charset='utf-8'></head><body>`;
         const footer = `</body></html>`;
 
-        const sourceHTML = header + element.innerHTML + footer;
+        const sourceHTML = header + content + footer;
 
-        // Create a Blob with the correct MIME type
-        const blob = new Blob([sourceHTML], {
-            type: 'application/msword;charset=utf-8'
-        });
-
-        // Create a download link
+        // Create the Blob object for the .doc file
+        const blob = new Blob([sourceHTML], { type: 'application/msword;charset=utf-8' });
         const url = URL.createObjectURL(blob);
+
+        // Trigger file download
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'form.docx';
+        a.download = 'page_content.doc';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+
+        // Clean up the created object URL
         URL.revokeObjectURL(url);
+
+        // Reset the exporting state after the export is done
+        setIsExporting(false);
     };
 
     return (
