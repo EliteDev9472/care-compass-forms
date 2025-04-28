@@ -70,9 +70,11 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave, s
     setShowResults(false);
   };
 
+  const SubmitForm = () => {
+    onSave(formData);
+  }
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
   };
 
   return (
@@ -138,16 +140,15 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave, s
 
           })}
         </div>
-
-        <div className="mt-8 flex justify-end">
-          <button
-            type="submit"
-            className="mr-4 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Save Form
-          </button>
-        </div>
       </form>
+      <div className="mt-8 flex justify-end">
+        <button
+          className="mr-4 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          onClick={SubmitForm}
+        >
+          Save Form
+        </button>
+      </div>
     </div>
   );
 };
