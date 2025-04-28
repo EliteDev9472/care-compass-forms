@@ -18,7 +18,7 @@ const FormPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const { timerSessions } = useAppSelector(state => state.timer);
+  const { timerSessions, isRunning } = useAppSelector(state => state.timer);
   const [formData, setFormData] = useState<(string | boolean)[]>([]);
   const [submissionId, setSubmissioId] = useState('');
   const { user } = useAppSelector(state => state.auth);
@@ -87,6 +87,11 @@ const FormPage: React.FC = () => {
     if (!timerSessions.length) {
       toast.error('Please check timer');
       return;
+    }
+
+    if (isRunning) {
+      toast.error('Please stop timer');
+      return
     }
     setLoading(true);
 
