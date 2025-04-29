@@ -78,7 +78,7 @@ export const getPatientFormsByTemplate = async (patientId: string, startDate?: s
 
 export const getPatientFormsByTemplateForClient = async (patientId: string, startDate?: string, endDate?: string): Promise<FormTemplate[]> => {
   const params = startDate && endDate ? `?start=${startDate}&end=${endDate}` : '';
-  const response = await axiosInstance.get(`${SERVER_URL}/client/patient/${patientId}/submissions`);
+  const response = await axiosInstance.get(`${SERVER_URL}/client/patient/${patientId}/submissions${params}`);
   return response.data;
 };
 
