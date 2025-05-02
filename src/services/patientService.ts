@@ -1,3 +1,4 @@
+
 import axiosInstance from './axiosConfig';
 import { SERVER_URL } from '@/config';
 
@@ -12,6 +13,13 @@ export interface Patient {
   ccmStatus?: 'Simple' | 'Complex';
   patientConsent?: boolean;
   billingMinutes: number;
+  billingHistory?: BillingHistoryItem[];
+}
+
+export interface BillingHistoryItem {
+  date: string;
+  minutes: number;
+  _id?: string;
 }
 
 export interface PatientCreateData {
@@ -58,5 +66,13 @@ export const updatePatient = async (patientId: string, patientData: PatientUpdat
 
 export const deletePatient = async (patientId: string) => {
   const response = await axiosInstance.delete(`${SERVER_URL}/admin/delete-patient/${patientId}`);
+  return response.data;
+};
+
+export const updatePatientBillingMinutes = async (patientId: string, date: string, minutes: number) => {
+  const response = await axiosInstance.post(`${SERVER_URL}/admin/patient/${patientId}/billing-minutes`, {
+    date,
+    minutes
+  });
   return response.data;
 };
