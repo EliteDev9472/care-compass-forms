@@ -126,11 +126,8 @@ const AdminPatientsList: React.FC = () => {
       </div>
 
       <div className="bg-white shadow-md rounded-md overflow-hidden">
-        <div className="grid grid-cols-6 bg-gray-50 border-b">
+        <div className="grid grid-cols-3 bg-gray-50 border-b">
           <div className="p-4 font-semibold">Patient Name</div>
-          <div className="p-4 font-semibold">Gender</div>
-          <div className="p-4 font-semibold">Phone</div>
-          <div className="p-4 font-semibold">CCM Status</div>
           <div className="p-4 font-semibold">Billing Time</div>
           <div className="p-4 font-semibold">Actions</div>
         </div>
@@ -141,11 +138,8 @@ const AdminPatientsList: React.FC = () => {
           <div className="p-6 text-center text-gray-500">No patients found</div>
         ) : (
           patients.map(patient => (
-            <div key={patient._id} className="grid grid-cols-6 border-b hover:bg-gray-50">
+            <div key={patient._id} className="grid grid-cols-3 border-b hover:bg-gray-50">
               <div className="p-4">{patient.name}</div>
-              <div className="p-4">{patient.gender || '-'}</div>
-              <div className="p-4">{patient.phoneNumber || '-'}</div>
-              <div className="p-4">{patient.ccmStatus || '-'}</div>
               <div className="p-4">{patient.billingMinutes}</div>
               <div className="p-4 space-x-2">
                 <Button variant="ghost" size="sm" onClick={() => handleEditPatient(patient._id)}>

@@ -218,6 +218,56 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
         <h1 className="text-3xl font-bold text-center mb-6">{currentForm.name}</h1>
       </div>
       <form>
+        <div className="relative -md pb-2 bg-white">
+          <div className="relative bg-white flex">
+            <p className='text-xl mr-4'>Patient Name:</p>
+            <p className='text-lg'>PT DJ James</p>
+          </div>
+        </div>
+        <div className="relative -md pb-2 bg-white">
+          <div className="relative  bg-white flex">
+            <p className='text-xl mr-4'>Date of Birth:</p>
+            <p className='text-lg'>1990-08-14</p>
+          </div>
+        </div>
+        <div className="relative -md pb-2 bg-white">
+          <div className="relative  bg-white flex">
+            <p className='text-xl mr-4'>Primary Phone Number:</p>
+            <p className='text-lg'>+1 819 917 2598</p>
+          </div>
+        </div>
+        <div className="relative -md pb-2 bg-white">
+          <div className="relative  bg-white flex">
+            <p className='text-xl mr-4'>Address:</p>
+            <p className='text-lg'>Address: 107 Merrimac Street, Boston, MA 02114</p>
+          </div>
+        </div>
+        <div className="relative -md pb-2 bg-white">
+          <div className="relative   flex">
+            <p className='text-xl mr-4 pt-1'>Note:</p>
+            <p className='text-lg w-fit bg-blue-50 pt-1 pb-6 px-4'>
+              Patient presents today for a routine follow-up. They report feeling well overall, with no new concerns or symptoms since their last visit. Vital signs are stable, and labs are within normal range. The treatment plan remains the same, and the patient has been advised to continue current medications.
+            </p>
+          </div>
+        </div>
+        <div className="relative -md pb-2 bg-white">
+          <div className="relative  bg-white flex">
+            <p className='text-xl mr-4'>CCM Status:</p>
+            <p className='text-lg'>Simple</p>
+          </div>
+        </div>
+        <div className="relative -md pb-2 bg-white">
+          <div className="relative  bg-white flex">
+            <p className='text-xl mr-4'>Patient Consent:</p>
+            <p className='text-lg'>Yes</p>
+          </div>
+        </div>
+        <div className="relative -md pb-2 bg-white">
+          <div className="relative  bg-white flex">
+            <p className='text-xl mr-4'>Billing Minutes:</p>
+            <p className='text-lg'>02:12</p>
+          </div>
+        </div>
         {
           currentForm.templateFields.map((field, index) => {
             return renderFormElement(field, index)

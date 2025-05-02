@@ -170,15 +170,17 @@ const PatientForms: React.FC = () => {
       }
       exportTableToCSV(
         'forms.csv',
-        formTemplates.map(t => ({
+        formTemplates.map((t, i) => ({
           name: t.name,
           // status: t.submission ? 'Submitted' : 'New',
-          billingMinutes: t.billingMinutes
+          billingMinutes: t.billingMinutes,
+          conditions: i < 2 ? 'This is pull condition list' : ''
         })),
         [
           { label: 'Form Name', key: 'name' },
           // { label: 'Status', key: 'status' },
-          { label: 'Billing Time', key: 'billingMinutes' }
+          { label: 'Billing Time', key: 'billingMinutes' },
+          { label: 'Conditions', key: 'conditions' }
         ],
         client['clientName'], currentPatient?.name, user.name
       );

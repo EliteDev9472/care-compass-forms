@@ -2,7 +2,7 @@
 export function exportTableToCSV<T>(filename: string, rows: T[], columns: { label: string; key: keyof T }[], clientName, patientName, staffName) {
   if (!rows.length) return;
 
-  const csvHeader1 = [`CLIENT,${clientName}`];
+  const csvHeader1 = [`CLIENT,${clientName},Conditions`];
   const csvHeader2 = [`PATIENT,${patientName}`];
   const csvHeader3 = [`STAFF,${staffName}`];
   const csvHeader4 = [];

@@ -24,12 +24,12 @@ import {
   RadioGroupItem
 } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { 
-  createPatient, 
-  getPatient, 
+import {
+  createPatient,
+  getPatient,
   updatePatient,
   updatePatientBillingMinutes,
-  PatientCreateData, 
+  PatientCreateData,
   PatientUpdateData,
   BillingHistoryItem
 } from '@/services/patientService';
@@ -44,7 +44,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
   const navigate = useNavigate();
   const { patientId } = useParams();
   const [loading, setLoading] = useState(false);
-  
+
   // Form fields
   const [patientName, setPatientName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
@@ -54,13 +54,14 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
   const [note, setNote] = useState('');
   const [ccmStatus, setCcmStatus] = useState<'Simple' | 'Complex' | ''>('');
   const [patientConsent, setPatientConsent] = useState<boolean | undefined>(undefined);
-  
+
   // Billing Minutes
   const [billingHistory, setBillingHistory] = useState<BillingHistoryItem[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [minutesInput, setMinutesInput] = useState<number>(0);
-  const [billingMinutes, setBillingMinutes] = useState(0);
-  
+  const [billingMinutes, setBillingMinutes] = useState(5);
+
+
   const [patientData, setPatientData] = useState<any>(null);
 
   useEffect(() => {
@@ -78,13 +79,13 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
           setCcmStatus(data.ccmStatus || '');
           setPatientConsent(data.patientConsent);
           setBillingMinutes(data.billingMinutes || 0);
-          
+
           // Initialize billing history if available
           if (data.billingHistory && Array.isArray(data.billingHistory)) {
             setBillingHistory(data.billingHistory);
           }
         } catch (error) {
-          toast({ title: "Error", description: "Failed to load patient data", variant: "destructive" });
+          toast.error("Failed to load patient data");
           navigate('/admin/patients');
         }
       };
@@ -94,13 +95,13 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
 
   const handleSave = async () => {
     if (!patientName) {
-      toast({ title: "Error", description: "Please fill in the patient name", variant: "destructive" });
+      toast.warning("Please fill in the patient name");
       return;
     }
 
     try {
       setLoading(true);
-      
+
       const patientData = {
         name: patientName,
         dateOfBirth: dateOfBirth ? format(dateOfBirth, 'yyyy-MM-dd') : undefined,
@@ -111,21 +112,19 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
         ccmStatus: ccmStatus as 'Simple' | 'Complex' | undefined,
         patientConsent
       };
-      
+
       if (mode === 'edit' && patientId) {
         await updatePatient(patientId, patientData as PatientUpdateData);
-        toast({ title: "Success", description: "Patient updated successfully" });
+        toast.success("Patient updated successfully");
       } else {
         await createPatient(patientData as PatientCreateData);
-        toast({ title: "Success", description: "Patient created successfully" });
+        toast.success("Patient created successfully");
       }
       navigate('/admin/patients');
     } catch (error) {
-      toast({ 
-        title: "Error", 
-        description: mode === 'edit' ? 'Failed to update patient' : 'Failed to create patient',
-        variant: "destructive"
-      });
+      toast.error(
+        mode === 'edit' ? 'Failed to update patient' : 'Failed to create patient',
+      );
     } finally {
       setLoading(false);
     }
@@ -133,26 +132,22 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
 
   const handleAddBillingMinutes = async () => {
     if (!patientId || minutesInput <= 0) {
-      toast({ 
-        title: "Error", 
-        description: "Please enter a valid number of minutes", 
-        variant: "destructive" 
-      });
+      toast.warning("Please enter a valid number of minutes");
       return;
     }
 
     try {
       setLoading(true);
       const dateString = format(selectedDate, 'yyyy-MM-dd');
-      
+
       // Check if there's already an entry for this date
       const existingEntryIndex = billingHistory.findIndex(
         item => item.date === dateString
       );
-      
+
       // Update API
       const updatedPatient = await updatePatientBillingMinutes(patientId, dateString, minutesInput);
-      
+
       // Update state
       if (existingEntryIndex >= 0) {
         // Update existing entry
@@ -163,7 +158,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
         // Add new entry
         setBillingHistory([...billingHistory, { date: dateString, minutes: minutesInput }]);
       }
-      
+
       // Update total minutes if available from API response
       if (updatedPatient && updatedPatient.billingMinutes) {
         setBillingMinutes(updatedPatient.billingMinutes);
@@ -173,11 +168,11 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
           .reduce((sum, item) => sum + item.minutes, 0);
         setBillingMinutes(total);
       }
-      
+
       setMinutesInput(0);
-      toast({ title: "Success", description: "Billing minutes updated successfully" });
+      toast.success("Billing minutes updated successfully");
     } catch (error) {
-      toast({ title: "Error", description: "Failed to update billing minutes", variant: "destructive" });
+      toast.error("Failed to update billing minutes");
     } finally {
       setLoading(false);
     }
@@ -185,16 +180,16 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
 
   const handleDeleteBillingEntry = async (date: string) => {
     if (!patientId) return;
-    
+
     try {
       setLoading(true);
       // Call API with 0 minutes to remove the entry
       const updatedPatient = await updatePatientBillingMinutes(patientId, date, 0);
-      
+
       // Update local state
       const updatedHistory = billingHistory.filter(item => item.date !== date);
       setBillingHistory(updatedHistory);
-      
+
       // Update total billing minutes
       if (updatedPatient && updatedPatient.billingMinutes !== undefined) {
         setBillingMinutes(updatedPatient.billingMinutes);
@@ -202,40 +197,45 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
         const total = updatedHistory.reduce((sum, item) => sum + item.minutes, 0);
         setBillingMinutes(total);
       }
-      
-      toast({ title: "Success", description: "Billing entry removed successfully" });
+
+      toast.success("Billing entry removed successfully");
     } catch (error) {
-      toast({ title: "Error", description: "Failed to remove billing entry", variant: "destructive" });
+      toast.error("Failed to remove billing entry");
     } finally {
       setLoading(false);
     }
   };
 
-  const renderBillingHistory = () => {
-    if (!billingHistory.length) {
-      return <div className="text-gray-500 italic">No billing history available.</div>;
-    }
+  // const renderBillingHistory = () => {
+  //   if (!billingHistory.length) {
+  //     return <div className="text-gray-500 italic">No billing history available.</div>;
+  //   }
 
-    return (
-      <div className="mt-2 space-y-2">
-        {billingHistory.map((entry, index) => (
-          <div key={entry._id || index} className="flex items-center justify-between p-2 border rounded bg-gray-50">
-            <div>
-              <span className="font-medium">{entry.date}</span>: {entry.minutes} minutes
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => handleDeleteBillingEntry(entry.date)}
-              className="text-red-500"
-            >
-              <Trash className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-      </div>
-    );
-  };
+  //   return (
+  //     <div className="mt-2 space-y-2">
+  //       {billingHistory.map((entry, index) => (
+  //         <div key={entry._id || index} className="flex items-center justify-between p-2 border rounded bg-gray-50">
+  //           <div>
+  //             <span className="font-medium">{entry.date}</span>: {entry.minutes} minutes
+  //           </div>
+  //           <Button
+  //             variant="ghost"
+  //             size="sm"
+  //             onClick={() => handleDeleteBillingEntry(entry.date)}
+  //             className="text-red-500"
+  //           >
+  //             <Trash className="h-4 w-4" />
+  //           </Button>
+  //         </div>
+  //       ))}
+  //     </div>
+  //   );
+  // };
+
+  const onChangeMinutes = (value: string) => {
+    const initialBillingMinutes = 5
+    setBillingMinutes(parseInt(value) ? initialBillingMinutes + parseInt(value) : initialBillingMinutes)
+  }
 
   return (
     <div className="bg-white p-6 rounded-md shadow-sm border">
@@ -250,7 +250,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             required
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
           <Popover>
@@ -277,7 +277,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             </PopoverContent>
           </Popover>
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
           <Select value={gender} onValueChange={setGender}>
@@ -292,7 +292,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             </SelectContent>
           </Select>
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Primary Phone Number</label>
           <Input
@@ -302,7 +302,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             placeholder="Enter phone number"
           />
         </div>
-        
+
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
           <Input
@@ -312,7 +312,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             placeholder="Enter address"
           />
         </div>
-        
+
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Note</label>
           <Textarea
@@ -322,7 +322,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             className="bg-blue-50"
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">CCM Status</label>
           <Select value={ccmStatus} onValueChange={(value: 'Simple' | 'Complex') => setCcmStatus(value)}>
@@ -335,11 +335,11 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             </SelectContent>
           </Select>
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">Patient Consent</label>
-          <RadioGroup 
-            defaultValue={patientConsent === true ? "yes" : patientConsent === false ? "no" : undefined} 
+          <RadioGroup
+            defaultValue={patientConsent === true ? "yes" : patientConsent === false ? "no" : undefined}
             onValueChange={(value) => setPatientConsent(value === "yes")}
           >
             <div className="flex items-center space-x-2">
@@ -354,11 +354,10 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
         </div>
       </div>
 
-      {/* Billing Minutes Section - Only show in edit mode */}
-      {mode === 'edit' && patientId && (
+      {/* {mode === 'edit' && patientId && (
         <div className="border-t pt-6 mt-6">
           <h3 className="text-lg font-medium mb-4">Billing Minutes</h3>
-          
+
           <div className="flex items-end gap-4 mb-4">
             <div className="flex-grow">
               <label className="block text-sm font-medium text-gray-700 mb-1">Select Date</label>
@@ -385,18 +384,17 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
                 </PopoverContent>
               </Popover>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Minutes</label>
               <Input
-                type="number"
-                value={minutesInput}
-                onChange={(e) => setMinutesInput(parseInt(e.target.value) || 0)}
-                min="0"
+                type="text"
+                // value={minutesInput.toString()}
+                onChange={(e) => onChangeMinutes(e.target.value)}
                 className="w-24"
               />
             </div>
-            
+
             <Button
               onClick={handleAddBillingMinutes}
               disabled={loading || minutesInput <= 0}
@@ -405,20 +403,20 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
               <Plus className="h-4 w-4 mr-1" /> Add
             </Button>
           </div>
-          
+
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">Total Billing Minutes</label>
             <div className="p-2 border rounded bg-gray-100 font-medium">
               {billingMinutes} minutes
             </div>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Billing History</label>
             {renderBillingHistory()}
           </div>
         </div>
-      )}
+      )} */}
 
       <div className="flex justify-end space-x-4 mt-6">
         <Button variant="outline" onClick={() => navigate('/admin/patients')}>
