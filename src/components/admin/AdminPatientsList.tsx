@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,6 @@ import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@radix-ui/react-popover';
 import { endOfMonth, endOfWeek, format, startOfMonth, startOfWeek } from 'date-fns';
 import DeleteConfirmDialog from '../shared/DeleteConfirmDialog';
-import { exportTableToCSV } from '@/utils/exportCsv';
 
 const AdminPatientsList: React.FC = () => {
   const navigate = useNavigate();
@@ -88,21 +86,6 @@ const AdminPatientsList: React.FC = () => {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
-  // const handleExportCSV = () => {
-  //   if (!patients.length) return;
-  //   exportTableToCSV(
-  //     'patients.csv',
-  //     patients.map(p => ({
-  //       name: p.name,
-  //       billingTime: p.billingMinutes || 0,
-  //     })),
-  //     [
-  //       { label: 'Patient Name', key: 'name' },
-  //       { label: 'Billing Time', key: 'billingTime' },
-  //     ]
-  //   );
-  // };
-
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -143,8 +126,11 @@ const AdminPatientsList: React.FC = () => {
       </div>
 
       <div className="bg-white shadow-md rounded-md overflow-hidden">
-        <div className="grid grid-cols-3 bg-gray-50 border-b">
+        <div className="grid grid-cols-6 bg-gray-50 border-b">
           <div className="p-4 font-semibold">Patient Name</div>
+          <div className="p-4 font-semibold">Gender</div>
+          <div className="p-4 font-semibold">Phone</div>
+          <div className="p-4 font-semibold">CCM Status</div>
           <div className="p-4 font-semibold">Billing Time</div>
           <div className="p-4 font-semibold">Actions</div>
         </div>
@@ -155,8 +141,11 @@ const AdminPatientsList: React.FC = () => {
           <div className="p-6 text-center text-gray-500">No patients found</div>
         ) : (
           patients.map(patient => (
-            <div key={patient._id} className="grid grid-cols-3 border-b hover:bg-gray-50">
+            <div key={patient._id} className="grid grid-cols-6 border-b hover:bg-gray-50">
               <div className="p-4">{patient.name}</div>
+              <div className="p-4">{patient.gender || '-'}</div>
+              <div className="p-4">{patient.phoneNumber || '-'}</div>
+              <div className="p-4">{patient.ccmStatus || '-'}</div>
               <div className="p-4">{patient.billingMinutes}</div>
               <div className="p-4 space-x-2">
                 <Button variant="ghost" size="sm" onClick={() => handleEditPatient(patient._id)}>

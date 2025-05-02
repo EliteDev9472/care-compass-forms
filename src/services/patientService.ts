@@ -1,19 +1,39 @@
-
 import axiosInstance from './axiosConfig';
 import { SERVER_URL } from '@/config';
 
 export interface Patient {
   _id: string;
   name: string;
+  dateOfBirth?: string;
+  gender?: string;
+  phoneNumber?: string;
+  address?: string;
+  note?: string;
+  ccmStatus?: 'Simple' | 'Complex';
+  patientConsent?: boolean;
   billingMinutes: number;
 }
 
 export interface PatientCreateData {
   name: string;
+  dateOfBirth?: string;
+  gender?: string;
+  phoneNumber?: string;
+  address?: string;
+  note?: string;
+  ccmStatus?: 'Simple' | 'Complex';
+  patientConsent?: boolean;
 }
 
 export interface PatientUpdateData {
   name: string;
+  dateOfBirth?: string;
+  gender?: string;
+  phoneNumber?: string;
+  address?: string;
+  note?: string;
+  ccmStatus?: 'Simple' | 'Complex';
+  patientConsent?: boolean;
 }
 
 export const getAllPatients = async (startDate?: string, endDate?: string) => {
