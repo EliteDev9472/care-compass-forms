@@ -168,13 +168,24 @@ const PatientForms: React.FC = () => {
       catch (error) {
         toast.error(error.response.data.message)
       }
+
+      const conditions = formTemplates.map((template, index) => {
+        let result = ''
+        template.fields.map((field, k) => {
+          if (field.label == 'Pull Condition')
+            result = template.submission.data[k] as string
+          return
+        })
+        return result
+      })
+
       exportTableToCSV(
         'forms.csv',
         formTemplates.map((t, i) => ({
           name: t.name,
           // status: t.submission ? 'Submitted' : 'New',
           billingMinutes: t.billingMinutes,
-          conditions: i < 2 ? 'This is pull condition list' : ''
+          conditions: conditions[i]
         })),
         [
           { label: 'Form Name', key: 'name' },

@@ -51,6 +51,8 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
   const [gender, setGender] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [street, setStreet] = useState('');
   const [note, setNote] = useState('');
   const [ccmStatus, setCcmStatus] = useState<'Simple' | 'Complex' | ''>('');
   const [patientConsent, setPatientConsent] = useState<boolean | undefined>(undefined);
@@ -75,6 +77,8 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
           setGender(data.gender || '');
           setPhoneNumber(data.phoneNumber || '');
           setAddress(data.address || '');
+          setCity(data.city || '');
+          setStreet(data.street || '')
           setNote(data.note || '');
           setCcmStatus(data.ccmStatus || '');
           setPatientConsent(data.patientConsent);
@@ -108,6 +112,8 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
         gender,
         phoneNumber,
         address,
+        city,
+        street,
         note,
         ccmStatus: ccmStatus as 'Simple' | 'Complex' | undefined,
         patientConsent
@@ -310,6 +316,24 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="Enter address"
+          />
+        </div>
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Street</label>
+          <Input
+            type="text"
+            value={street}
+            onChange={(e) => setStreet(e.target.value)}
+            placeholder="Enter Street"
+          />
+        </div>
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">City, State, Zip</label>
+          <Input
+            type="text"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            placeholder="Enter City, State, Zip"
           />
         </div>
 
