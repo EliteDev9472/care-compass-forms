@@ -1,3 +1,4 @@
+
 import axiosInstance from './axiosConfig';
 import { SERVER_URL } from '@/config';
 
@@ -34,6 +35,14 @@ export interface StaffPatient {
   _id: string;
   name: string;
   billingMinutes: number;
+}
+
+export interface ManualTimeEntry {
+  staffId: string;
+  patientId: string;
+  formId?: string;
+  date: string;
+  minutes: number;
 }
 
 export const getAllStaffs = async (startDate?: string, endDate?: string) => {
@@ -86,4 +95,16 @@ export const getClientName = async (patientId: string) => {
 export const getPatientInfo = async (patientId: string) => {
   const response = await axiosInstance.get(`${SERVER_URL}/staff/Patient-Info/${patientId}`);
   return response.data;
+};
+
+export const addManualTimeEntry = async (timeEntry: ManualTimeEntry) => {
+  // This would be the real implementation when the backend is ready
+  const response = await axiosInstance.post(`${SERVER_URL}/admin/manual-time-entry`, timeEntry);
+  return response.data;
+};
+
+// For development purposes - mock implementation
+export const addManualTimeEntryMock = (timeEntry: ManualTimeEntry) => {
+  console.log('Manual time entry added:', timeEntry);
+  return Promise.resolve({ success: true, data: timeEntry });
 };

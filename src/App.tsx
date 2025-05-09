@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -5,7 +6,6 @@ import { store, persistor } from './store/store';
 import { Toaster } from 'sonner';
 import ProtectedRoute from './components/shared/ProtectedRoute';
 import Index from './pages/Index';
-import { UserRole } from './store/authSlice';
 
 // Pages
 import SignIn from './pages/SignIn';
@@ -25,6 +25,7 @@ import AddStaffPage from './pages/admin/AddStaffPage';
 import EditStaffPage from './pages/admin/EditStaffPage';
 import AddPatientPage from './pages/admin/AddPatientPage';
 import EditPatientPage from './pages/admin/EditPatientPage';
+import ManualTimerPage from './pages/admin/ManualTimerPage';
 
 // Common pages
 import PatientsListPage from './pages/common/PatientsListPage';
@@ -70,6 +71,11 @@ const App = () => (
           <Route path="/admin/patients" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <PatientsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/manual-timer" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <ManualTimerPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/forms/create" element={

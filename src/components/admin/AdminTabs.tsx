@@ -11,6 +11,7 @@ const AdminTabs: React.FC = () => {
     if (location.pathname.includes('/clients')) return 'clients';
     if (location.pathname.includes('/staff')) return 'staff';
     if (location.pathname.includes('/patients')) return 'patients';
+    if (location.pathname.includes('/manual-timer')) return 'manual-timer';
     return 'forms';
   });
 
@@ -28,6 +29,9 @@ const AdminTabs: React.FC = () => {
         break;
       case 'patients':
         navigate('/admin/patients');
+        break;
+      case 'manual-timer':
+        navigate('/admin/manual-timer');
         break;
       default:
         navigate('/admin/dashboard');
@@ -64,6 +68,13 @@ const AdminTabs: React.FC = () => {
           onClick={() => handleTabChange('patients')}
         >
           Patients
+        </Button>
+        <Button
+          variant={activeTab === 'manual-timer' ? 'default' : 'ghost'}
+          className="rounded-none rounded-t-lg"
+          onClick={() => handleTabChange('manual-timer')}
+        >
+          Manual Timer
         </Button>
       </div>
     </div>
