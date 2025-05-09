@@ -188,7 +188,7 @@ const ManualTimer: React.FC = () => {
                 className="w-full"
                 disabled={!selectedStaff || !selectedPatient || !selectedForm || minutes <= 0}
               >
-                Add Time Entry
+                Add Time
               </Button>
             </div>
           </div>

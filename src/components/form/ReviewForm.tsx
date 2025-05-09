@@ -227,66 +227,68 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
         <h1 className="text-3xl font-bold text-center mb-6">{currentForm.name}</h1>
       </div>
       <form>
-        <div className="relative -md pb-2 bg-white">
-          <div className="relative bg-white flex">
-            <p className='text-xl mr-4'>Patient Name:</p>
-            <p className='text-lg'>{patientInfo?.name}</p>
+        <div className='grid grid-cols-3'>
+          <div className="relative -md pb-2 bg-white">
+            <div className="relative bg-white flex">
+              <p className='text-xl mr-4'>Patient Name:</p>
+              <p className='text-lg'>{patientInfo?.name}</p>
+            </div>
+          </div>
+          <div className="relative -md pb-2 bg-white">
+            <div className="relative  bg-white flex">
+              <p className='text-xl mr-4'>CCM Status:</p>
+              <p className='text-lg'>{patientInfo?.ccmStatus}</p>
+            </div>
+          </div>
+          <div className="relative -md pb-2 bg-white">
+            <div className="relative  bg-white flex">
+              <p className='text-xl mr-4'>Patient Consent:</p>
+              <p className='text-lg'>{patientInfo?.patientConsent == "true" ? "Yes" : "No"}</p>
+            </div>
           </div>
         </div>
-        <div className="relative -md pb-2 bg-white">
-          <div className="relative  bg-white flex">
-            <p className='text-xl mr-4'>Date of Birth:</p>
-            <p className='text-lg'>{patientInfo?.dateOfBirth?.slice(0, 10)}</p>
+        <div className='grid grid-cols-3 mt-2'>
+          <div className="relative -md pb-2 bg-white col-span-1">
+            <div className="relative  bg-white flex">
+              <p className='text-xl mr-4'>Date of Birth:</p>
+              <p className='text-lg'>{patientInfo?.dateOfBirth?.slice(0, 10)}</p>
+            </div>
+          </div>
+          <div className="relative -md pb-2 bg-white col-span-1">
+            <div className="relative  bg-white flex">
+              <p className='text-xl mr-4'>Primary Phone Number:</p>
+              <p className='text-lg'>{patientInfo?.phoneNumber}</p>
+            </div>
           </div>
         </div>
-        <div className="relative -md pb-2 bg-white">
-          <div className="relative  bg-white flex">
-            <p className='text-xl mr-4'>Primary Phone Number:</p>
-            <p className='text-lg'>{patientInfo?.phoneNumber}</p>
+        <div className='grid grid-cols-3 mt-2'>
+          <div className="relative -md pb-2 bg-white col-span-1">
+            <div className="relative  bg-white flex">
+              <p className='text-xl mr-4'>Street:</p>
+              <p className='text-lg'>{patientInfo?.street}</p>
+            </div>
+          </div>
+          <div className="relative -md pb-2 bg-white col-span-1">
+            <div className="relative  bg-white flex">
+              <p className='text-xl mr-4'>City, State, Zip:</p>
+              <p className='text-lg'>{patientInfo?.city}</p>
+            </div>
           </div>
         </div>
-        {/* <div className="relative -md pb-2 bg-white">
-          <div className="relative  bg-white flex">
-            <p className='text-xl mr-4'>Address:</p>
-            <p className='text-lg'>{patientInfo?.address}</p>
-          </div>
-        </div> */}
-        <div className="relative -md pb-2 bg-white">
-          <div className="relative  bg-white flex">
-            <p className='text-xl mr-4'>Street:</p>
-            <p className='text-lg'>{patientInfo?.street}</p>
+        <div className='mt-2'>
+          <div className="relative -md pb-2 bg-white">
+            <div className="relative  bg-white flex">
+              <p className='text-xl mr-4'>Billing Minutes:</p>
+              <p className='text-lg'>{currentForm.billingTime}</p>
+            </div>
           </div>
         </div>
-        <div className="relative -md pb-2 bg-white">
-          <div className="relative  bg-white flex">
-            <p className='text-xl mr-4'>City, State, Zip:</p>
-            <p className='text-lg'>{patientInfo?.city}</p>
-          </div>
-        </div>
-        <div className="relative -md pb-2 bg-white">
+        <div className="relative -md pb-2 bg-white mt-2">
           <div className="relative   flex">
             <p className='text-xl mr-4 pt-1'>Note:</p>
             <p className='text-lg w-fit bg-blue-50 pt-1 pb-6 px-4'>
               {patientInfo?.note}
             </p>
-          </div>
-        </div>
-        <div className="relative -md pb-2 bg-white">
-          <div className="relative  bg-white flex">
-            <p className='text-xl mr-4'>CCM Status:</p>
-            <p className='text-lg'>{patientInfo?.ccmStatus}</p>
-          </div>
-        </div>
-        <div className="relative -md pb-2 bg-white">
-          <div className="relative  bg-white flex">
-            <p className='text-xl mr-4'>Patient Consent:</p>
-            <p className='text-lg'>{patientInfo?.patientConsent == "true" ? "Yes" : "No"}</p>
-          </div>
-        </div>
-        <div className="relative -md pb-2 bg-white">
-          <div className="relative  bg-white flex">
-            <p className='text-xl mr-4'>Billing Minutes:</p>
-            <p className='text-lg'>{currentForm.billingTime}</p>
           </div>
         </div>
         {
