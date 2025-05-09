@@ -30,7 +30,7 @@ export interface PatientCreateData {
   address?: string;
   note?: string;
   ccmStatus?: 'Simple' | 'Complex';
-  patientConsent?: boolean;
+  patientConsent?: string;
 }
 
 export interface PatientUpdateData {
@@ -41,7 +41,7 @@ export interface PatientUpdateData {
   address?: string;
   note?: string;
   ccmStatus?: 'Simple' | 'Complex';
-  patientConsent?: boolean;
+  patientConsent?: string;
 }
 
 export const getAllPatients = async (startDate?: string, endDate?: string) => {

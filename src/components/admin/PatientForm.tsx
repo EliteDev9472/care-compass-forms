@@ -234,7 +234,6 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
           <Input type='date' defaultValue={dateOfBirth && format(dateOfBirth, 'yyyy-MM-dd')} onChange={(e) => setDateOfBirth(new Date(e.target.value))} />
-
         </div>
 
         <div>
