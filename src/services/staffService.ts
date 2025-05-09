@@ -82,3 +82,8 @@ export const getClientName = async (patientId: string) => {
   const response = await axiosInstance.get(`${SERVER_URL}/staff/client-by-patient/${patientId}`);
   return response.data;
 };
+
+export const getPatientInfo = async (patientId: string) => {
+  const response = await axiosInstance.get(`${SERVER_URL}/staff/Patient-Info/${patientId}`);
+  return response.data;
+};

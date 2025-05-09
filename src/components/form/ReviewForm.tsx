@@ -3,6 +3,8 @@ import { useAppSelector } from '../../hooks/reduxHooks';
 import Timer from '../timer/Timer';
 import { AlignLeft, Type } from 'lucide-react';
 import { FormField } from '@/services/templateService';
+import { getPatientInfo } from '@/services/staffService';
+import { useParams } from 'react-router-dom';
 
 
 interface ReviewFormProps {
@@ -11,14 +13,20 @@ interface ReviewFormProps {
 }
 
 const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => {
+  const { patientId } = useParams();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<(string | boolean)[]>(initialData);
   const { currentForm } = useAppSelector(state =>
     state.patients
   );
+  const [patientInfo, setPatientInfo] = useState<any>(null)
 
-
+  const fetchPatientInfo = async () => {
+    const result = await getPatientInfo(patientId);
+    setPatientInfo(result)
+  }
   useEffect(() => {
+    fetchPatientInfo();
     if (Object.keys(initialData).length === 0) {
       const defaultData: (string | boolean)[] = [];
 
@@ -33,6 +41,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
     } else {
       setFormData(initialData);
     }
+
   }, [initialData]);
 
   const renderFormElement = (element: FormField, index: number) => {
@@ -221,51 +230,63 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
         <div className="relative -md pb-2 bg-white">
           <div className="relative bg-white flex">
             <p className='text-xl mr-4'>Patient Name:</p>
-            <p className='text-lg'>PT DJ James</p>
+            <p className='text-lg'>{patientInfo?.name}</p>
           </div>
         </div>
         <div className="relative -md pb-2 bg-white">
           <div className="relative  bg-white flex">
             <p className='text-xl mr-4'>Date of Birth:</p>
-            <p className='text-lg'>1990-08-14</p>
+            <p className='text-lg'>{patientInfo?.dateOfBirth?.slice(0, 10)}</p>
           </div>
         </div>
         <div className="relative -md pb-2 bg-white">
           <div className="relative  bg-white flex">
             <p className='text-xl mr-4'>Primary Phone Number:</p>
-            <p className='text-lg'>+1 819 917 2598</p>
+            <p className='text-lg'>{patientInfo?.phoneNumber}</p>
+          </div>
+        </div>
+        {/* <div className="relative -md pb-2 bg-white">
+          <div className="relative  bg-white flex">
+            <p className='text-xl mr-4'>Address:</p>
+            <p className='text-lg'>{patientInfo?.address}</p>
+          </div>
+        </div> */}
+        <div className="relative -md pb-2 bg-white">
+          <div className="relative  bg-white flex">
+            <p className='text-xl mr-4'>Street:</p>
+            <p className='text-lg'>{patientInfo?.street}</p>
           </div>
         </div>
         <div className="relative -md pb-2 bg-white">
           <div className="relative  bg-white flex">
-            <p className='text-xl mr-4'>Address:</p>
-            <p className='text-lg'>Address: 107 Merrimac Street, Boston, MA 02114</p>
+            <p className='text-xl mr-4'>City, State, Zip:</p>
+            <p className='text-lg'>{patientInfo?.city}</p>
           </div>
         </div>
         <div className="relative -md pb-2 bg-white">
           <div className="relative   flex">
             <p className='text-xl mr-4 pt-1'>Note:</p>
             <p className='text-lg w-fit bg-blue-50 pt-1 pb-6 px-4'>
-              Patient presents today for a routine follow-up. They report feeling well overall, with no new concerns or symptoms since their last visit. Vital signs are stable, and labs are within normal range. The treatment plan remains the same, and the patient has been advised to continue current medications.
+              {patientInfo?.note}
             </p>
           </div>
         </div>
         <div className="relative -md pb-2 bg-white">
           <div className="relative  bg-white flex">
             <p className='text-xl mr-4'>CCM Status:</p>
-            <p className='text-lg'>Simple</p>
+            <p className='text-lg'>{patientInfo?.ccmStatus}</p>
           </div>
         </div>
         <div className="relative -md pb-2 bg-white">
           <div className="relative  bg-white flex">
             <p className='text-xl mr-4'>Patient Consent:</p>
-            <p className='text-lg'>Yes</p>
+            <p className='text-lg'>{patientInfo?.patientConsent == "true" ? "Yes" : "No"}</p>
           </div>
         </div>
         <div className="relative -md pb-2 bg-white">
           <div className="relative  bg-white flex">
             <p className='text-xl mr-4'>Billing Minutes:</p>
-            <p className='text-lg'>02:12</p>
+            <p className='text-lg'>{currentForm.billingTime}</p>
           </div>
         </div>
         {

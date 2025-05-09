@@ -40,12 +40,14 @@ const PatientForms: React.FC = () => {
     try {
       dispatch(fetchFormsStart());
       let templates: FormTemplate[]
-      if (user.role == 'staff')
+      if (user.role == 'staff') {
         templates = await getPatientFormsByTemplate(
           patientId,
           startDate,
           endDate
         );
+
+      }
 
       else if (user.role == 'client')
         templates = await getPatientFormsByTemplateForClient(
@@ -166,17 +168,64 @@ const PatientForms: React.FC = () => {
         client = await getClientName(patientId);
       }
       catch (error) {
-        toast.error(error.response.data.message)
+        toast.error('Client should be assigned for this patient')
+        return
+        // toast.error(error.response.data.message)
       }
 
+      let communityConditions = []
+      let longConditions = []
+
+      formTemplates.map((template, index) => {
+        if (template.name == 'Community Care Questionnaire') {
+          let pushFlag = false
+          if (!template.submission)
+            return
+          template.fields.map((field, k) => {
+            if (field.label.indexOf('CHRONIC CONDITIONS') != -1) {
+              pushFlag = true
+            }
+            if (pushFlag) {
+              communityConditions.push(template.submission.data[k])
+            }
+            if (field.label.indexOf('Chronic Conditions') != -1) {
+              pushFlag = false
+            }
+          })
+        }
+
+        if (template.name == 'Long Term Care Plan') {
+          let pushFlag = false
+          template.fields.map((field, k) => {
+            if (!template.submission)
+              return
+            if (field.label.indexOf('CHRONIC CONDITIONS') != -1) {
+              pushFlag = true
+            }
+            if (pushFlag) {
+              longConditions.push(template.submission.data[k])
+            }
+            if (field.label.indexOf('Chronic Conditions') != -1) {
+              pushFlag = false
+            }
+          })
+        }
+      })
+
+      let filterCommunity = communityConditions.filter((_, index) => index % 2 === 1)
+      const strfilterCommunity = filterCommunity.splice(0, 5).join('.')
+
+      let filterLong = longConditions.filter((_, index) => index % 2 === 0)
+      const strfilterLong = filterLong.splice(1, 5).join('.')
+
       const conditions = formTemplates.map((template, index) => {
-        let result = ''
-        template.fields.map((field, k) => {
-          if (field.label == 'Pull Condition')
-            result = template.submission.data[k] as string
-          return
-        })
-        return result
+        if (template.name == 'Community Care Questionnaire')
+          return strfilterCommunity
+
+        if (template.name == 'Long Term Care Plan')
+          return strfilterLong
+
+        return ''
       })
 
       exportTableToCSV(

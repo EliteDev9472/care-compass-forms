@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -35,6 +34,9 @@ import {
 } from '@/services/patientService';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import DatePicker from 'react-datepicker'; // Import react-datepicker
+import "react-datepicker/dist/react-datepicker.css"; // Styles for the calendar
+import { Value } from '@radix-ui/react-select';
 
 interface PatientFormProps {
   mode?: 'add' | 'edit';
@@ -55,14 +57,13 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
   const [street, setStreet] = useState('');
   const [note, setNote] = useState('');
   const [ccmStatus, setCcmStatus] = useState<'Simple' | 'Complex' | ''>('');
-  const [patientConsent, setPatientConsent] = useState<boolean | undefined>(undefined);
+  const [patientConsent, setPatientConsent] = useState<string>('');
 
   // Billing Minutes
   const [billingHistory, setBillingHistory] = useState<BillingHistoryItem[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [minutesInput, setMinutesInput] = useState<number>(0);
   const [billingMinutes, setBillingMinutes] = useState(5);
-
 
   const [patientData, setPatientData] = useState<any>(null);
 
@@ -76,7 +77,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
           setDateOfBirth(data.dateOfBirth ? new Date(data.dateOfBirth) : undefined);
           setGender(data.gender || '');
           setPhoneNumber(data.phoneNumber || '');
-          setAddress(data.address || '');
+          // setAddress(data.address || '');
           setCity(data.city || '');
           setStreet(data.street || '')
           setNote(data.note || '');
@@ -97,9 +98,38 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
     }
   }, [mode, patientId, navigate]);
 
-  const handleSave = async () => {
+  // Validation
+  const validateFields = () => {
     if (!patientName) {
       toast.warning("Please fill in the patient name");
+      return false;
+    }
+    if (!dateOfBirth) {
+      toast.warning("Please fill in the patient's date of birth");
+      return false;
+    }
+    if (!gender) {
+      toast.warning("Please select the patient's gender");
+      return false;
+    }
+    if (!phoneNumber || !/^\+?[1-9]\d{1,14}$/.test(phoneNumber)) {
+      toast.warning("Please enter a valid phone number");
+      return false;
+    }
+    if (ccmStatus === '') {
+      toast.warning("Please select the CCM status");
+      return false;
+    }
+    if (patientConsent === undefined) {
+      toast.warning("Please select the patient's consent");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSave = async () => {
+    console.log(city, street)
+    if (!validateFields()) {
       return;
     }
 
@@ -111,7 +141,6 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
         dateOfBirth: dateOfBirth ? format(dateOfBirth, 'yyyy-MM-dd') : undefined,
         gender,
         phoneNumber,
-        address,
         city,
         street,
         note,
@@ -184,64 +213,10 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
     }
   };
 
-  const handleDeleteBillingEntry = async (date: string) => {
-    if (!patientId) return;
-
-    try {
-      setLoading(true);
-      // Call API with 0 minutes to remove the entry
-      const updatedPatient = await updatePatientBillingMinutes(patientId, date, 0);
-
-      // Update local state
-      const updatedHistory = billingHistory.filter(item => item.date !== date);
-      setBillingHistory(updatedHistory);
-
-      // Update total billing minutes
-      if (updatedPatient && updatedPatient.billingMinutes !== undefined) {
-        setBillingMinutes(updatedPatient.billingMinutes);
-      } else {
-        const total = updatedHistory.reduce((sum, item) => sum + item.minutes, 0);
-        setBillingMinutes(total);
-      }
-
-      toast.success("Billing entry removed successfully");
-    } catch (error) {
-      toast.error("Failed to remove billing entry");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // const renderBillingHistory = () => {
-  //   if (!billingHistory.length) {
-  //     return <div className="text-gray-500 italic">No billing history available.</div>;
-  //   }
-
-  //   return (
-  //     <div className="mt-2 space-y-2">
-  //       {billingHistory.map((entry, index) => (
-  //         <div key={entry._id || index} className="flex items-center justify-between p-2 border rounded bg-gray-50">
-  //           <div>
-  //             <span className="font-medium">{entry.date}</span>: {entry.minutes} minutes
-  //           </div>
-  //           <Button
-  //             variant="ghost"
-  //             size="sm"
-  //             onClick={() => handleDeleteBillingEntry(entry.date)}
-  //             className="text-red-500"
-  //           >
-  //             <Trash className="h-4 w-4" />
-  //           </Button>
-  //         </div>
-  //       ))}
-  //     </div>
-  //   );
-  // };
-
   const onChangeMinutes = (value: string) => {
-    const initialBillingMinutes = 5
-    setBillingMinutes(parseInt(value) ? initialBillingMinutes + parseInt(value) : initialBillingMinutes)
-  }
+    const initialBillingMinutes = 5;
+    setBillingMinutes(parseInt(value) ? initialBillingMinutes + parseInt(value) : initialBillingMinutes);
+  };
 
   return (
     <div className="bg-white p-6 rounded-md shadow-sm border">
@@ -256,32 +231,10 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             required
           />
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !dateOfBirth && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateOfBirth ? format(dateOfBirth, 'PPP') : <span>Select date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={dateOfBirth}
-                onSelect={setDateOfBirth}
-                initialFocus
-                className="p-3 pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
+          <Input type='date' defaultValue={dateOfBirth && format(dateOfBirth, 'yyyy-MM-dd')} onChange={(e) => setDateOfBirth(new Date(e.target.value))} />
+
         </div>
 
         <div>
@@ -309,7 +262,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
           />
         </div>
 
-        <div className="md:col-span-2">
+        {/* <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
           <Input
             type="text"
@@ -317,7 +270,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             onChange={(e) => setAddress(e.target.value)}
             placeholder="Enter address"
           />
-        </div>
+        </div> */}
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Street</label>
           <Input
@@ -361,10 +314,23 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Patient Consent</label>
+          <Select value={patientConsent} onValueChange={(value: 'true' | 'false') => setPatientConsent(value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Patient Consent" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="true">Yes</SelectItem>
+              <SelectItem value="false">No</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">Patient Consent</label>
           <RadioGroup
-            defaultValue={patientConsent === true ? "yes" : patientConsent === false ? "no" : undefined}
-            onValueChange={(value) => setPatientConsent(value === "yes")}
+            defaultValue={patientConsent == "true" ? "yes" : patientConsent == "false" ? "no" : undefined}
+            onValueChange={(value) => setPatientConsent(value == "yes")}
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="yes" id="consent-yes" />
@@ -375,72 +341,8 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
               <Label htmlFor="consent-no">No</Label>
             </div>
           </RadioGroup>
-        </div>
+        </div> */}
       </div>
-
-      {/* {mode === 'edit' && patientId && (
-        <div className="border-t pt-6 mt-6">
-          <h3 className="text-lg font-medium mb-4">Billing Minutes</h3>
-
-          <div className="flex items-end gap-4 mb-4">
-            <div className="flex-grow">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Select Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(selectedDate, 'PPP')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Minutes</label>
-              <Input
-                type="text"
-                // value={minutesInput.toString()}
-                onChange={(e) => onChangeMinutes(e.target.value)}
-                className="w-24"
-              />
-            </div>
-
-            <Button
-              onClick={handleAddBillingMinutes}
-              disabled={loading || minutesInput <= 0}
-              className="mb-0"
-            >
-              <Plus className="h-4 w-4 mr-1" /> Add
-            </Button>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Total Billing Minutes</label>
-            <div className="p-2 border rounded bg-gray-100 font-medium">
-              {billingMinutes} minutes
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Billing History</label>
-            {renderBillingHistory()}
-          </div>
-        </div>
-      )} */}
 
       <div className="flex justify-end space-x-4 mt-6">
         <Button variant="outline" onClick={() => navigate('/admin/patients')}>

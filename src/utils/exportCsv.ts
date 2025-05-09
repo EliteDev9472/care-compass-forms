@@ -27,6 +27,7 @@ export function exportTableToCSV<T>(filename: string, rows: T[], columns: { labe
     ...csvRows
   ].join('\r\n');
 
+  console.log(csvContent)
   const blob = new Blob([csvContent], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

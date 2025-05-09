@@ -28,8 +28,9 @@ const PatientsList: React.FC = () => {
     setLoading(true);
     try {
       let response: StaffPatient[]
-      if (user.role == 'staff')
+      if (user.role == 'staff') {
         response = await getMyAssignedPatients(start, end);
+      }
       else if (user.role == 'client')
         response = await getMyAssignedPatientsForClient(start, end);
       setPatients(response);
