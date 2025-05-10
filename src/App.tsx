@@ -26,6 +26,7 @@ import EditStaffPage from './pages/admin/EditStaffPage';
 import AddPatientPage from './pages/admin/AddPatientPage';
 import EditPatientPage from './pages/admin/EditPatientPage';
 import ManualTimerPage from './pages/admin/ManualTimerPage';
+import TimerTrackingPage from './pages/admin/TimerTrackingPage';
 
 // Common pages
 import PatientsListPage from './pages/common/PatientsListPage';
@@ -76,6 +77,11 @@ const App = () => (
           <Route path="/admin/manual-timer" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <ManualTimerPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/timer-tracking" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <TimerTrackingPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/forms/create" element={
