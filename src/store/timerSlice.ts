@@ -93,14 +93,11 @@ const timerSlice = createSlice({
     setCurrentFormId(state, action: PayloadAction<string | null>) {
       state.currentFormId = action.payload;
     },
-    addTimerSession(state, action: PayloadAction<TimerSession>) {
-      state.timerSessions.push(action.payload);
-    },
     clearTimerSessions(state) {
       state.timerSessions = [];
     }
   }
 });
 
-export const { startTimer, stopTimer, resetTimer, setCurrentFormId, addTimerSession, clearTimerSessions } = timerSlice.actions;
+export const { startTimer, stopTimer, resetTimer, setCurrentFormId, clearTimerSessions } = timerSlice.actions;
 export default timerSlice.reducer;

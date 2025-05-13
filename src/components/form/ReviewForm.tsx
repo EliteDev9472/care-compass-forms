@@ -227,69 +227,34 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
         <h1 className="text-3xl font-bold text-center mb-6">{currentForm.name}</h1>
       </div>
       <form>
-        <div className='grid grid-cols-3'>
-          <div className="relative -md pb-2 bg-white">
-            <div className="relative bg-white flex">
-              <p className='text-xl mr-4'>Patient Name:</p>
-              <p className='text-lg'>{patientInfo?.name}</p>
-            </div>
-          </div>
-          <div className="relative -md pb-2 bg-white">
-            <div className="relative  bg-white flex">
-              <p className='text-xl mr-4'>CCM Status:</p>
-              <p className='text-lg'>{patientInfo?.ccmStatus}</p>
-            </div>
-          </div>
-          <div className="relative -md pb-2 bg-white">
-            <div className="relative  bg-white flex">
-              <p className='text-xl mr-4'>Patient Consent:</p>
-              <p className='text-lg'>{patientInfo?.patientConsent == "true" ? "Yes" : "No"}</p>
-            </div>
-          </div>
+        <div>
+          <p className='text-xl mr-4'>
+            <span>Patient Name: </span> <span>   {patientInfo?.name}   </span>
+            <span>CCM Status:</span> <span>    {patientInfo?.ccmStatus}   </span>
+            <span>Patient Consent:</span> <span>    {patientInfo?.patientConsent == "true" ? "Yes" : "No"}   </span>
+          </p>
         </div>
-        <div className='grid grid-cols-3 mt-2'>
-          <div className="relative -md pb-2 bg-white col-span-1">
-            <div className="relative  bg-white flex">
-              <p className='text-xl mr-4'>Date of Birth:</p>
-              <p className='text-lg'>{patientInfo?.dateOfBirth?.slice(0, 10)}</p>
-            </div>
-          </div>
-          <div className="relative -md pb-2 bg-white col-span-1">
-            <div className="relative  bg-white flex">
-              <p className='text-xl mr-4'>Primary Phone Number:</p>
-              <p className='text-lg'>{patientInfo?.phoneNumber}</p>
-            </div>
-          </div>
+        <div>
+          <p className='text-xl mr-4 mt-4'>
+            <span>  Date of Birth:  </span> <span>   {patientInfo?.dateOfBirth?.slice(0, 10)}  </span>
+            <span>  Primary Phone Number:  </span> <span>   {patientInfo?.phoneNumber}   </span>
+          </p>
         </div>
-        <div className='grid grid-cols-3 mt-2'>
-          <div className="relative -md pb-2 bg-white col-span-1">
-            <div className="relative  bg-white flex">
-              <p className='text-xl mr-4'>Street:</p>
-              <p className='text-lg'>{patientInfo?.street}</p>
-            </div>
-          </div>
-          <div className="relative -md pb-2 bg-white col-span-1">
-            <div className="relative  bg-white flex">
-              <p className='text-xl mr-4'>City, State, Zip:</p>
-              <p className='text-lg'>{patientInfo?.city}</p>
-            </div>
-          </div>
+        <div>
+          <p className='text-xl mr-4 mt-4'>
+            <span>  Street:  </span> <span>  {patientInfo?.street}</span>
+            <span>  City/State/Zip:  </span> <span>  {patientInfo?.city}</span>
+          </p>
         </div>
-        <div className='mt-2'>
-          <div className="relative -md pb-2 bg-white">
-            <div className="relative  bg-white flex">
-              <p className='text-xl mr-4'>Billing Minutes:</p>
-              <p className='text-lg'>{currentForm.billingTime}</p>
-            </div>
-          </div>
+        <div className='mt-4'>
+          <p className='text-xl'>
+            <span>  Billing Minutes:  </span> <span>  {currentForm.billingTime}  </span>
+          </p>
         </div>
-        <div className="relative -md pb-2 bg-white mt-2">
-          <div className="relative   flex">
-            <p className='text-xl mr-4 pt-1'>Note:</p>
-            <p className='text-lg w-fit bg-blue-50 pt-1 pb-6 px-4'>
-              {patientInfo?.note}
-            </p>
-          </div>
+        <div className='my-4'>
+          <p className='text-xl'>
+            <span>  Note:  </span> <span className='bg-blue-50 px-4 pb-3'>  {patientInfo?.note}  </span>
+          </p>
         </div>
         {
           currentForm.templateFields.map((field, index) => {
