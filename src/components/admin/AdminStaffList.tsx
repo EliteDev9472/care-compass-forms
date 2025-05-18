@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -60,6 +59,10 @@ const AdminStaffList: React.FC = () => {
     navigate('/admin/staff/add');
   };
 
+  const handleViewStaffPatients = (staff: Staff) => {
+    navigate(`/admin/staff/${staff._id}/patients`);
+  };
+
   const handleEditStaff = (staffId: string) => {
     navigate(`/admin/staff/${staffId}/edit`);
   };
@@ -91,25 +94,6 @@ const AdminStaffList: React.FC = () => {
     const mins = (minutes || 0) % 60;
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
-
-  // const handleExportCSV = () => {
-  //   if (!staff.length) return;
-  //   exportTableToCSV(
-  //     'staff.csv',
-  //     staff.map(staffMember => ({
-  //       name: staffMember.name,
-  //       username: staffMember.username,
-  //       billingTime: staffMember.billingMinutes || 0,
-  //       status: staffMember.isActive ? 'Active' : 'Inactive',
-  //     })),
-  //     [
-  //       { label: 'Staff Name', key: 'name' },
-  //       { label: 'Username', key: 'username' },
-  //       { label: 'Billing Time', key: 'billingTime' },
-  //       { label: 'Status', key: 'status' },
-  //     ]
-  //   );
-  // };
 
   return (
     <div>
@@ -179,7 +163,12 @@ const AdminStaffList: React.FC = () => {
         ) : (
           staff.map((staffMember) => (
             <div key={staffMember._id} className="grid grid-cols-5 border-b hover:bg-gray-50">
-              <div className="p-4">{staffMember.name}</div>
+              <div 
+                className="p-4 cursor-pointer text-blue-600 hover:underline"
+                onClick={() => handleViewStaffPatients(staffMember)}
+              >
+                {staffMember.name}
+              </div>
               <div className="p-4">{staffMember.username}</div>
               <div className="p-4">{staffMember.billingMinutes || '00:00'}</div>
               <div className="p-4">
