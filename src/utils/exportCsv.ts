@@ -15,7 +15,7 @@ export function exportTableToCSV<T>(filename: string, rows: T[], columns: { labe
         // Ensure left alignment by adding a non-breaking space (or any character you prefer)
         return value
       })
-      .join('.')
+      .join(',')
   );
 
   const csvContent = [
