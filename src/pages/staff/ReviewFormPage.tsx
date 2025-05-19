@@ -17,8 +17,9 @@ const ReviewFormPage: React.FC = () => {
     const [formData, setFormData] = useState<(string | boolean)[]>([]);
     // State to track whether the export is triggered
     const [isExporting, setIsExporting] = useState(false);
+    const { user } = useAppSelector(state => state.auth);
     const handleGoBack = () => {
-        navigate('/staff/patients');
+        navigate(`/${user.role}/patients`);
     };
 
     const handleDownloadDoc = () => {
@@ -61,7 +62,7 @@ const ReviewFormPage: React.FC = () => {
     };
 
     return (
-        <ProtectedRoute allowedRoles={['staff']}>
+        <ProtectedRoute allowedRoles={['staff', 'admin']}>
             <Layout>
                 <div className="mb-4">
                     <Button

@@ -71,7 +71,11 @@ const ReviewFormPage: React.FC = () => {
     const handleGoBack = () => {
         if (user?.role === 'staff') {
             navigate('/staff/patients');
-        } else {
+        }
+        else if (user?.role == 'admin') {
+            navigate('/admin/patients');
+        }
+        else {
             navigate('/client');
         }
     };

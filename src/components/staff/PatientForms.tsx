@@ -7,7 +7,7 @@ import {
   fetchFormsFailure,
   setCurrentForm
 } from '../../store/patientSlice';
-import { getPatientFormsByTemplate, FormTemplate, getPatientFormsByTemplateForClient } from '../../services/templateService';
+import { getPatientFormsByTemplate, FormTemplate, getPatientFormsByTemplateForClient, getPatientOfAdminFormsByTemplate } from '../../services/templateService';
 import { Calendar } from '../../components/ui/calendar';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -48,7 +48,9 @@ const PatientForms: React.FC = () => {
         );
 
       }
-
+      else if (user.role == 'admin') {
+        templates = await getPatientOfAdminFormsByTemplate(patientId)
+      }
       else if (user.role == 'client')
         templates = await getPatientFormsByTemplateForClient(
           patientId,
@@ -101,7 +103,7 @@ const PatientForms: React.FC = () => {
   const handleFormClick = (template: FormTemplate, type: string) => {
     let form
     // Transform template to match the current form structure expected by the app
-    if (user.role == 'staff') {
+    if (user.role == 'staff' || user.role == 'admin') {
       const formData = template.submission?.data || [];
       form = {
         id: template._id,
@@ -143,7 +145,15 @@ const PatientForms: React.FC = () => {
       }
       else if (type == 'view')
         navigate(`/staff/patients/${patientId}/forms/${template._id}/review`);
-    } else {
+    }
+    else if (user?.role == 'admin') {
+      if (type == 'edit') {
+        navigate(`/admin/patients/${patientId}/form/${template._id}/`);
+      }
+      else if (type == 'view')
+        navigate(`/admin/patients/${patientId}/forms/${template._id}/review`);
+    }
+    else {
       navigate(`/client/patients/${patientId}/forms/${template._id}`);
     }
   };
@@ -155,7 +165,11 @@ const PatientForms: React.FC = () => {
   const handleGoBack = () => {
     if (user?.role === 'staff') {
       navigate('/staff/patients');
-    } else {
+    }
+    else if (user?.role == 'admin') {
+      navigate('/admin/patients');
+    }
+    else {
       navigate('/client');
     }
   };
@@ -328,7 +342,6 @@ const PatientForms: React.FC = () => {
           </Popover>
         </div>
       </div>
-
       <div className="bg-white shadow-md rounded-md overflow-hidden">
         <div className={`grid grid-cols-${user.role == 'staff' ? 4 : 2} bg-gray-50 border-b`}>
           {
@@ -369,20 +382,48 @@ const PatientForms: React.FC = () => {
                 </div>
               </div>
             )) :
-            formTemplates.map(template => (
-              <div
-                key={template.template._id}
-                onClick={() => handleFormClick(template, '')}
-                className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
-              >
-                <div className="p-4">
-                  {template.template.name}
-                  {template.data ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
-                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
+            user.role == 'admin' ?
+              formTemplates.map(template => (
+                <div
+                  key={template._id}
+                  onClick={() => handleFormClick(template, '')}
+                  className="grid grid-cols-4 border-b hover:bg-gray-50 cursor-pointer"
+                >
+                  <div className="p-4 col-span-2">
+                    {template.name}
+                    {template.data ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
+                      <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
+                  </div>
+                  <div className="p-4  col-span-1">{template.billingMinutes}</div>
+                  <div className="p-4 col-span-1 flex justify-left align-middle">
+                    <Button variant="ghost" size="sm" onClick={() => handleFormClick(template, 'edit')}>
+                      <Pencil size={16} className="mr-1" /> Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleFormClick(template, 'view')}
+                    >
+                      <View size={16} className="mr-1" /> View
+                    </Button>
+                  </div>
                 </div>
-                {/* <div className="p-4">{template.billingMinutes}</div> */}
-              </div>
-            ))
+              ))
+              :
+              formTemplates.map(template => (
+                <div
+                  key={template.template._id}
+                  onClick={() => handleFormClick(template, '')}
+                  className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
+                >
+                  <div className="p-4">
+                    {template.template.name}
+                    {template.data ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
+                      <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
+                  </div>
+                  {/* <div className="p-4">{template.billingMinutes}</div> */}
+                </div>
+              ))
         )}
       </div>
     </div>

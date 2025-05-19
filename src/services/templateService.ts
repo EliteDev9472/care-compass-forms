@@ -76,6 +76,11 @@ export const getPatientFormsByTemplate = async (patientId: string, startDate?: s
   return response.data;
 };
 
+export const getPatientOfAdminFormsByTemplate = async (patientId: string): Promise<FormTemplate[]> => {
+  const response = await axiosInstance.get(`${SERVER_URL}/admin/patients/${patientId}/forms-by-template`);
+  return response.data;
+};
+
 export const getPatientFormsByTemplateForClient = async (patientId: string, startDate?: string, endDate?: string): Promise<FormTemplate[]> => {
   const params = startDate && endDate ? `?start=${startDate}&end=${endDate}` : '';
   const response = await axiosInstance.get(`${SERVER_URL}/client/patient/${patientId}/submissions${params}`);
@@ -87,15 +92,17 @@ export const submitFormWithTimerSessions = async (
   templateId: string,
   data: (string | boolean)[],
   timerSessions: TimerSession[],
-  submissionId: string
+  submissionId: string,
+  role: string
 ): Promise<any> => {
   const payload = {
     patientId,
     templateId,
     data,
     timerSessions,
-    submissionId
+    submissionId,
+    role
   };
-  const response = await axiosInstance.post(`${SERVER_URL}/staff/form-submit`, payload);
+  const response = await axiosInstance.post(`${SERVER_URL}/${role}/form-submit`, payload);
   return response.data;
 };

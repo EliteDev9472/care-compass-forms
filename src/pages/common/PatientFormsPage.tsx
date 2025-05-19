@@ -6,7 +6,7 @@ import ProtectedRoute from '../../components/shared/ProtectedRoute';
 
 const PatientFormsPage: React.FC = () => {
   return (
-    <ProtectedRoute allowedRoles={['staff', 'client']}>
+    <ProtectedRoute allowedRoles={['admin', 'staff', 'client']}>
       <Layout>
         <PatientForms />
       </Layout>

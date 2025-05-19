@@ -78,7 +78,8 @@ export const deleteStaff = async (staffId: string) => {
 };
 
 export const getUnassignedPatientsForStaff = async () => {
-  const response = await axiosInstance.get(`${SERVER_URL}/admin/unassigned-patients-staff`);
+  // const response = await axiosInstance.get(`${SERVER_URL}/admin/unassigned-patients-staff`);
+  const response = await axiosInstance.get(`${SERVER_URL}/admin/getAllPatients`);
   return response.data;
 };
 

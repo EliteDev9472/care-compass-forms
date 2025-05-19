@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Pencil, Trash } from 'lucide-react';
+import { BookAIcon, CalendarIcon, Pencil, Trash } from 'lucide-react';
 import { getAllPatients, deletePatient, Patient } from '@/services/patientService';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@radix-ui/react-popover';
@@ -147,6 +147,9 @@ const AdminPatientsList: React.FC = () => {
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(patient._id)}>
                   <Trash className="h-4 w-4 mr-1" /> Delete
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/patients/${patient._id}/forms`)}>
+                  <BookAIcon className="h-4 w-4 mr-1" /> Forms
                 </Button>
               </div>
             </div>
