@@ -72,7 +72,7 @@ const Timer: React.FC<TimerProps> = ({ formId }) => {
     <div className="flex items-center justify-center space-x-4">
       <div className="text-4xl font-mono font-bold">{displayTime}</div>
       {
-        user.role == 'staff' || user.role == 'admin' && (
+        (user.role == 'staff' || user.role == 'admin') && (
           <button
             onClick={handleStartStop}
             className={`px-6 py-2 text-white rounded-md ${isRunning ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'

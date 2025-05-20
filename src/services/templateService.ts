@@ -35,8 +35,19 @@ export interface FormTemplate {
   _id: string;
   name: string;
   fields: FormField[];
-  submission?: FormSubmission | null;
+  submission?: FormSubmission[] | null;
   billingMinutes?: string;
+  template?: FormTemplate
+  data?: (string | boolean)[]
+}
+
+export interface FormTemplateForAdmin {
+  templateId: string;
+  templateName: string;
+  fields: FormField[];
+  submissions?: FormSubmission | null;
+  billingMinutes?: string;
+  workingHistory?: any[];
   template?: FormTemplate
   data?: (string | boolean)[]
 }
@@ -106,3 +117,9 @@ export const submitFormWithTimerSessions = async (
   const response = await axiosInstance.post(`${SERVER_URL}/${role}/form-submit`, payload);
   return response.data;
 };
+
+export const getFormsofPatientByAdmin = async (patientId: string, startDate?: string, endDate?: string): Promise<FormTemplateForAdmin[]> => {
+  const params = startDate && endDate ? `?startDate=${startDate}&endDate=${endDate}` : '';
+  const response = await axiosInstance.get(`${SERVER_URL}/admin/export/${patientId}/allcsv${params}`);
+  return response.data.data;
+}
