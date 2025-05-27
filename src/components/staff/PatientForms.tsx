@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks/reduxHooks';
 import {
   fetchFormsStart,
@@ -9,7 +9,7 @@ import {
 } from '../../store/patientSlice';
 import { getPatientFormsByTemplate, FormTemplate, getPatientFormsByTemplateForClient } from '../../services/templateService';
 import { Calendar } from '../../components/ui/calendar';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon, ArrowLeft, Pencil, View } from 'lucide-react';
@@ -19,11 +19,14 @@ import { getClientName } from '@/services/staffService';
 
 const PatientForms: React.FC = () => {
   const { patientId } = useParams<{ patientId: string }>();
-  // const { patientName } = useParams<{ patientName: string }>();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isArchiveMode = searchParams.get('mode') === 'archive';
+  
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('month');
+  const [selectedArchiveMonth, setSelectedArchiveMonth] = useState<Date>(subMonths(new Date(), 1));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formTemplates, setFormTemplates] = useState<FormTemplate[]>([]);
@@ -46,18 +49,23 @@ const PatientForms: React.FC = () => {
           startDate,
           endDate
         );
-
       }
-
       else if (user.role == 'client')
         templates = await getPatientFormsByTemplateForClient(
           patientId,
           startDate,
           endDate
         );
+      
+      // Filter only submitted forms in archive mode
+      if (isArchiveMode) {
+        templates = templates.filter(template => 
+          user.role === 'staff' ? template.submission : template.data
+        );
+      }
+      
       setFormTemplates(templates);
-
-      dispatch(fetchFormsSuccess([])); // We're not using the old forms state anymore
+      dispatch(fetchFormsSuccess([]));
       setLoading(false);
     } catch (err) {
       console.error('Error fetching templates:', err);
@@ -74,22 +82,29 @@ const PatientForms: React.FC = () => {
     let startDate: string;
     let endDate: string;
 
-    switch (viewMode) {
-      case 'week':
-        startDate = format(startOfWeek(date), 'yyyy-MM-dd');
-        endDate = format(endOfWeek(date), 'yyyy-MM-dd');
-        break;
-      case 'month':
-        startDate = format(startOfMonth(date), 'yyyy-MM-dd');
-        endDate = format(endOfMonth(date), 'yyyy-MM-dd');
-        break;
-      default:
-        startDate = format(date, 'yyyy-MM-dd');
-        endDate = format(date, 'yyyy-MM-dd');
+    if (isArchiveMode) {
+      // For archive mode, use the selected archive month
+      startDate = format(startOfMonth(selectedArchiveMonth), 'yyyy-MM-dd');
+      endDate = format(endOfMonth(selectedArchiveMonth), 'yyyy-MM-dd');
+    } else {
+      // Regular mode logic
+      switch (viewMode) {
+        case 'week':
+          startDate = format(startOfWeek(date), 'yyyy-MM-dd');
+          endDate = format(endOfWeek(date), 'yyyy-MM-dd');
+          break;
+        case 'month':
+          startDate = format(startOfMonth(date), 'yyyy-MM-dd');
+          endDate = format(endOfMonth(date), 'yyyy-MM-dd');
+          break;
+        default:
+          startDate = format(date, 'yyyy-MM-dd');
+          endDate = format(date, 'yyyy-MM-dd');
+      }
     }
 
     fetchTemplates(startDate, endDate);
-  }, [dispatch, patientId, date, viewMode]);
+  }, [dispatch, patientId, date, viewMode, isArchiveMode, selectedArchiveMonth]);
 
   const formatTime = (minutes: number): string => {
     if (!minutes) return '00:00';
@@ -158,6 +173,10 @@ const PatientForms: React.FC = () => {
     } else {
       navigate('/client');
     }
+  };
+
+  const handleSwitchToLiveMode = () => {
+    navigate(`/staff/patients/${patientId}/forms`);
   };
 
   const handleExportCSV = async () => {
@@ -282,50 +301,89 @@ const PatientForms: React.FC = () => {
           Back to Patients
         </Button>
 
-        {user.role == 'staff' && <Button variant="outline" onClick={handleExportCSV}>
-          Export CSV
-        </Button>}
+        <div className="flex gap-2">
+          {isArchiveMode && (
+            <Button variant="outline" onClick={handleSwitchToLiveMode}>
+              Switch to Live Forms
+            </Button>
+          )}
+          {user.role == 'staff' && !isArchiveMode && (
+            <Button variant="outline" onClick={handleExportCSV}>
+              Export CSV
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Forms of {currentPatient?.name || patientId}</h1>
+        <h1 className="text-2xl font-bold">
+          {isArchiveMode ? 'Archived' : 'Live'} Forms of {currentPatient?.name || patientId}
+          {isArchiveMode && (
+            <span className="text-lg text-gray-600 ml-2">
+              - {format(selectedArchiveMonth, 'MMMM yyyy')}
+            </span>
+          )}
+        </h1>
+        
         <div className="flex space-x-2">
-          <div className="flex rounded-md overflow-hidden">
-            <button
-              onClick={() => setViewAndUpdate('day')}
-              className={`px-3 py-1 ${viewMode === 'day' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              Day
-            </button>
-            <button
-              onClick={() => setViewAndUpdate('week')}
-              className={`px-3 py-1 ${viewMode === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              Week
-            </button>
-            <button
-              onClick={() => setViewAndUpdate('month')}
-              className={`px-3 py-1 ${viewMode === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              Month
-            </button>
-          </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="h-10 w-10 p-0">
-                <CalendarIcon className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                initialFocus
-                className="p-3 pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
+          {isArchiveMode ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-10">
+                  <CalendarIcon className="h-4 w-4 mr-2" />
+                  {format(selectedArchiveMonth, 'MMMM yyyy')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={selectedArchiveMonth}
+                  onSelect={(newDate) => newDate && setSelectedArchiveMonth(newDate)}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          ) : (
+            <>
+              <div className="flex rounded-md overflow-hidden">
+                <button
+                  onClick={() => setViewAndUpdate('day')}
+                  className={`px-3 py-1 ${viewMode === 'day' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                >
+                  Day
+                </button>
+                <button
+                  onClick={() => setViewAndUpdate('week')}
+                  className={`px-3 py-1 ${viewMode === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                >
+                  Week
+                </button>
+                <button
+                  onClick={() => setViewAndUpdate('month')}
+                  className={`px-3 py-1 ${viewMode === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                >
+                  Month
+                </button>
+              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="h-10 w-10 p-0">
+                    <CalendarIcon className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </>
+          )}
         </div>
       </div>
 

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../hooks/reduxHooks';
@@ -13,8 +12,6 @@ import { setCurrentPatient } from '@/store/patientSlice';
 import { useDispatch } from 'react-redux';
 import { getMyAssignedPatientsForClient } from '@/services/clientService';
 import { exportTableToCSV } from '@/utils/exportCsv';
-import axiosInstance from '@/services/axiosConfig';
-import { SERVER_URL } from '@/config';
 
 const PatientsList: React.FC = () => {
   const navigate = useNavigate();
@@ -82,36 +79,14 @@ const PatientsList: React.FC = () => {
   const handleArchivePatient = async (patientId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent patient click navigation
     
-    try {
-      let startDate: Date;
-      let endDate: Date;
-
-      switch (viewMode) {
-        case 'week':
-          startDate = startOfWeek(date);
-          endDate = endOfWeek(date);
-          break;
-        case 'month':
-          startDate = startOfMonth(date);
-          endDate = endOfMonth(date);
-          break;
-        default:
-          startDate = date;
-          endDate = date;
-      }
-
-      const start = format(startDate, 'yyyy-MM-dd');
-      const end = format(endDate, 'yyyy-MM-dd');
-      
-      await axiosInstance.get(`${SERVER_URL}/store/${patientId}/${start}$$${end}`);
-      toast.success('Patient archived successfully');
-      
-      // Refresh the patients list
-      fetchPatients(start, end);
-    } catch (error) {
-      toast.error('Failed to archive patient');
-      console.error('Archive error:', error);
+    // Find the patient and set as current patient
+    const patient = patients.find(p => p._id === patientId);
+    if (patient) {
+      dispatch(setCurrentPatient(patient));
     }
+    
+    // Navigate to forms page with archive mode
+    navigate(`/staff/patients/${patientId}/forms?mode=archive`);
   };
 
   // const handleExportCSV = () => {
