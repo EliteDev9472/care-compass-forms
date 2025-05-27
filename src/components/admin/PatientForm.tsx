@@ -67,6 +67,11 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
 
   const [patientData, setPatientData] = useState<any>(null);
 
+  const [insurancePayer, setInsurancePayer] = useState('');
+  const [insurancePlan, setInsurancePlan] = useState('');
+  const [payerID, setPayerID] = useState('')
+  const [groupNumber, setGroupNumber] = useState('');
+
   useEffect(() => {
     if (mode === 'edit' && patientId) {
       const fetchPatient = async () => {
@@ -84,6 +89,10 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
           setCcmStatus(data.ccmStatus || '');
           setPatientConsent(data.patientConsent);
           setBillingMinutes(data.billingMinutes || 0);
+          setInsurancePayer(data.insurancePayer || '');
+          setInsurancePlan(data.insurancePlan || '');
+          setPayerID(data.payerID || '');
+          setGroupNumber(data.groupNumber || '');
 
           // Initialize billing history if available
           if (data.billingHistory && Array.isArray(data.billingHistory)) {
@@ -124,6 +133,22 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
       toast.warning("Please select the patient's consent");
       return false;
     }
+    if (insurancePayer === '') {
+      toast.warning("Please fill in the patient's Insurance Payer");
+      return false;
+    }
+    if (insurancePlan === '') {
+      toast.warning("Please fill in the patient's Insurance Plan");
+      return false;
+    }
+    if (payerID === '') {
+      toast.warning("Please fill in the patient's PayerID");
+      return false;
+    }
+    if (groupNumber === '') {
+      toast.warning("Please fill in the patient's GroupNumber");
+      return false;
+    }
     return true;
   };
 
@@ -145,7 +170,11 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
         street,
         note,
         ccmStatus: ccmStatus as 'Simple' | 'Complex' | undefined,
-        patientConsent
+        patientConsent,
+        insurancePayer,
+        insurancePlan,
+        payerID,
+        groupNumber
       };
 
       if (mode === 'edit' && patientId) {
@@ -321,8 +350,48 @@ const PatientForm: React.FC<PatientFormProps> = ({ mode = 'add' }) => {
             <SelectContent>
               <SelectItem value="true">Yes</SelectItem>
               <SelectItem value="false">No</SelectItem>
-            </SelectContent>
-          </Select>
+            </SelectContent>             
+          </Select>          
+        </div>                    
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Insurance Payer</label>
+          <Input
+            type="text"
+            value={insurancePayer}
+            onChange={(e) => setInsurancePayer(e.target.value)}
+            placeholder="Enter Insurance Payer"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Insurance Plan</label>
+          <Input
+            type="text"
+            value={insurancePlan}
+            onChange={(e) => setInsurancePlan(e.target.value)}
+            placeholder="Enter Insurance Plan"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">PayerID</label>
+          <Input
+            type="text"
+            value={payerID}
+            onChange={(e) => setPayerID(e.target.value)}
+            placeholder="Enter payerID"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Group Number</label>
+          <Input
+            type="text"
+            value={groupNumber}
+            onChange={(e) => setGroupNumber(e.target.value)}
+            placeholder="Enter Group Number"
+          />
         </div>
 
         {/* <div>

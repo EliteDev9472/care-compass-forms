@@ -35,19 +35,8 @@ export interface FormTemplate {
   _id: string;
   name: string;
   fields: FormField[];
-  submission?: FormSubmission[] | null;
+  submission?: FormSubmission | null;
   billingMinutes?: string;
-  template?: FormTemplate
-  data?: (string | boolean)[]
-}
-
-export interface FormTemplateForAdmin {
-  templateId: string;
-  templateName: string;
-  fields: FormField[];
-  submissions?: FormSubmission | null;
-  billingMinutes?: string;
-  workingHistory?: any[];
   template?: FormTemplate
   data?: (string | boolean)[]
 }
@@ -87,11 +76,6 @@ export const getPatientFormsByTemplate = async (patientId: string, startDate?: s
   return response.data;
 };
 
-export const getPatientOfAdminFormsByTemplate = async (patientId: string): Promise<FormTemplate[]> => {
-  const response = await axiosInstance.get(`${SERVER_URL}/admin/patients/${patientId}/forms-by-template`);
-  return response.data;
-};
-
 export const getPatientFormsByTemplateForClient = async (patientId: string, startDate?: string, endDate?: string): Promise<FormTemplate[]> => {
   const params = startDate && endDate ? `?start=${startDate}&end=${endDate}` : '';
   const response = await axiosInstance.get(`${SERVER_URL}/client/patient/${patientId}/submissions${params}`);
@@ -103,23 +87,15 @@ export const submitFormWithTimerSessions = async (
   templateId: string,
   data: (string | boolean)[],
   timerSessions: TimerSession[],
-  submissionId: string,
-  role: string
+  submissionId: string
 ): Promise<any> => {
   const payload = {
     patientId,
     templateId,
     data,
     timerSessions,
-    submissionId,
-    role
+    submissionId
   };
-  const response = await axiosInstance.post(`${SERVER_URL}/${role}/form-submit`, payload);
+  const response = await axiosInstance.post(`${SERVER_URL}/staff/form-submit`, payload);
   return response.data;
 };
-
-export const getFormsofPatientByAdmin = async (patientId: string, startDate?: string, endDate?: string): Promise<FormTemplateForAdmin[]> => {
-  const params = startDate && endDate ? `?startDate=${startDate}&endDate=${endDate}` : '';
-  const response = await axiosInstance.get(`${SERVER_URL}/admin/export/${patientId}/allcsv${params}`);
-  return response.data.data;
-}

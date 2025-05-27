@@ -6,7 +6,7 @@ import Layout from '../../components/layout/Layout';
 import CareForm from '../../components/form/CareForm';
 import ProtectedRoute from '../../components/shared/ProtectedRoute';
 import { setCurrentForm } from '../../store/patientSlice';
-import { submitFormWithTimerSessions, getPatientFormsByTemplate, getPatientOfAdminFormsByTemplate } from '../../services/templateService';
+import { submitFormWithTimerSessions, getPatientFormsByTemplate } from '../../services/templateService';
 import { resetTimer } from '../../store/timerSlice';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -36,11 +36,7 @@ const FormPage: React.FC = () => {
         try {
           // Find the form from the list of templates
           setLoading(true);
-          let templates;
-          if (user?.role == 'staff')
-            templates = await getPatientFormsByTemplate(patientId);
-          else if (user?.role == 'admin')
-            templates = await getPatientOfAdminFormsByTemplate(patientId)
+          const templates = await getPatientFormsByTemplate(patientId);
           const selectedTemplate = templates.find(template => template._id === formId);
 
           if (selectedTemplate) {
@@ -106,8 +102,7 @@ const FormPage: React.FC = () => {
         formId,
         data,
         timerSessions,
-        submissionId,
-        user.role
+        submissionId
       );
 
       toast.success('Form saved successfully');
@@ -116,7 +111,7 @@ const FormPage: React.FC = () => {
       dispatch(resetTimer());
 
       // Redirect back to the forms list
-      navigate(`/${user.role}/patients/${patientId}/forms`);
+      navigate(`/staff/patients/${patientId}/forms`);
     } catch (error) {
       console.error('Error saving form:', error);
       toast.error('Failed to save form');
@@ -126,17 +121,13 @@ const FormPage: React.FC = () => {
   const handleGoBack = () => {
     if (user?.role === 'staff') {
       navigate('/staff/patients');
-    }
-    else if (user?.role === 'admin') {
-      navigate('/admin/patients');
-    }
-    else {
+    } else {
       navigate('/client');
     }
   };
 
   return (
-    <ProtectedRoute allowedRoles={['staff', 'client', 'admin']}>
+    <ProtectedRoute allowedRoles={['staff', 'client']}>
       <Layout>
         <div className="mb-4">
           <Button

@@ -7,14 +7,14 @@ import {
   fetchFormsFailure,
   setCurrentForm
 } from '../../store/patientSlice';
-import { getPatientFormsByTemplate, FormTemplate, getPatientFormsByTemplateForClient, getPatientOfAdminFormsByTemplate, getFormsofPatientByAdmin } from '../../services/templateService';
+import { getPatientFormsByTemplate, FormTemplate, getPatientFormsByTemplateForClient } from '../../services/templateService';
 import { Calendar } from '../../components/ui/calendar';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon, ArrowLeft, Pencil, View } from 'lucide-react';
 import { toast } from 'sonner';
-import { exportTableToCSV, exportTableToCSVForAdmin } from '@/utils/exportCsv';
+import { exportTableToCSV } from '@/utils/exportCsv';
 import { getClientName } from '@/services/staffService';
 
 const PatientForms: React.FC = () => {
@@ -22,13 +22,11 @@ const PatientForms: React.FC = () => {
   // const { patientName } = useParams<{ patientName: string }>();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formTemplates, setFormTemplates] = useState<FormTemplate[]>([]);
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
 
   const { currentPatient } = useAppSelector(state => state.patients);
   const { user } = useAppSelector(state => state.auth);
@@ -50,9 +48,7 @@ const PatientForms: React.FC = () => {
         );
 
       }
-      else if (user.role == 'admin') {
-        templates = await getPatientOfAdminFormsByTemplate(patientId)
-      }
+
       else if (user.role == 'client')
         templates = await getPatientFormsByTemplateForClient(
           patientId,
@@ -77,7 +73,7 @@ const PatientForms: React.FC = () => {
 
     let startDate: string;
     let endDate: string;
-    if (!date) return
+
     switch (viewMode) {
       case 'week':
         startDate = format(startOfWeek(date), 'yyyy-MM-dd');
@@ -92,8 +88,6 @@ const PatientForms: React.FC = () => {
         endDate = format(date, 'yyyy-MM-dd');
     }
 
-    setStartDate(startDate);
-    setEndDate(endDate);
     fetchTemplates(startDate, endDate);
   }, [dispatch, patientId, date, viewMode]);
 
@@ -107,7 +101,7 @@ const PatientForms: React.FC = () => {
   const handleFormClick = (template: FormTemplate, type: string) => {
     let form
     // Transform template to match the current form structure expected by the app
-    if (user.role == 'staff' || user.role == 'admin') {
+    if (user.role == 'staff') {
       const formData = template.submission?.data || [];
       form = {
         id: template._id,
@@ -149,15 +143,7 @@ const PatientForms: React.FC = () => {
       }
       else if (type == 'view')
         navigate(`/staff/patients/${patientId}/forms/${template._id}/review`);
-    }
-    else if (user?.role == 'admin') {
-      if (type == 'edit') {
-        navigate(`/admin/patients/${patientId}/form/${template._id}/`);
-      }
-      else if (type == 'view')
-        navigate(`/admin/patients/${patientId}/forms/${template._id}/review`);
-    }
-    else {
+    } else {
       navigate(`/client/patients/${patientId}/forms/${template._id}`);
     }
   };
@@ -169,11 +155,7 @@ const PatientForms: React.FC = () => {
   const handleGoBack = () => {
     if (user?.role === 'staff') {
       navigate('/staff/patients');
-    }
-    else if (user?.role == 'admin') {
-      navigate('/admin/patients');
-    }
-    else {
+    } else {
       navigate('/client');
     }
   };
@@ -195,7 +177,7 @@ const PatientForms: React.FC = () => {
       let longConditions = []
 
       formTemplates.map((template, index) => {
-        if (template.name == 'Community Care Questionnaire') {
+        if (template.name == 'Community Care Plan') {
           let pushFlag = false
           if (!template.submission)
             return
@@ -237,7 +219,7 @@ const PatientForms: React.FC = () => {
       const strfilterLong = filterLong.splice(1, 5).join('.')
 
       const conditions = formTemplates.map((template, index) => {
-        if (template.name == 'Community Care Questionnaire')
+        if (template.name == 'Community Care Plan')
           return strfilterCommunity
 
         if (template.name == 'Long Term Care Plan')
@@ -280,102 +262,6 @@ const PatientForms: React.FC = () => {
     // }
   };
 
-  const handleAdminExportCSV = async () => {
-    let client = {}
-    try {
-      client = await getClientName(patientId);
-    }
-    catch (error) {
-      toast.error('Client should be assigned for this patient')
-      return
-      // toast.error(error.response.data.message)
-    }
-    const formTemplates = await getFormsofPatientByAdmin(patientId, startDate, endDate)
-
-    console.log('---------->', formTemplates)
-
-    let communityConditions = []
-    let longConditions = []
-
-    formTemplates.map((template, index) => {
-      if (template.templateName == 'Community Care Questionnaire') {
-        let pushFlag = false
-        if (!template.submissions)
-          return
-        template.fields.map((field, k) => {
-          if (field.label.indexOf('CHRONIC CONDITIONS') != -1) {
-            pushFlag = true
-          }
-          if (pushFlag) {
-            communityConditions.push(template.submissions[0].data[k])
-          }
-          if (field.label.indexOf('Chronic Conditions') != -1) {
-            pushFlag = false
-          }
-        })
-      }
-
-      if (template.templateName == 'Long Term Care Plan') {
-        let pushFlag = false
-        template.fields.map((field, k) => {
-          if (!template.submissions)
-            return
-          if (field.label.indexOf('CHRONIC CONDITIONS') != -1) {
-            pushFlag = true
-          }
-          if (pushFlag) {
-            longConditions.push(template.submissions[0].data[k], k)
-          }
-          if (field.label.indexOf('Chronic Conditions') != -1) {
-            pushFlag = false
-          }
-        })
-      }
-    })
-
-
-    let filterCommunity = communityConditions.filter((_, index) => index % 2 === 1)
-    const strfilterCommunity = filterCommunity.splice(0, 5).join('.')
-
-    let filterLong = longConditions.filter((_, index) => index % 2 === 0)
-    const strfilterLong = filterLong.splice(1, 5).join('.')
-
-    const conditions = formTemplates.map((template, index) => {
-      if (template.templateName == 'Community Care Questionnaire')
-        return strfilterCommunity
-
-      if (template.templateName == 'Long Term Care Plan')
-        return strfilterLong
-
-      return ''
-    })
-
-    let temp = []
-    formTemplates.map((t, i) => {
-      t.workingHistory.map((work, j) => {
-        temp.push({
-          name: t.templateName,
-          // status: t.submission ? 'Submitted' : 'New',
-          staff: work.staffName,
-          billingMinutes: work.minutes,
-          conditions: conditions[i]
-        })
-      })
-    })
-
-    exportTableToCSVForAdmin(
-      'forms.csv',
-      temp,
-      [
-        { label: 'Form Name', key: 'name' },
-        { label: 'Staff Name', key: 'staff' },
-        { label: 'Billing Time', key: 'billingMinutes' },
-        { label: 'Conditions', key: 'conditions' }
-      ],
-      client['clientName'], currentPatient?.name, user.name
-    );
-  }
-
   if (loading) {
     return <div className="flex justify-center mt-8">Loading forms...</div>;
   }
@@ -396,7 +282,7 @@ const PatientForms: React.FC = () => {
           Back to Patients
         </Button>
 
-        {(user.role == 'staff' || user.role == 'admin') && <Button variant="outline" onClick={() => user.role == 'staff' ? handleExportCSV() : handleAdminExportCSV()}>
+        {user.role == 'staff' && <Button variant="outline" onClick={handleExportCSV}>
           Export CSV
         </Button>}
       </div>
@@ -442,6 +328,7 @@ const PatientForms: React.FC = () => {
           </Popover>
         </div>
       </div>
+
       <div className="bg-white shadow-md rounded-md overflow-hidden">
         <div className={`grid grid-cols-${user.role == 'staff' ? 4 : 2} bg-gray-50 border-b`}>
           {
@@ -482,48 +369,20 @@ const PatientForms: React.FC = () => {
                 </div>
               </div>
             )) :
-            user.role == 'admin' ?
-              formTemplates.map(template => (
-                <div
-                  key={template._id}
-                  onClick={() => handleFormClick(template, '')}
-                  className="grid grid-cols-4 border-b hover:bg-gray-50 cursor-pointer"
-                >
-                  <div className="p-4 col-span-2">
-                    {template.name}
-                    {template.submission ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
-                      <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
-                  </div>
-                  <div className="p-4  col-span-1">{template.billingMinutes}</div>
-                  <div className="p-4 col-span-1 flex justify-left align-middle">
-                    <Button variant="ghost" size="sm" onClick={() => handleFormClick(template, 'edit')}>
-                      <Pencil size={16} className="mr-1" /> Edit
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleFormClick(template, 'view')}
-                    >
-                      <View size={16} className="mr-1" /> View
-                    </Button>
-                  </div>
+            formTemplates.map(template => (
+              <div
+                key={template.template._id}
+                onClick={() => handleFormClick(template, '')}
+                className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
+              >
+                <div className="p-4">
+                  {template.template.name}
+                  {template.data ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
+                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
                 </div>
-              ))
-              :
-              formTemplates.map(template => (
-                <div
-                  key={template.template._id}
-                  onClick={() => handleFormClick(template, '')}
-                  className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
-                >
-                  <div className="p-4">
-                    {template.template.name}
-                    {template.data ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
-                      <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
-                  </div>
-                  {/* <div className="p-4">{template.billingMinutes}</div> */}
-                </div>
-              ))
+                {/* <div className="p-4">{template.billingMinutes}</div> */}
+              </div>
+            ))
         )}
       </div>
     </div>

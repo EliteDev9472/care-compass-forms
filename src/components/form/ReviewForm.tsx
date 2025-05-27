@@ -213,7 +213,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
               </div>
               <textarea className="w-full p-2 h-36 bg-white" placeholder='Rich text editor preview' value={currentForm.data[index] as string} disabled={true} />
             </div> */}
-          </div>
+          </div>    
         );
 
       default:
@@ -248,7 +248,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
         </div>
         <div className='mt-4'>
           <p className='text-xl'>
-            <span>  Billing Minutes:  </span> <span>  {currentForm.billingTime}  </span>
+            {/* <span>  Billing Minutes:  </span> <span>  {currentForm.billingTime}  </span> */}
           </p>
         </div>
         <div className='my-4'>

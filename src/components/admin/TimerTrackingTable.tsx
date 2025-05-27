@@ -24,7 +24,6 @@ const TimerTrackingTable: React.FC = () => {
     const fetchData = async () => {
       try {
         const result = await getAllTracking();
-        console.log(result)
         setTimerRecords(result)
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -74,6 +73,7 @@ const TimerTrackingTable: React.FC = () => {
                 <TableHead>Form</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Billing Minutes</TableHead>
+                <TableHead>Note</TableHead>
                 <TableHead>Added By</TableHead>
                 <TableHead>Added At</TableHead>
               </TableRow>
@@ -88,6 +88,7 @@ const TimerTrackingTable: React.FC = () => {
                     <TableCell>{record.templateTitle}</TableCell>
                     <TableCell>{record.date.substring(0, 10)}</TableCell>
                     <TableCell>{record.billingMinutes}</TableCell>
+                    <TableCell>{record.note}</TableCell>
                     <TableCell>{record.addedByName}</TableCell>
                     <TableCell>{record.addedAt.substring(0, 10)}</TableCell>
                   </TableRow>

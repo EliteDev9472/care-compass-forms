@@ -46,6 +46,7 @@ const ManualTimer: React.FC = () => {
   const [minutes, setMinutes] = useState<number>(0);
   const [patients, setPatients] = useState<StaffPatient[]>([]);
   const [forms, setForms] = useState<FormTemplate[]>([]);
+  const [note, setNote] = useState<string>('');
 
   // Fetch staffs and their patients on component mount
   useEffect(() => {
@@ -103,7 +104,8 @@ const ManualTimer: React.FC = () => {
         templateId: selectedForm,
         manualTimer: [{
           date: selectedDate,
-          billingMinutes: minutes
+          billingMinutes: minutes,
+          note: note
         }]
       })
 
@@ -200,6 +202,16 @@ const ManualTimer: React.FC = () => {
                 value={minutes || ''}
                 onChange={(e) => setMinutes(parseInt(e.target.value) || 0)}
                 placeholder="Enter time in minutes"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Note</label>
+              <Input
+                type="string"
+                value={note || ''}
+                onChange={(e) => setNote(e.target.value || '')}
+                placeholder="Enter note for manual time"
               />
             </div>
 
