@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks/reduxHooks';
@@ -9,7 +10,7 @@ import {
 } from '../../store/patientSlice';
 import { getPatientFormsByTemplate, FormTemplate, getPatientFormsByTemplateForClient } from '../../services/templateService';
 import { Calendar } from '../../components/ui/calendar';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon, ArrowLeft, Pencil, View } from 'lucide-react';
@@ -23,10 +24,16 @@ const PatientForms: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isArchiveMode = searchParams.get('mode') === 'archive';
+  const archiveMonthParam = searchParams.get('month');
   
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('month');
-  const [selectedArchiveMonth, setSelectedArchiveMonth] = useState<Date>(subMonths(new Date(), 1));
+  const [selectedArchiveMonth, setSelectedArchiveMonth] = useState<Date>(() => {
+    if (archiveMonthParam) {
+      return parseISO(archiveMonthParam);
+    }
+    return subMonths(new Date(), 1);
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formTemplates, setFormTemplates] = useState<FormTemplate[]>([]);

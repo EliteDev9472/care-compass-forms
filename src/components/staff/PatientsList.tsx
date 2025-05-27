@@ -85,8 +85,9 @@ const PatientsList: React.FC = () => {
       dispatch(setCurrentPatient(patient));
     }
     
-    // Navigate to forms page with archive mode
-    navigate(`/staff/patients/${patientId}/forms?mode=archive`);
+    // Navigate to forms page with archive mode and selected month
+    const archiveMonth = format(date, 'yyyy-MM-dd');
+    navigate(`/staff/patients/${patientId}/forms?mode=archive&month=${archiveMonth}`);
   };
 
   // const handleExportCSV = () => {
