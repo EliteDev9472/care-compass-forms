@@ -37,6 +37,13 @@ export interface StaffPatient {
   billingMinutes: number;
 }
 
+export interface StaffPatientForm {
+  _id: string;
+  title: string;
+  status: 'completed' | 'in-progress';
+  updatedAt: string;
+}
+
 export interface ManualTimeEntry {
   staffId: string;
   patientId: string;
@@ -98,7 +105,6 @@ export const getPatientInfo = async (patientId: string) => {
 };
 
 export const addManualTimeEntry = async (timeEntry: ManualTimeEntry) => {
-  // This would be the real implementation when the backend is ready
   const response = await axiosInstance.post(`${SERVER_URL}/admin/manual-time-entry`, timeEntry);
   return response.data;
 };
@@ -107,4 +113,26 @@ export const addManualTimeEntry = async (timeEntry: ManualTimeEntry) => {
 export const addManualTimeEntryMock = (timeEntry: ManualTimeEntry) => {
   console.log('Manual time entry added:', timeEntry);
   return Promise.resolve({ success: true, data: timeEntry });
+};
+
+// New functions for admin impersonating staff
+export const getStaffPatientsForAdmin = async (staffId: string, start: string, end: string) => {
+  const response = await axiosInstance.get(
+    `${SERVER_URL}/admin/staff/${staffId}/patients?start=${start}&end=${end}`
+  );
+  return response.data;
+};
+
+export const getStaffPatientForms = async (staffId: string, patientId: string) => {
+  const response = await axiosInstance.get(
+    `${SERVER_URL}/admin/staff/${staffId}/patient/${patientId}/forms`
+  );
+  return response.data;
+};
+
+export const getStaffAndPatientNames = async (staffId: string, patientId: string) => {
+  const response = await axiosInstance.get(
+    `${SERVER_URL}/admin/staff/${staffId}/patient/${patientId}/names`
+  );
+  return response.data;
 };
