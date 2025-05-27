@@ -76,3 +76,8 @@ export const updatePatientBillingMinutes = async (patientId: string, date: strin
   });
   return response.data;
 };
+
+export const archivePatient = async (patientId: string) => {
+  const response = await axiosInstance.put(`${SERVER_URL}/api/store/${patientId}`);
+  return response.data;
+};
