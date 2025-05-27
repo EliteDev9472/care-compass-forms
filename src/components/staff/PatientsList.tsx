@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../hooks/reduxHooks';
@@ -6,12 +7,14 @@ import { Calendar } from '../../components/ui/calendar';
 import { endOfMonth, endOfWeek, format, startOfMonth, startOfWeek } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Archive } from 'lucide-react';
 import { toast } from 'sonner';
 import { setCurrentPatient } from '@/store/patientSlice';
 import { useDispatch } from 'react-redux';
 import { getMyAssignedPatientsForClient } from '@/services/clientService';
 import { exportTableToCSV } from '@/utils/exportCsv';
+import axiosInstance from '@/services/axiosConfig';
+import { SERVER_URL } from '@/config';
 
 const PatientsList: React.FC = () => {
   const navigate = useNavigate();
@@ -74,6 +77,41 @@ const PatientsList: React.FC = () => {
       navigate(`/staff/patients/${patient._id}/forms`);
     else if (user.role == 'client')
       navigate(`/client/patients/${patient._id}/forms`);
+  };
+
+  const handleArchivePatient = async (patientId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent patient click navigation
+    
+    try {
+      let startDate: Date;
+      let endDate: Date;
+
+      switch (viewMode) {
+        case 'week':
+          startDate = startOfWeek(date);
+          endDate = endOfWeek(date);
+          break;
+        case 'month':
+          startDate = startOfMonth(date);
+          endDate = endOfMonth(date);
+          break;
+        default:
+          startDate = date;
+          endDate = date;
+      }
+
+      const start = format(startDate, 'yyyy-MM-dd');
+      const end = format(endDate, 'yyyy-MM-dd');
+      
+      await axiosInstance.get(`${SERVER_URL}/store/${patientId}/${start}$$${end}`);
+      toast.success('Patient archived successfully');
+      
+      // Refresh the patients list
+      fetchPatients(start, end);
+    } catch (error) {
+      toast.error('Failed to archive patient');
+      console.error('Archive error:', error);
+    }
   };
 
   // const handleExportCSV = () => {
@@ -144,9 +182,10 @@ const PatientsList: React.FC = () => {
       </div>
 
       <div className="bg-white shadow-md rounded-md overflow-hidden">
-        <div className="grid grid-cols-2 bg-gray-50 border-b">
+        <div className={`grid ${user.role === 'staff' ? 'grid-cols-3' : 'grid-cols-2'} bg-gray-50 border-b`}>
           <div className="p-4 font-semibold">Patient Name</div>
           {user.role == 'staff' && <div className="p-4 font-semibold">Billing Time</div>}
+          {user.role == 'staff' && <div className="p-4 font-semibold">Actions</div>}
         </div>
 
         {patients.length === 0 ? (
@@ -156,10 +195,23 @@ const PatientsList: React.FC = () => {
             <div
               key={patient._id}
               onClick={() => handlePatientClick(patient)}
-              className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
+              className={`grid ${user.role === 'staff' ? 'grid-cols-3' : 'grid-cols-2'} border-b hover:bg-gray-50 cursor-pointer`}
             >
               <div className="p-4">{patient.name}</div>
               {user.role == 'staff' && <div className="p-4">{patient.billingMinutes}</div>}
+              {user.role == 'staff' && (
+                <div className="p-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => handleArchivePatient(patient._id, e)}
+                    className="flex items-center gap-2"
+                  >
+                    <Archive size={16} />
+                    Archive
+                  </Button>
+                </div>
+              )}
             </div>
           ))
         )}
