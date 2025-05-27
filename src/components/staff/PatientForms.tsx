@@ -8,7 +8,7 @@ import {
   fetchFormsFailure,
   setCurrentForm
 } from '../../store/patientSlice';
-import { getPatientFormsByTemplate, FormTemplate, getPatientFormsByTemplateForClient } from '../../services/templateService';
+import { getPatientFormsByTemplate, FormTemplate, getPatientFormsByTemplateForClient, getArchiveTemplates } from '../../services/templateService';
 import { Calendar } from '../../components/ui/calendar';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -25,7 +25,7 @@ const PatientForms: React.FC = () => {
   const [searchParams] = useSearchParams();
   const isArchiveMode = searchParams.get('mode') === 'archive';
   const archiveMonthParam = searchParams.get('month');
-  
+
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('month');
   const [selectedArchiveMonth, setSelectedArchiveMonth] = useState<Date>(() => {
@@ -63,14 +63,16 @@ const PatientForms: React.FC = () => {
           startDate,
           endDate
         );
-      
+
       // Filter only submitted forms in archive mode
       if (isArchiveMode) {
-        templates = templates.filter(template => 
-          user.role === 'staff' ? template.submission : template.data
-        );
+        templates = await getArchiveTemplates(
+          patientId,
+          startDate,
+          endDate
+        )
       }
-      
+
       setFormTemplates(templates);
       dispatch(fetchFormsSuccess([]));
       setLoading(false);
@@ -331,7 +333,7 @@ const PatientForms: React.FC = () => {
             </span>
           )}
         </h1>
-        
+
         <div className="flex space-x-2">
           {isArchiveMode ? (
             <Popover>

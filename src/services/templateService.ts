@@ -82,6 +82,12 @@ export const getPatientFormsByTemplateForClient = async (patientId: string, star
   return response.data;
 };
 
+export const getArchiveTemplates = async (patientId: string, start: string, end: string) => {
+  const response = await axiosInstance.get(`${SERVER_URL}/store/${patientId}?startDate=${start}&endDate=${end}`);
+  return response.data.data;
+}
+
+
 export const submitFormWithTimerSessions = async (
   patientId: string,
   templateId: string,
