@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { BookAIcon, CalendarIcon, Pencil, Trash } from 'lucide-react';
-import { getAllPatients, deletePatient, Patient } from '@/services/patientService';
+import { BookAIcon, CalendarIcon, Pencil, Trash, Archive } from 'lucide-react';
+import { getAllPatients, deletePatient, Patient, archivePatient } from '@/services/patientService';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@radix-ui/react-popover';
 import { endOfMonth, endOfWeek, format, startOfMonth, startOfWeek } from 'date-fns';
@@ -16,6 +16,7 @@ const AdminPatientsList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
   const [deletePatientId, setDeletePatientId] = useState<string | null>(null);
+  const [archivedPatients, setArchivedPatients] = useState<Set<string>>(new Set());
 
   const fetchPatients = async (start, end) => {
     try {
@@ -52,6 +53,8 @@ const AdminPatientsList: React.FC = () => {
 
   const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
     setViewMode(mode);
+    // Reset archived patients when changing view mode
+    setArchivedPatients(new Set());
   };
 
   const handleAddPatient = () => {
@@ -78,6 +81,16 @@ const AdminPatientsList: React.FC = () => {
       }
     }
     setDeletePatientId(null);
+  };
+
+  const handleArchivePatient = async (patientId: string) => {
+    try {
+      await archivePatient(patientId);
+      setArchivedPatients(prev => new Set(prev).add(patientId));
+      toast.success('Patient archived successfully');
+    } catch (error) {
+      toast.error('Failed to archive patient');
+    }
   };
 
   const formatTime = (minutes: number): string => {
@@ -112,7 +125,13 @@ const AdminPatientsList: React.FC = () => {
               <Calendar
                 mode="single"
                 selected={date}
-                onSelect={(newDate) => newDate && setDate(newDate)}
+                onSelect={(newDate) => {
+                  if (newDate) {
+                    setDate(newDate);
+                    // Reset archived patients when changing date
+                    setArchivedPatients(new Set());
+                  }
+                }}
                 initialFocus
                 className="p-3 pointer-events-auto bg-white"
               />
@@ -150,6 +169,15 @@ const AdminPatientsList: React.FC = () => {
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/patients/${patient._id}/forms`)}>
                   <BookAIcon className="h-4 w-4 mr-1" /> Forms
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => handleArchivePatient(patient._id)}
+                  disabled={archivedPatients.has(patient._id)}
+                >
+                  <Archive className="h-4 w-4 mr-1" />
+                  {archivedPatients.has(patient._id) ? 'Archived' : 'Archive'}
                 </Button>
               </div>
             </div>
