@@ -4,6 +4,7 @@ import { useAppSelector } from '../../hooks/reduxHooks';
 import Timer from '../timer/Timer';
 import { searchICDCodes } from '../../services/icdService';
 import FormElementRenderer from './elements/FormElementRenderer';
+import { useSearchParams } from 'react-router-dom';
 
 interface CareFormProps {
   formId: string;
@@ -21,6 +22,10 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave, s
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [inputingIndex, setInputingIndex] = useState<number>(-1);
+  const { user } = useAppSelector(state => state.auth)
+
+  const [searchParams] = useSearchParams();
+  const isArchiveMode = searchParams.get('mode') === 'archive';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,7 +86,9 @@ const CareForm: React.FC<CareFormProps> = ({ formId, initialData = [], onSave, s
     <div className="max-w-6xl mx-auto my-8 bg-white p-6 rounded-lg shadow-md">
       <div className="mb-2">
         <h1 className="text-3xl font-bold text-center mb-6">{currentForm.name}</h1>
-        <Timer formId={formId} />
+
+        {user?.role == 'staff' && <Timer formId={formId} />}
+        {user?.role == 'admin' && !isArchiveMode && <Timer formId={formId} />}
       </div>
 
       <form onSubmit={handleSubmit}>

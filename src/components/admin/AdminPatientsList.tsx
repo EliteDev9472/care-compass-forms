@@ -6,8 +6,9 @@ import { BookAIcon, CalendarIcon, Pencil, Trash, Archive } from 'lucide-react';
 import { getAllPatients, deletePatient, Patient, archivePatient } from '@/services/patientService';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@radix-ui/react-popover';
-import { endOfMonth, endOfWeek, format, startOfMonth, startOfWeek } from 'date-fns';
+import { endOfMonth, endOfWeek, format, startOfMonth, startOfWeek, differenceInCalendarDays } from 'date-fns';
 import DeleteConfirmDialog from '../shared/DeleteConfirmDialog';
+import { getArchiveTemplates } from '@/services/templateService';
 
 const AdminPatientsList: React.FC = () => {
   const navigate = useNavigate();
@@ -83,15 +84,21 @@ const AdminPatientsList: React.FC = () => {
     setDeletePatientId(null);
   };
 
-  const handleArchivePatient = async (patientId: string) => {
+  const handleArchivePatient = async () => {
     try {
-      await archivePatient(patientId);
-      setArchivedPatients(prev => new Set(prev).add(patientId));
+      await archivePatient(format(date, 'yyyy-MM-dd').substring(0, 4), format(date, 'yyyy-MM-dd').substring(5, 7));
+      // setArchivedPatients(prev => new Set(prev).add(patientId));
       toast.success('Patient archived successfully');
     } catch (error) {
       toast.error('Failed to archive patient');
     }
   };
+
+  const onClickArchive = async (patientId) => {
+    // Navigate to forms page with archive mode and selected month
+    const archiveMonth = format(date, 'yyyy-MM-dd');
+    navigate(`/admin/patients/${patientId}/forms?mode=archive&month=${archiveMonth}`);
+  }
 
   const formatTime = (minutes: number): string => {
     const hours = Math.floor((minutes || 0) / 60);
@@ -99,6 +106,8 @@ const AdminPatientsList: React.FC = () => {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
+  const daysUntilEndOfMonth = differenceInCalendarDays(endOfMonth(date), date);
+  const isLastWeekOfMonth = daysUntilEndOfMonth <= 6;
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -139,13 +148,16 @@ const AdminPatientsList: React.FC = () => {
           </Popover>
         </div>
       </div>
-
-      <div className="flex justify-end mb-4">
-        <Button onClick={handleAddPatient}>Add Patient</Button>
+      <div className='flex justify-between w-full'>
+        <div className="flex justify-end mb-4">
+          <Button disabled={!isLastWeekOfMonth} onClick={handleArchivePatient}>Archive {format(date, 'yyyy-MM-dd').substring(0, 4)} - {format(date, 'yyyy-MM-dd').substring(5, 7)}</Button>
+        </div>
+        <div className="flex justify-end mb-4">
+          <Button onClick={handleAddPatient}>Add Patient</Button>
+        </div>
       </div>
-
       <div className="bg-white shadow-md rounded-md overflow-hidden">
-        <div className="grid grid-cols-3 bg-gray-50 border-b">
+        <div className="grid grid-cols-4 bg-gray-50 border-b">
           <div className="p-4 font-semibold">Patient Name</div>
           <div className="p-4 font-semibold">Billing Time</div>
           <div className="p-4 font-semibold">Actions</div>
@@ -157,10 +169,10 @@ const AdminPatientsList: React.FC = () => {
           <div className="p-6 text-center text-gray-500">No patients found</div>
         ) : (
           patients.map(patient => (
-            <div key={patient._id} className="grid grid-cols-3 border-b hover:bg-gray-50">
+            <div key={patient._id} className="grid grid-cols-4 border-b hover:bg-gray-50">
               <div className="p-4">{patient.name}</div>
               <div className="p-4">{patient.billingMinutes}</div>
-              <div className="p-4 space-x-2">
+              <div className="p-4 space-x-2 col-span-2">
                 <Button variant="ghost" size="sm" onClick={() => handleEditPatient(patient._id)}>
                   <Pencil className="h-4 w-4 mr-1" /> Edit
                 </Button>
@@ -170,14 +182,14 @@ const AdminPatientsList: React.FC = () => {
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/patients/${patient._id}/forms`)}>
                   <BookAIcon className="h-4 w-4 mr-1" /> Forms
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => handleArchivePatient(patient._id)}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onClickArchive(patient._id)}
                   disabled={archivedPatients.has(patient._id)}
                 >
                   <Archive className="h-4 w-4 mr-1" />
-                  {archivedPatients.has(patient._id) ? 'Archived' : 'Archive'}
+                  Archived
                 </Button>
               </div>
             </div>
@@ -192,7 +204,7 @@ const AdminPatientsList: React.FC = () => {
         title="Delete Patient"
         description="Are you sure you want to delete this patient? This action cannot be undone."
       />
-    </div>
+    </div >
   );
 };
 

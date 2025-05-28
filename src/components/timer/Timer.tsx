@@ -71,18 +71,13 @@ const Timer: React.FC<TimerProps> = ({ formId }) => {
   return (
     <div className="flex items-center justify-center space-x-4">
       <div className="text-4xl font-mono font-bold">{displayTime}</div>
-      {
-        user.role == 'staff' && (
-          <button
-            onClick={handleStartStop}
-            className={`px-6 py-2 text-white rounded-md ${isRunning ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
-              }`}
-          >
-            {isRunning ? 'Stop' : 'Start'}
-          </button>
-        )
-      }
-
+      <button
+        onClick={handleStartStop}
+        className={`px-6 py-2 text-white rounded-md ${isRunning ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
+          }`}
+      >
+        {isRunning ? 'Stop' : 'Start'}
+      </button>
     </div>
   );
 };

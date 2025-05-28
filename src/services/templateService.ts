@@ -34,6 +34,7 @@ export interface FormSubmission {
 export interface FormTemplate {
   _id: string;
   name: string;
+  templateName?: StorageManager;
   fields: FormField[];
   submission?: FormSubmission | null;
   billingMinutes?: string;
@@ -76,6 +77,13 @@ export const getPatientFormsByTemplate = async (patientId: string, startDate?: s
   return response.data;
 };
 
+export const getPatientOfAdminFormsByTemplate = async (patientId: string, startDate?: string, endDate?: string): Promise<FormTemplate[]> => {
+  const params = startDate && endDate ? `?start=${startDate}&end=${endDate}` : '';
+  const response = await axiosInstance.get(`${SERVER_URL}/admin/patients/${patientId}/forms-by-template${params}`);
+  return response.data;
+};
+
+
 export const getPatientFormsByTemplateForClient = async (patientId: string, startDate?: string, endDate?: string): Promise<FormTemplate[]> => {
   const params = startDate && endDate ? `?start=${startDate}&end=${endDate}` : '';
   const response = await axiosInstance.get(`${SERVER_URL}/client/patient/${patientId}/submissions${params}`);
@@ -83,7 +91,7 @@ export const getPatientFormsByTemplateForClient = async (patientId: string, star
 };
 
 export const getArchiveTemplates = async (patientId: string, start: string, end: string) => {
-  const response = await axiosInstance.get(`${SERVER_URL}/store/${patientId}?startDate=${start}&endDate=${end}`);
+  const response = await axiosInstance.get(`${SERVER_URL}/store/${patientId}?year=${start.substring(0, 4)}&month=${start.substring(5, 7)}`);
   return response.data.data;
 }
 
@@ -93,7 +101,8 @@ export const submitFormWithTimerSessions = async (
   templateId: string,
   data: (string | boolean)[],
   timerSessions: TimerSession[],
-  submissionId: string
+  submissionId: string,
+  role: string
 ): Promise<any> => {
   const payload = {
     patientId,
@@ -102,6 +111,18 @@ export const submitFormWithTimerSessions = async (
     timerSessions,
     submissionId
   };
-  const response = await axiosInstance.post(`${SERVER_URL}/staff/form-submit`, payload);
+  const response = await axiosInstance.post(`${SERVER_URL}/${role}/form-submit`, payload);
+  return response.data;
+};
+
+
+export const submitArchiveTemplate = async (
+  id: string,
+  data: (string | boolean)[],
+): Promise<any> => {
+  const payload = {
+    data,
+  };
+  const response = await axiosInstance.put(`${SERVER_URL}/store/${id}`, payload);
   return response.data;
 };

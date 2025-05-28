@@ -8,7 +8,7 @@ import {
   fetchFormsFailure,
   setCurrentForm
 } from '../../store/patientSlice';
-import { getPatientFormsByTemplate, FormTemplate, getPatientFormsByTemplateForClient, getArchiveTemplates } from '../../services/templateService';
+import { getPatientFormsByTemplate, FormTemplate, getPatientFormsByTemplateForClient, getPatientOfAdminFormsByTemplate, getArchiveTemplates } from '../../services/templateService';
 import { Calendar } from '../../components/ui/calendar';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -17,6 +17,7 @@ import { CalendarIcon, ArrowLeft, Pencil, View } from 'lucide-react';
 import { toast } from 'sonner';
 import { exportTableToCSV } from '@/utils/exportCsv';
 import { getClientName } from '@/services/staffService';
+import { Treemap } from 'recharts';
 
 const PatientForms: React.FC = () => {
   const { patientId } = useParams<{ patientId: string }>();
@@ -56,6 +57,10 @@ const PatientForms: React.FC = () => {
           startDate,
           endDate
         );
+
+      }
+      else if (user.role == 'admin') {
+        templates = await getPatientOfAdminFormsByTemplate(patientId, startDate, endDate)
       }
       else if (user.role == 'client')
         templates = await getPatientFormsByTemplateForClient(
@@ -72,7 +77,6 @@ const PatientForms: React.FC = () => {
           endDate
         )
       }
-
       setFormTemplates(templates);
       dispatch(fetchFormsSuccess([]));
       setLoading(false);
@@ -125,7 +129,7 @@ const PatientForms: React.FC = () => {
   const handleFormClick = (template: FormTemplate, type: string) => {
     let form
     // Transform template to match the current form structure expected by the app
-    if (user.role == 'staff') {
+    if (user.role == 'staff' || user.role == 'admin') {
       const formData = template.submission?.data || [];
       form = {
         id: template._id,
@@ -167,11 +171,25 @@ const PatientForms: React.FC = () => {
       }
       else if (type == 'view')
         navigate(`/staff/patients/${patientId}/forms/${template._id}/review`);
-    } else {
+    }
+    else if (user?.role == 'admin') {
+      if (type == 'edit') {
+        if (template._id)
+          navigate(`/admin/patients/${patientId}/form/${template._id}`);
+        else
+          navigate(`/admin/patients/${patientId}/form/${template.submissions[0]._id}/?mode=archive&date=${format(date, 'yyyy-MM-dd')}`);
+      }
+      else if (type == 'view') {
+        if (template._id)
+          navigate(`/admin/patients/${patientId}/forms/${template._id}/review`);
+        else
+          navigate(`/admin/patients/${patientId}/forms/${template.templateId}/review/?mode=archive`);
+      }
+    }
+    else {
       navigate(`/client/patients/${patientId}/forms/${template._id}`);
     }
   };
-
   const setViewAndUpdate = (mode: 'day' | 'week' | 'month') => {
     setViewMode(mode);
   };
@@ -179,7 +197,11 @@ const PatientForms: React.FC = () => {
   const handleGoBack = () => {
     if (user?.role === 'staff') {
       navigate('/staff/patients');
-    } else {
+    }
+    else if (user?.role == 'admin') {
+      navigate('/admin/patients');
+    }
+    else {
       navigate('/client');
     }
   };
@@ -240,10 +262,10 @@ const PatientForms: React.FC = () => {
         }
       })
 
-      let filterCommunity = communityConditions.filter((_, index) => index % 2 === 1)
+      let filterCommunity = communityConditions.filter((_, index) => index % 3 === 2)
       const strfilterCommunity = filterCommunity.splice(0, 5).join('.')
 
-      let filterLong = longConditions.filter((_, index) => index % 2 === 0)
+      let filterLong = longConditions.filter((_, index) => index % 3 === 0)
       const strfilterLong = filterLong.splice(1, 5).join('.')
 
       const conditions = formTemplates.map((template, index) => {
@@ -396,6 +418,7 @@ const PatientForms: React.FC = () => {
         </div>
       </div>
 
+
       <div className="bg-white shadow-md rounded-md overflow-hidden">
         <div className={`grid grid-cols-${user.role == 'staff' ? 4 : 2} bg-gray-50 border-b`}>
           {
@@ -417,15 +440,15 @@ const PatientForms: React.FC = () => {
                 className="grid grid-cols-4 border-b hover:bg-gray-50 cursor-pointer"
               >
                 <div className={`p-4 col-span-${user.role == 'staff' ? 2 : 1}`}>
-                  {template.name}
-                  {template.submission ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
-                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
+                  {template.name} {template.templateName}
+                  {template.name && (template.submission ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
+                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>)}
                 </div>
                 <div className="p-4 col-span-1">{template.billingMinutes}</div>
                 <div className="p-4 col-span-1 flex justify-left align-middle">
-                  <Button variant="ghost" size="sm" onClick={() => handleFormClick(template, 'edit')}>
+                  {template.name && <Button variant="ghost" size="sm" onClick={() => handleFormClick(template, 'edit')}>
                     <Pencil size={16} className="mr-1" /> Edit
-                  </Button>
+                  </Button>}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -436,20 +459,50 @@ const PatientForms: React.FC = () => {
                 </div>
               </div>
             )) :
-            formTemplates.map(template => (
-              <div
-                key={template.template._id}
-                onClick={() => handleFormClick(template, '')}
-                className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
-              >
-                <div className="p-4">
-                  {template.template.name}
-                  {template.data ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
-                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
+            user.role == 'admin' ?
+              formTemplates.map(template => (
+                <div
+                  key={template._id}
+                  onClick={() => handleFormClick(template, '')}
+                  className="grid grid-cols-4 border-b hover:bg-gray-50 cursor-pointer"
+                >
+                  <div className="p-4 col-span-2">
+                    {template.name} {template.templateName}
+                    {template.name && (template.submission ?
+                      <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
+                      <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>)}
+                  </div>
+                  <div className="p-4  col-span-1">{template.billingMinutes}</div>
+                  <div className="p-4 col-span-1 flex justify-left align-middle">
+                    <Button variant="ghost" size="sm" onClick={() => handleFormClick(template, 'edit')}>
+                      <Pencil size={16} className="mr-1" /> Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleFormClick(template, 'view')}
+                    >
+                      <View size={16} className="mr-1" /> View
+                    </Button>
+                  </div>
                 </div>
-                {/* <div className="p-4">{template.billingMinutes}</div> */}
-              </div>
-            ))
+              ))
+              :
+              <></>
+          // formTemplates.map(template => (
+          //   <div
+          //     key={template.template._id}
+          //     onClick={() => handleFormClick(template, '')}
+          //     className="grid grid-cols-2 border-b hover:bg-gray-50 cursor-pointer"
+          //   >
+          //     <div className="p-4">
+          //       {template.templateName}
+          //       {template.data ? <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Submitted</span> :
+          //         <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">New</span>}
+          //     </div>
+          //     {/* <div className="p-4">{template.billingMinutes}</div> */}
+          //   </div>
+          // ))
         )}
       </div>
     </div>

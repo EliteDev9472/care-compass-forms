@@ -130,6 +130,19 @@ const App = () => (
             </ProtectedRoute>
 
           } />
+
+          <Route path="/admin/patients/:patientId/form/:formId" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <FormPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/patients/:patientId/forms/:formId/review" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <StaffReviewFormPage />
+            </ProtectedRoute>
+          } />
+
+
           {/* Staff routes */}
           <Route path="/staff/patients" element={
             <ProtectedRoute allowedRoles={['staff']}>

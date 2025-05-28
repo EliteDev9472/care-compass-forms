@@ -78,13 +78,13 @@ const PatientsList: React.FC = () => {
 
   const handleArchivePatient = async (patientId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent patient click navigation
-    
+
     // Find the patient and set as current patient
     const patient = patients.find(p => p._id === patientId);
     if (patient) {
       dispatch(setCurrentPatient(patient));
     }
-    
+
     // Navigate to forms page with archive mode and selected month
     const archiveMonth = format(date, 'yyyy-MM-dd');
     navigate(`/staff/patients/${patientId}/forms?mode=archive&month=${archiveMonth}`);
@@ -184,7 +184,7 @@ const PatientsList: React.FC = () => {
                     className="flex items-center gap-2"
                   >
                     <Archive size={16} />
-                    Archive
+                    Archived
                   </Button>
                 </div>
               )}

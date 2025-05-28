@@ -77,7 +77,10 @@ export const updatePatientBillingMinutes = async (patientId: string, date: strin
   return response.data;
 };
 
-export const archivePatient = async (patientId: string) => {
-  const response = await axiosInstance.put(`${SERVER_URL}/api/store/${patientId}`);
+export const archivePatient = async (year: string, month: string) => {
+  const response = await axiosInstance.post(`${SERVER_URL}/store/archive/manual`, {
+    year: year,
+    month: month
+  });
   return response.data;
 };

@@ -73,7 +73,7 @@ const TimerTrackingTable: React.FC = () => {
                 <TableHead>Form</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Billing Minutes</TableHead>
-                <TableHead>Note</TableHead>
+                <TableHead>Notes</TableHead>
                 <TableHead>Added By</TableHead>
                 <TableHead>Added At</TableHead>
               </TableRow>

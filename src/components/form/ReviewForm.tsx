@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAppSelector } from '../../hooks/reduxHooks';
 import Timer from '../timer/Timer';
-import { AlignLeft, Type } from 'lucide-react';
+import { AlignLeft, Type, User } from 'lucide-react';
 import { FormField } from '@/services/templateService';
 import { getPatientInfo } from '@/services/staffService';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 
 interface ReviewFormProps {
@@ -20,6 +20,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
     state.patients
   );
   const [patientInfo, setPatientInfo] = useState<any>(null)
+  const { user } = useAppSelector(state => state.auth)
+
+  const [searchParams] = useSearchParams();
+  const isArchiveMode = searchParams.get('mode') === 'archive';
 
   const fetchPatientInfo = async () => {
     const result = await getPatientInfo(patientId);
@@ -213,7 +217,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
               </div>
               <textarea className="w-full p-2 h-36 bg-white" placeholder='Rich text editor preview' value={currentForm.data[index] as string} disabled={true} />
             </div> */}
-          </div>    
+          </div>
         );
 
       default:
@@ -225,6 +229,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
     <div className="max-w-6xl mx-auto my-8 bg-white p-6 rounded-lg shadow-md">
       <div className="mb-2">
         <h1 className="text-3xl font-bold text-center mb-6">{currentForm.name}</h1>
+        {user.role == 'admin' && !isArchiveMode && <h1 className="text-3xl font-bold text-center mb-6">{currentForm.billingTime}</h1>}
       </div>
       <form>
         <div>
@@ -256,13 +261,22 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ formId, initialData = [] }) => 
             <span>  Note:  </span> <span className='bg-blue-50 px-4 pb-3'>  {patientInfo?.note}  </span>
           </p>
         </div>
+        {console.log('------->', patientInfo)}
+        <div className='my-4'>
+          <p className='text-xl'>
+            <span>  Insurance Pay:  </span> <span className=' px-4 pb-3'>  {patientInfo?.insurancePayer}  </span>
+            <span>  Insurance Plan:  </span> <span className=' px-4 pb-3'>  {patientInfo?.insurancePlan}  </span>
+            <span>  Payer ID:  </span> <span className=' px-4 pb-3'>  {patientInfo?.payerID}  </span>
+            <span>  Group Number:  </span> <span className=' px-4 pb-3'>  {patientInfo?.groupNumber}  </span>
+          </p>
+        </div>
         {
           currentForm.templateFields.map((field, index) => {
             return renderFormElement(field, index)
           })
         }
       </form>
-    </div>
+    </div >
   );
 };
 

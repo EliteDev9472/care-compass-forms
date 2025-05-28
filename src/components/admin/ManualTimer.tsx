@@ -206,7 +206,7 @@ const ManualTimer: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Note</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
               <Input
                 type="string"
                 value={note || ''}

@@ -1,16 +1,17 @@
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks/reduxHooks';
 import Layout from '../../components/layout/Layout';
 import CareForm from '../../components/form/CareForm';
 import ProtectedRoute from '../../components/shared/ProtectedRoute';
 import { setCurrentForm } from '../../store/patientSlice';
-import { submitFormWithTimerSessions, getPatientFormsByTemplate } from '../../services/templateService';
+import { submitFormWithTimerSessions, getPatientFormsByTemplate, getPatientOfAdminFormsByTemplate, submitArchiveTemplate, getArchiveTemplates } from '../../services/templateService';
 import { resetTimer } from '../../store/timerSlice';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { start } from 'repl';
 
 const FormPage: React.FC = () => {
   const { patientId, formId } = useParams<{ patientId: string, formId: string }>();
@@ -24,6 +25,11 @@ const FormPage: React.FC = () => {
   const { user } = useAppSelector(state => state.auth);
   const [sumupArray, setSumupArray] = useState<number[]>([]);
   const [threshold, setThresHold] = useState<number>(0);
+  const [curTemplate, setCurTemplate] = useState<any>(null)
+
+  const [searchParams] = useSearchParams();
+  const isArchiveMode = searchParams.get('mode') === 'archive';
+  const selectedDate = searchParams.get('date');
 
   useEffect(() => {
 
@@ -36,35 +42,57 @@ const FormPage: React.FC = () => {
         try {
           // Find the form from the list of templates
           setLoading(true);
-          const templates = await getPatientFormsByTemplate(patientId);
-          const selectedTemplate = templates.find(template => template._id === formId);
+          let templates = []
+          if (user?.role == 'staff')
+            templates = await getPatientFormsByTemplate(patientId);
+          else if (user?.role == 'admin')
+            if (!isArchiveMode)
+              templates = await getPatientOfAdminFormsByTemplate(patientId);
+            else
+              templates = await getArchiveTemplates(patientId, selectedDate, '');
+          let selectedTemplate;
+          if (user?.role == 'admin' && isArchiveMode)
+            selectedTemplate = templates.find(template => template.submissions[0]._id === formId);
+          else
+            selectedTemplate = templates.find(template => template._id === formId);
+
+          setCurTemplate(selectedTemplate)
 
           if (selectedTemplate) {
             // Transform template to match the current form structure expected by the app
-            const initialData = selectedTemplate.submission?.data || [];
 
-            const form = {
-              id: selectedTemplate._id,
-              patientId: patientId,
-              name: selectedTemplate.name,
-              type: selectedTemplate.name,
-              createdAt: new Date().toString(),
-              updatedAt: new Date().toString(),
-              billingTime: selectedTemplate.billingMinutes || "00:00",
-              data: initialData,
-              templateFields: selectedTemplate.fields,
-              submission: selectedTemplate.submission,
-            };
-            let tempArray = new Array(selectedTemplate.fields.length).fill(0)
-            setSumupArray(tempArray)
-            form.templateFields.map((item, index) => {
-              if (item.threshold && item.type == 'score-sum') {
-                setThresHold(item.threshold)
-              }
-            })
-            dispatch(setCurrentForm(form));
-            setSubmissioId(selectedTemplate.submission?._id || null);
-            setFormData(initialData);
+            if (user?.role == 'admin' && isArchiveMode) {
+              let initialData = selectedTemplate.submissions[0].data;
+              console.log('***********', initialData)
+              setFormData(initialData);
+            }
+            else {
+              const initialData = selectedTemplate.submission?.data || [];
+
+              const form = {
+                id: selectedTemplate._id,
+                patientId: patientId,
+                name: selectedTemplate.name,
+                type: selectedTemplate.name,
+                createdAt: new Date().toString(),
+                updatedAt: new Date().toString(),
+                billingTime: selectedTemplate.billingMinutes || "00:00",
+                data: initialData,
+                templateFields: selectedTemplate.fields,
+                submission: selectedTemplate.submission,
+              };
+              let tempArray = new Array(selectedTemplate.fields.length).fill(0)
+              setSumupArray(tempArray)
+              form.templateFields.map((item, index) => {
+                if (item.threshold && item.type == 'score-sum') {
+                  setThresHold(item.threshold)
+                }
+              })
+              dispatch(setCurrentForm(form));
+              setSubmissioId(selectedTemplate.submission?._id || null);
+
+              setFormData(initialData);
+            }
           }
           setLoading(false);
         } catch (error) {
@@ -84,7 +112,7 @@ const FormPage: React.FC = () => {
       return;
     }
 
-    if (!timerSessions.length) {
+    if (!isArchiveMode && !timerSessions.length) {
       toast.error('Please check timer');
       return;
     }
@@ -96,14 +124,19 @@ const FormPage: React.FC = () => {
     setLoading(true);
 
     try {
-      // Submit the form with timer sessions
-      await submitFormWithTimerSessions(
-        patientId,
-        formId,
-        data,
-        timerSessions,
-        submissionId
-      );
+      if (!isArchiveMode)
+        // Submit the form with timer sessions
+        await submitFormWithTimerSessions(
+          patientId,
+          formId,
+          data,
+          timerSessions,
+          submissionId,
+          user.role
+        );
+      else {
+        await submitArchiveTemplate(curTemplate.submissions[0]._id, data);
+      }
 
       toast.success('Form saved successfully');
 
@@ -111,7 +144,7 @@ const FormPage: React.FC = () => {
       dispatch(resetTimer());
 
       // Redirect back to the forms list
-      navigate(`/staff/patients/${patientId}/forms`);
+      navigate(`/${user.role}/patients`);
     } catch (error) {
       console.error('Error saving form:', error);
       toast.error('Failed to save form');
@@ -121,13 +154,17 @@ const FormPage: React.FC = () => {
   const handleGoBack = () => {
     if (user?.role === 'staff') {
       navigate('/staff/patients');
-    } else {
+    }
+    else if (user?.role == 'admin') {
+      navigate('/admin/patients');
+    }
+    else {
       navigate('/client');
     }
   };
 
   return (
-    <ProtectedRoute allowedRoles={['staff', 'client']}>
+    <ProtectedRoute allowedRoles={['staff', 'client', 'admin']}>
       <Layout>
         <div className="mb-4">
           <Button
@@ -139,6 +176,7 @@ const FormPage: React.FC = () => {
             Back to Patients
           </Button>
         </div>
+        {console.log('-------->', formData)}
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="text-xl">Loading form...</div>
